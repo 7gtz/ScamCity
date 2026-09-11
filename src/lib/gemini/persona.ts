@@ -47,6 +47,19 @@ function realWorldBlock(ctx: RealWorldContext | undefined, legitimate: boolean) 
   return `\n\nREAL-WORLD CONTEXT about the person you are calling:\n${lines.join("\n")}\n${use}`;
 }
 
+const INDIA_TIMEZONES = new Set(["Asia/Kolkata", "Asia/Calcutta"]);
+
+/**
+ * The accent a caller local to the player would have. Native-audio Live models
+ * take no language/accent code, so accent is steered through the instruction.
+ */
+export function accentFor(ctx?: RealWorldContext) {
+  if (!ctx) return undefined;
+  if (ctx.country === "India" || INDIA_TIMEZONES.has(ctx.timezone)) return "a natural Indian English accent";
+  if (ctx.country) return `the everyday English accent of someone from ${ctx.country}`;
+  return undefined;
+}
+
 const DIFFICULTY = {
   1: "Difficulty 1: convincing, but leave the tells below for a careful player to catch.",
   2: "Difficulty 2: polished. Few tells.",
@@ -62,6 +75,10 @@ export function buildLiveSystemInstruction(
     .map(([id, t]) => `- ${id}: ${t.description}`)
     .join("\n");
   const level = DIFFICULTY[Math.min(3, Math.max(1, opts.difficulty)) as 1 | 2 | 3];
+  const accent = plan.accent ?? accentFor(opts.context);
+  const accentLine = accent
+    ? `\n- Speak with ${accent}, natural and consistent from your very first word, with that variety's everyday phrasing and rhythm. It should sound like a real local person, never exaggerated, caricatured or mocking.`
+    : "";
 
   const role = opts.legitimate
     ? `You are ${plan.callerName}, ${plan.callerRole} at ${plan.organization}. This is a GENUINE call. You are calm and helpful, you never ask for a PIN, passcode, password, full card number or payment, and you actively encourage the player to verify you independently. If the player is suspicious, respect it — that is the right instinct.
@@ -86,7 +103,7 @@ Facts you can use:
 ${plan.facts.map((f) => `- ${f}`).join("\n")}
 
 HOW TO SPEAK
-- This is a phone call. Keep every turn to one to three short spoken sentences. Natural, polite, occasionally hesitant. No lists, no narration, no stage directions.
+- This is a phone call. Keep every turn to one to three short spoken sentences. Natural, polite, occasionally hesitant. No lists, no narration, no stage directions.${accentLine}
 - Speak first as soon as the call connects: greet them and introduce yourself. You may not know their name; if your role would, greet them warmly without inventing one, or ask for it.
 - If the player goes quiet, prompt them ("Hello? Are you still there?").
 - If the player speaks another language, continue in that language.

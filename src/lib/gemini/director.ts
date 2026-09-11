@@ -14,6 +14,7 @@ Rules:
 - Ground scam plans in documented real-world patterns for the district. Make them specific and believable, never cartoonish.
 - Localise to the player's country when it is known: currency, local conventions, a local-sounding organisation. Keep it loose — cities are diverse, and the caller need not share one background with the player.
 - Follow the casting line exactly (gender and first-name initial).
+- Give the caller an accent that fits the player's location and the person you cast — a local-sounding voice is how real callers earn trust. For a player in India, an Indian English accent; a regional flavour is welcome. Describe it plainly and respectfully.
 - Facts are short, concrete, fictional details the caller can use (IDs, amounts, deadlines, reference numbers).`;
 
 const INITIALS = "ABCDEFGHIJKLMNOPRSTVWYZ";

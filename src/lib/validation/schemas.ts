@@ -141,5 +141,10 @@ export const CallPlanSchema = z.object({
     .array(z.string().max(400))
     .max(5)
     .describe("Scam: small mistakes left for a careful player. Genuine: the verification routes the caller offers."),
+  accent: z
+    .string()
+    .max(200)
+    .optional()
+    .describe('How the caller sounds, fitted to the player\'s location, e.g. "a natural Indian English accent with a light Bengali lilt".'),
 });
 export type CallPlan = z.infer<typeof CallPlanSchema>;

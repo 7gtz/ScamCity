@@ -153,6 +153,8 @@ Five AI roles, each load-bearing. Remove any of them and a core system disappear
 - **Voice.** A real spoken conversation through your browser microphone, streamed as 16 kHz PCM through an AudioWorklet to Gemini Live, with 24 kHz PCM audio played back.
 - **Location, time and weather.** From your timezone by default. With consent, GPS supplies your real city (BigDataCloud) and live weather (open-meteo). The caller weaves these in to sound local and to invent believable urgency ("our Leeds branch closes early with the storm tonight"). **Where and when you play changes the con you face.**
 
+- **A local accent.** The director gives every caller an accent that fits where you are. For a player in India, that's an Indian English accent, sometimes with a regional flavour. The live voice models take no language or accent code, so the accent is set through the caller's instructions, and those instructions forbid caricature.
+
 Coordinates are only sent to those two public lookup services, and only if you tick the box. Audio is never stored.
 
 ---

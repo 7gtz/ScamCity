@@ -29,6 +29,28 @@ describe("director briefs", () => {
   });
 });
 
+describe("accent", () => {
+  const plan = BRIEFS["bank-security"]!.plan;
+  const kolkata = { timezone: "Asia/Kolkata", localTime: "Friday 18:00", source: "timezone" as const };
+
+  it("sounds local to a player in India, even without GPS", () => {
+    expect(buildLiveSystemInstruction(plan, { legitimate: false, difficulty: 1, context: kolkata })).toMatch(/Indian English accent/);
+  });
+
+  it("follows the director's choice over the location default", () => {
+    const prompt = buildLiveSystemInstruction(
+      { ...plan, accent: "a natural Indian English accent with a light Tamil lilt" },
+      { legitimate: false, difficulty: 1, context: kolkata },
+    );
+    expect(prompt).toContain("Tamil lilt");
+    expect(prompt).toContain("never exaggerated");
+  });
+
+  it("adds no accent line when nothing is known about the player", () => {
+    expect(buildLiveSystemInstruction(plan, { legitimate: false, difficulty: 1 })).not.toMatch(/accent/i);
+  });
+});
+
 describe("adaptive difficulty", () => {
   const first = SCENARIOS["bank-security"]!;
   const late = SCENARIOS["romance-emergency"]!;
