@@ -38,20 +38,28 @@ type Props = {
  * - Renders only while on screen and while the tab is visible.
  * - Caps device pixel ratio and supports sub-resolution rendering.
  * - Reduced motion: draws one still frame (and redraws on resize).
- * - No WebGL / compile failure / context loss: the canvas stays transparent,
- *   so the parent's CSS background is the fallback.
- * - Releases the GL context on unmount (browsers cap live contexts).
+ * - No WebGL / compile failure / context loss: the canvas is removed or
+ *   hidden, so the parent's CSS background is the fallback. (A lost context
+ *   left on screen paints as a flat grey sheet.)
+ * - Each mount creates its own <canvas> and releases its GL context on
+ *   unmount (browsers cap live contexts). Reusing one element would hand a
+ *   remount — React Strict Mode, Fast Refresh — the context it just lost.
  */
 export function ShaderCanvas({ fragment, uniforms, className, resolution = 1, maxDpr = 1.5 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
   const uniformsRef = useRef(uniforms);
   useEffect(() => {
     uniformsRef.current = uniforms;
   });
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const host = hostRef.current;
+    if (!host) return;
+    const canvas = document.createElement("canvas");
+    canvas.className = "block size-full";
+    canvas.setAttribute("aria-hidden", "true");
+    host.appendChild(canvas);
+
     const gl = canvas.getContext("webgl", {
       antialias: false,
       depth: false,
@@ -60,17 +68,28 @@ export function ShaderCanvas({ fragment, uniforms, className, resolution = 1, ma
       premultipliedAlpha: true,
       powerPreference: "low-power",
     });
-    if (!gl) return;
+    if (!gl) {
+      canvas.remove();
+      return;
+    }
+    const release = () => {
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      canvas.remove();
+    };
 
     const vs = compile(gl, gl.VERTEX_SHADER, VERTEX);
     const fs = compile(gl, gl.FRAGMENT_SHADER, fragment);
     const program = gl.createProgram();
-    if (!vs || !fs || !program) return;
+    if (!vs || !fs || !program) {
+      release();
+      return;
+    }
     gl.attachShader(program, vs);
     gl.attachShader(program, fs);
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.warn("[shader] link failed", gl.getProgramInfoLog(program));
+      release();
       return;
     }
     gl.useProgram(program);
@@ -134,6 +153,7 @@ export function ShaderCanvas({ fragment, uniforms, className, resolution = 1, ma
     const onLost = (e: Event) => {
       e.preventDefault();
       lost = true;
+      canvas.style.visibility = "hidden";
     };
     canvas.addEventListener("webglcontextlost", onLost);
 
@@ -145,9 +165,9 @@ export function ShaderCanvas({ fragment, uniforms, className, resolution = 1, ma
       io.disconnect();
       ro.disconnect();
       canvas.removeEventListener("webglcontextlost", onLost);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      release();
     };
   }, [fragment, resolution, maxDpr]);
 
-  return <canvas ref={canvasRef} aria-hidden className={cn("block size-full", className)} />;
+  return <div ref={hostRef} aria-hidden className={cn("block size-full", className)} />;
 }
