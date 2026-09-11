@@ -92,6 +92,8 @@ export class PcmPlayer {
   private readonly frame = new Float32Array(512);
   private readonly sources = new Set<AudioBufferSourceNode>();
   private next = 0;
+  /** performance.now() when the last buffer finished (or was flushed). */
+  private quietSince = 0;
 
   constructor() {
     this.analyser = this.ctx.createAnalyser();
@@ -118,11 +120,19 @@ export class PcmPlayer {
     src.start(at);
     this.next = at + buffer.duration;
     this.sources.add(src);
-    src.onended = () => this.sources.delete(src);
+    src.onended = () => {
+      this.sources.delete(src);
+      if (!this.sources.size) this.quietSince = performance.now();
+    };
   }
 
   get playing() {
     return this.sources.size > 0;
+  }
+
+  /** True while the caller is audible, and for `tailMs` after: room echo off speakers takes a moment to die. */
+  recentlyAudible(tailMs: number) {
+    return this.sources.size > 0 || performance.now() - this.quietSince < tailMs;
   }
 
   flush() {
@@ -135,6 +145,7 @@ export class PcmPlayer {
     }
     this.sources.clear();
     this.next = 0;
+    this.quietSince = performance.now();
   }
 
   level() {

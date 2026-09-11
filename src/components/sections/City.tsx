@@ -4,8 +4,11 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import { SplitReveal } from "@/components/motion/SplitReveal";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { DISTRICTS, type District } from "@/content/districts";
-import { CityMap, type MapKey } from "@/features/districts/CityMap";
+import { animate, useMotionValue } from "motion/react";
+import type { MapKey } from "@/features/districts/CityMap";
 import { CityMapDialog } from "@/features/districts/CityMapDialog";
+import { RouteMap } from "@/features/districts/RouteMap";
+import { ease } from "@/lib/motion/tokens";
 import { DistrictArtifact } from "@/features/districts/DistrictArtifact";
 import { cn } from "@/lib/cn";
 import { EASE, gsap, MQ, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
@@ -40,6 +43,8 @@ export function City() {
   const [pinned, setPinned] = useState(false);
   /** The place the map overlay points at; null while it's closed. */
   const [mapFor, setMapFor] = useState<MapKey | null>(null);
+  /** Continuous district position (0–5) for the map's pointer; fractional mid-wipe. */
+  const progress = useMotionValue(0);
   const lg = useLg();
   const last = DISTRICTS.length - 1;
 
@@ -72,6 +77,9 @@ export function City() {
           const inner = plate.querySelector("[data-plate-inner]");
           if (inner) tl.fromTo(inner, { xPercent: 12 }, { xPercent: 0, duration: 1 }, i);
         });
+        // The map's pointer rides the same scrubbed timeline, so it glides in step with the wipes.
+        const travel = { p: 0 };
+        tl.to(travel, { p: last, duration: last, onUpdate: () => progress.set(travel.p) }, 0);
         trigger.current = tl.scrollTrigger ?? null;
 
         return () => {
@@ -87,7 +95,10 @@ export function City() {
   const select = (i: number) => {
     const st = trigger.current;
     if (st) scrollToTarget(st.start + ((st.end - st.start) * i) / last + 1);
-    else setActive(i);
+    else {
+      setActive(i);
+      animate(progress, i, { duration: 0.8, ease });
+    }
   };
 
   return (
@@ -101,37 +112,8 @@ export function City() {
             lines={["Six districts.", <em key="e" className="font-light">Six ways in.</em>]}
           />
 
-          {/* Desktop index */}
-          <ol className="hidden lg:block">
-            {DISTRICTS.map((d, i) => (
-              <li key={d.id}>
-                <button
-                  type="button"
-                  onClick={() => select(i)}
-                  aria-current={i === active ? "true" : undefined}
-                  className="group flex w-full items-baseline gap-5 border-t border-line py-3 text-left"
-                  data-cursor="magnetic"
-                >
-                  <span className={cn("meta w-7 transition-colors duration-[320ms]", i === active ? "text-bone" : "text-smoke")}>
-                    {d.number}
-                  </span>
-                  <span
-                    className={cn(
-                      "font-display text-[clamp(1.25rem,2vw,1.75rem)] leading-none tracking-[-0.015em] uppercase transition-colors duration-[320ms] ease-out",
-                      i === active ? "text-bone" : "text-smoke group-hover:text-ash",
-                    )}
-                  >
-                    {d.title}
-                  </span>
-                  <span
-                    aria-hidden
-                    className={cn("ml-auto h-px w-8 self-center transition-opacity duration-[320ms]", i === active ? "opacity-100" : "opacity-0")}
-                    style={{ background: d.hueText }}
-                  />
-                </button>
-              </li>
-            ))}
-          </ol>
+          {/* Desktop: the city map is the index. Its pointer follows the scroll. */}
+          <RouteMap className="hidden lg:flex" progress={progress} active={active} onSelect={select} onOpen={setMapFor} />
         </div>
 
         {/* One set of plates: stacked and wiped on desktop, a list below lg. */}
@@ -195,26 +177,7 @@ function Plate({
         </span>
 
         <div className="relative flex flex-1 flex-col justify-between gap-10 p-6 lg:p-10">
-          <div className="flex items-start justify-between gap-6">
-            {/* Where this district sits in the city: a live thumbnail of the same map, opening it full-screen. */}
-            <button
-              type="button"
-              onClick={onMap}
-              data-cursor="view"
-              aria-label={`Show District ${d.number}, ${d.title}, on the city map`}
-              className="group hidden w-[min(16rem,38%)] flex-col gap-2 text-left lg:flex"
-            >
-              <CityMap
-                variant="compact"
-                focus={d.id}
-                className="w-full border border-line bg-ink/60 transition-colors duration-[320ms] group-hover:border-dim"
-              />
-              <span className="meta flex items-center gap-2 text-smoke transition-colors duration-[320ms] group-hover:text-bone">
-                On the city map <span aria-hidden>→</span>
-              </span>
-            </button>
-            <DistrictArtifact artifact={d.artifact} className="ml-auto w-full sm:w-[21rem] lg:w-[min(22rem,48%)]" />
-          </div>
+          <DistrictArtifact artifact={d.artifact} className="w-full self-end sm:w-[21rem] lg:w-[min(22rem,48%)]" />
           <div className="flex flex-col gap-4 lg:gap-5">
             <p className="meta text-[color:var(--hue-text)]">
               District {d.number} · Runs on {d.lever.toLowerCase()}

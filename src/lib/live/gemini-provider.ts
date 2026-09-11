@@ -17,6 +17,8 @@ import type {
 
 const OUTCOMES = new Set<CallOutcome>(["scammed", "exposed", "hung-up", "verified-legit", "rejected-legit"]);
 const RING_MS = 1400;
+/** Speaker mode: how long the mic stays closed after the caller's voice stops (room echo). */
+const SPEAKER_TAIL_MS = 450;
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -41,6 +43,7 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
   private startedAt = 0;
   private seq = 0;
   private speaking: Speaker | null = null;
+  private speakerMode = false;
   private silenceTimer: ReturnType<typeof setInterval> | undefined;
 
   private transcript: TranscriptMessage[] = [];
@@ -121,9 +124,17 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
 
   async startMicrophone(stream: MediaStream) {
     this.mic = new MicCapture();
-    await this.mic.start(stream, (data) =>
-      this.session?.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } }),
-    );
+    await this.mic.start(stream, (data) => {
+      // Speakers: while the caller is audible (and a beat after), the mic would only
+      // hear the caller's own voice coming back. Hold it, so the model never hears itself.
+      if (this.speakerMode && this.player.recentlyAudible(SPEAKER_TAIL_MS)) return;
+      this.session?.sendRealtimeInput({ audio: { data, mimeType: "audio/pcm;rate=16000" } });
+    });
+  }
+
+  /** Half-duplex for speakers: the player talks when the caller stops (typing still interrupts). */
+  setSpeakerMode(on: boolean) {
+    this.speakerMode = on;
   }
 
   setMuted(muted: boolean) {

@@ -124,6 +124,7 @@ export function useLiveCall(scenarioId: string) {
       });
       provider.current = p;
       wire(p);
+      p.setSpeakerMode?.(useCallStore.getState().speakerMode);
       try {
         await p.connect({ scenarioId });
         await p.startMicrophone(stream);
@@ -150,5 +151,11 @@ export function useLiveCall(scenarioId: string) {
     provider.current?.setMuted?.(!muted);
   }, []);
 
-  return { answer, choose, sendText, hangUp, toggleMute };
+  const toggleSpeakerMode = useCallback(() => {
+    const { speakerMode, setSpeakerMode } = useCallStore.getState();
+    setSpeakerMode(!speakerMode);
+    provider.current?.setSpeakerMode?.(!speakerMode);
+  }, []);
+
+  return { answer, choose, sendText, hangUp, toggleMute, toggleSpeakerMode };
 }

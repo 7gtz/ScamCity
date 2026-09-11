@@ -2,13 +2,38 @@ import { tacticLabel } from "@/content/tactics";
 import type { CallScore, CompletedCall, TacticId } from "@/lib/live/types";
 
 export const PASS_THRESHOLD = 65;
+/** Where a safe decision always lands, at least. */
+export const SAFE_FLOOR = 75;
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 const secs = (ms: number) => Math.round(ms / 1000);
 
+type Item = { label: string; points: number };
+
+/**
+ * The behaviour the game teaches always passes: ending or blocking a scam, or
+ * verifying a genuine contact, without giving anything away. Exactly when the
+ * player did it is for the notes to discuss, never a reason to fail them.
+ */
+export function safetyFloor(call: CompletedCall): { to: number; reason: string } | null {
+  if (call.revealed.length) return null;
+  const chat = call.scenarioId === "messages";
+  if (!call.legitimate && call.outcome === "exposed") {
+    return {
+      to: SAFE_FLOOR,
+      reason: chat ? "You blocked a scam without giving anything away" : "You ended a scam call without giving anything away",
+    };
+  }
+  if (call.legitimate && call.outcome === "verified-legit") {
+    return { to: SAFE_FLOOR, reason: "You verified a genuine contact without giving anything away" };
+  }
+  return null;
+}
+
 /**
  * Deterministic stand-in for the AI judge (spec Phase 3). Same output shape the
- * server-side Gemini scorer must return, so the results UI never changes.
+ * server-side Gemini scorer must return — breakdown included — so the results
+ * UI never changes.
  */
 export function judgeCall(call: CompletedCall): CallScore {
   const used = new Set<TacticId>(call.transcript.flatMap((m) => m.tactics ?? []));
@@ -18,14 +43,16 @@ export function judgeCall(call: CompletedCall): CallScore {
 
   const events = timeline(call);
   const notes: string[] = [];
-  let score: number;
+  const items: Item[] = [];
+  let base: number;
   // Messages are judged here too when the AI judge is unavailable: speak their language.
   const chat = call.scenarioId === "messages";
   const who = chat ? "contact" : "caller";
 
   if (call.legitimate) {
+    base = 50;
     if (call.outcome === "rejected-legit") {
-      score = 30;
+      items.push({ label: `Dismissed a genuine ${who} without checking`, points: -20 });
       notes.push(`This ${who} was genuine. They asked for nothing sensitive${chat ? "." : " and offered you a way to check."}`);
       notes.push(
         chat
@@ -33,20 +60,21 @@ export function judgeCall(call: CompletedCall): CallScore {
           : "Hanging up was safe, but you left a real fraud alert unanswered. Verify, don't dismiss.",
       );
     } else {
-      score = 60 + (call.decisionQuality ?? 0);
+      items.push({ label: `Recognised a genuine ${chat ? "contact" : "call"}, gave nothing away`, points: 10 });
+      if (call.decisionQuality) items.push({ label: "Verified through a number you trust", points: call.decisionQuality });
       notes.push(`You recognised a legitimate ${chat ? "contact" : "call"} without giving anything away.`);
       if ((call.decisionQuality ?? 0) >= 25) notes.push("Calling back on the number you already trust is exactly right.");
       else notes.push(`Next time, confirm through a channel you already trust before acting on the ${chat ? "message" : "call"}.`);
     }
   } else {
-    score = 35 + caught.length * 10;
+    base = 35;
+    if (caught.length) items.push({ label: `Caught ${caught.length} tactic${caught.length === 1 ? "" : "s"}`, points: caught.length * 10 });
     const first = caught[0];
-    if (first && first.at <= 45_000) score += 15;
-    else if (first && first.at <= 90_000) score += 8;
-
-    score -= call.revealed.length * 20;
-    if (call.outcome === "exposed") score += 20;
-    if (call.outcome === "scammed") score -= 15;
+    if (first && first.at <= 45_000) items.push({ label: `Suspicious early, by ${fmt(first.at)}`, points: 15 });
+    else if (first && first.at <= 90_000) items.push({ label: `Suspicious by ${fmt(first.at)}`, points: 8 });
+    for (const r of call.revealed) items.push({ label: `Gave away: ${r.toLowerCase()}`, points: -20 });
+    if (call.outcome === "exposed") items.push({ label: chat ? "Blocked it and checked independently" : "Ended it and checked independently", points: 20 });
+    if (call.outcome === "scammed") items.push({ label: `The ${who} got what they came for`, points: -15 });
 
     if (first) notes.push(`Your suspicion surfaced at ${fmt(first.at)} — when you challenged the ${tacticLabel(first.tactic).toLowerCase()}.`);
     else notes.push(`You never challenged the ${who} directly. Every claim went unverified.`);
@@ -60,7 +88,10 @@ export function judgeCall(call: CompletedCall): CallScore {
       );
   }
 
-  const final = clamp(score);
+  const total = clamp(base + items.reduce((sum, i) => sum + i.points, 0));
+  const floor = safetyFloor(call);
+  const lifted = floor !== null && total < floor.to;
+  const final = lifted ? floor.to : total;
   return {
     sessionId: call.sessionId,
     scenarioId: call.scenarioId,
@@ -77,6 +108,7 @@ export function judgeCall(call: CompletedCall): CallScore {
     notes: notes.slice(0, 4),
     judge: "rules",
     brief: call.brief,
+    breakdown: { base, items, floor: lifted ? floor : undefined },
   };
 }
 

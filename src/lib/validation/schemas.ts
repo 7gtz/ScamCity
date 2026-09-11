@@ -93,9 +93,8 @@ export const CompletedCallSchema = z.object({
   brief: CallBriefSchema.optional(),
 });
 
-/** What the judge model must return. */
+/** What the judge model must return. The score is computed from `breakdown` in code (compose.ts). */
 export const JudgeSchema = z.object({
-  score: z.number().min(0).max(100).describe("Whole number, 0–100."),
   caught: z
     .array(z.object({ tactic: Tactic, atSeconds: z.number().min(0) }))
     .max(12)
@@ -106,6 +105,16 @@ export const JudgeSchema = z.object({
     .max(10)
     .describe("3–5 key moments, each labelled in one or two lowercase words."),
   notes: z.array(z.string().max(800)).min(1).max(6).describe("2–4 specific second-person sentences quoting the call."),
+  breakdown: z
+    .array(
+      z.object({
+        label: z.string().max(160).describe("At most 8 words naming one specific thing the player did."),
+        points: z.number().min(-60).max(60).describe("What it earned (positive) or cost (negative)."),
+      }),
+    )
+    .min(2)
+    .max(6)
+    .describe("3–5 line items explaining the score from a base of 50. The score is 50 plus their sum."),
 });
 export type JudgeOutput = z.infer<typeof JudgeSchema>;
 

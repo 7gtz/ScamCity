@@ -9,9 +9,18 @@ const EXAMPLE: CallScore = {
   scenarioId: "bank-security",
   legitimate: false,
   outcome: "exposed",
-  score: 72,
+  score: 78,
   threshold: 65,
   passed: true,
+  breakdown: {
+    base: 50,
+    items: [
+      { label: "Asked the caller to prove who he was", points: 12 },
+      { label: "Refused the security code", points: 15 },
+      { label: "Hung up and called the bank yourself", points: 11 },
+      { label: "Let the “other customers” story move you", points: -10 },
+    ],
+  },
   caught: [
     { tactic: "authority", at: 18_000 },
     { tactic: "urgency", at: 102_000 },

@@ -24,6 +24,13 @@ Rubric for a GENUINE call (pass mark 65):
 
 Confirming a detail the caller supplied ("account ending 4821?" — "Yes") counts as revealing it, even if the player volunteered nothing.
 
+What the game teaches the player — never penalise these:
+- Asking questions, checking the story, or replying once more before ending. The player is told explicitly: "ask questions, check their story, or block them."
+- Refusing to share, insisting on an official channel, then ending or blocking is the ideal sequence. Whether they ended at the first demand or a reply later does not matter: score it 75 or more unless they revealed something. Only deduct for timing if they kept engaging for several turns after an explicit demand for a code, payment or access.
+Your notes must agree with this: never tell a player who refused and ended safely that they should have ended sooner.
+
+Explain the score as 3–5 line items ("breakdown"): each names one specific thing the player did, in at most 8 words, with the points it earned or cost. The score is 50 plus the sum of the items, so choose points that total what the rubric deserves.
+
 Tactics: ${Object.keys(TACTICS).join(", ")}.
 Notes judge BEHAVIOUR, not just the outcome. Never write a bare "Correct" or "Incorrect". Each note is specific, in second person, refers to what was actually said, and where it fits pairs what the player did well with what undid it — e.g. "You challenged the caller's identity, but then confirmed the account number they read out." Put the single most important observation first.`;
 

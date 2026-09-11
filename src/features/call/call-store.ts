@@ -30,9 +30,14 @@ interface CallState {
   liveAt: number | null;
   detected: { tactic: TacticId; at: number }[];
   muted: boolean;
+  /** Playing on speakers, not headphones: the mic is held while the caller speaks. A remembered preference. */
+  speakerMode: boolean;
   error: { code: string; message: string } | null;
 
   reset: (scenarioId: string) => void;
+  setSpeakerMode: (on: boolean) => void;
+  /** Reads the remembered preference (after mount, so server and client render alike). */
+  loadSpeakerMode: () => void;
   setStatus: (status: CallStatus) => void;
   setMode: (mode: ProviderKind) => void;
   setContext: (context: RealWorldContext) => void;
@@ -65,10 +70,29 @@ const initial = {
   error: null,
 };
 
-/** Live-call state: one active call at a time. Not persisted. */
+const SPEAKER_KEY = "scam-city:speaker-mode";
+
+/** Live-call state: one active call at a time. Not persisted (except the speakers preference). */
 export const useCallStore = create<CallState>()((set) => ({
   ...initial,
-  reset: (scenarioId) => set({ ...initial, scenarioId }),
+  speakerMode: false,
+  // A new call starts clean, but keeps the player's speakers/headphones choice.
+  reset: (scenarioId) => set((s) => ({ ...initial, scenarioId, speakerMode: s.speakerMode })),
+  setSpeakerMode: (speakerMode) => {
+    set({ speakerMode });
+    try {
+      localStorage.setItem(SPEAKER_KEY, speakerMode ? "1" : "0");
+    } catch {
+      // storage blocked: the choice lasts for this page only
+    }
+  },
+  loadSpeakerMode: () => {
+    try {
+      set({ speakerMode: localStorage.getItem(SPEAKER_KEY) === "1" });
+    } catch {
+      // storage blocked
+    }
+  },
   setStatus: (status) =>
     set((s) => {
       const next = transition(s.status, status);

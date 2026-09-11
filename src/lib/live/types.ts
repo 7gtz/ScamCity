@@ -141,6 +141,8 @@ export interface LiveCallProvider {
   /** Mock-only: pick a scripted reply. */
   choose?(actionId: string): void;
   setMuted?(muted: boolean): void;
+  /** Speakers instead of headphones: the mic isn't sent while the caller is audible. */
+  setSpeakerMode?(on: boolean): void;
   endCall(): Promise<CompletedCall>;
   disconnect(): void;
   on<T extends LiveCallEventType>(type: T, listener: LiveCallListener<T>): () => void;
@@ -165,4 +167,13 @@ export interface CallScore {
   brief?: CallBrief;
   /** Voice call, or a text conversation from Messages. */
   channel?: "call" | "sms";
+  /** "Why this score?": the base, each line item, and the safety floor if it lifted the score. */
+  breakdown?: ScoreBreakdown;
+}
+
+export interface ScoreBreakdown {
+  base: number;
+  items: { label: string; points: number }[];
+  /** Set when a safe decision lifted the total to the floor. */
+  floor?: { to: number; reason: string };
 }

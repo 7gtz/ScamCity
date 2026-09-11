@@ -326,6 +326,18 @@ html.has-custom-cursor textarea {
   }
 }
 
+/* The city map's pointer, breathing. */
+@keyframes map-pulse {
+  from {
+    transform: scale(0.55);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
 /* An incoming notification's time running out. */
 @keyframes ring-out {
   from {

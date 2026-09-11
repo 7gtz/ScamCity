@@ -63,7 +63,7 @@ Get a Gemini API key at https://aistudio.google.com/apikey.
 ENTER THE CITY → PICK A DISTRICT → ANSWER THE CALL → TALK / DECIDE → HANG UP OR GET SCAMMED → AI JUDGE → PROGRESS
 ```
 
-1. **Enter the city.** The landing page (`/`) introduces the game. Scroll to *The City*, or open the **Index** menu (top right). Each district's plate carries a live thumbnail of the city map; click it (or **On the city map** on a phone) to open the full map as an overlay, pointing at that district, with its status and a way in.
+1. **Enter the city.** The landing page (`/`) introduces the game. Scroll to *The City*, or open the **Index** menu (top right). On desktop the section's index is the city map itself: as you scroll, its pointer glides along the route from district to district, the road behind it lights up in each district's colour, and a halftone dot matrix lies over the map, brightest at the pointer. Click a place to go there, or **Full map** (on a phone, **On the city map**) to open the whole map as an overlay, pointing at that district, with its status and a way in.
 2. **Pick a district.** Each is a different con:
 
    Six districts, six ways people get manipulated. Each rings with its own caller ID, brand and pretext.
@@ -95,6 +95,7 @@ ENTER THE CITY → PICK A DISTRICT → ANSWER THE CALL → TALK / DECIDE → HAN
 | Type a reply | Reply box under the transcript (live mode) |
 | Pick a scripted reply | Click it, or press **1** / **2** / **3** (simulation mode) |
 | Mute / unmute the mic | **M**, or the **Mic on** button |
+| Playing on speakers | **Headphones / Speakers** button (live mode), or the checkbox on the ringing screen |
 | Hang up | **Hang up** |
 | Skip the results animation | Click or press any key |
 | Section index | **Index** (top right) |
@@ -115,7 +116,7 @@ This is the quick, voice-free training mode. Read a message, decide whether it's
 
 ### Tips for a good live call
 
-- **Wear headphones.** Otherwise the caller can hear itself through your speakers.
+- **Headphones are best.** On speakers, turn on **speaker mode** (on the ringing screen, or **Headphones/Speakers** in the call controls): the mic is held while the caller talks and for 0.45 s after, so the caller never hears its own voice. You take turns instead of interrupting; typing still cuts the caller off. The choice is remembered.
 - Speak in short turns. You can cut in whenever you like.
 - To stop at any time, say "stop" or "end game": the caller drops character.
 
@@ -176,7 +177,7 @@ Five AI roles, each load-bearing. Remove any of them and a core system disappear
 | **Director** | `gemini-3.5-flash-lite` | Before every call, writes a unique plan: caller name, organisation, voice, pretext, facts and tactic order. The plan is aimed at the tactics this player keeps missing, scaled to their record, and never repeats a recent pretext. In districts 3–7, about one call in five is secretly **genuine**. |
 | **Caller** | `gemini-3.1-flash-live-preview` | Performs the plan as a real-time voice call. Escalates when you comply, and pivots to a new tactic when you challenge it. It reads the player: if you stay defensive it reframes instead of arguing (agrees with your caution, backs off, offers its own "callback number", sounds hurt), and it volunteers a believable detail to get you to confirm it. Hangs up on its own through an `end_call` tool. |
 | **Analyst** | `gemini-3.5-flash-lite` | After every caller turn, reads the transcript and returns structured state: your suspicion, the tactics in play, what you detected and what you revealed. This drives the HUD. |
-| **Judge** | `gemini-3.8-flash` | Scores the whole transcript against a rubric covering verifying questions, how early suspicion appeared, tactics caught, information revealed (confirming a detail the caller read out counts), and the final decision. Its notes judge behaviour, never a bare "correct": "You challenged the caller's identity, but then confirmed the account number they read out." Pass mark and time clamping are enforced in code, not trusted to the model. The judges are raced, not queued: if the flagship hasn't answered in 2 s a lite model starts too, and the first valid verdict wins inside an 8.5 s budget (past that, the rules judge answers). While it works, the player sees *Reading the transcript → Identifying tactics → Building your profile*. Reports use the channel's own words ("Conversation report", "Message timeline"). Emails and sites get the same treatment from rules: the verdict says what you inspected (links, sender details, site information) before you decided. |
+| **Judge** | `gemini-3.8-flash` | Scores the whole transcript against a rubric covering verifying questions, how early suspicion appeared, tactics caught, information revealed (confirming a detail the caller read out counts), and the final decision. Its notes judge behaviour, never a bare "correct": "You challenged the caller's identity, but then confirmed the account number they read out." Pass mark and time clamping are enforced in code, not trusted to the model. The judges are raced, not queued: if the flagship hasn't answered in 2 s a lite model starts too, and the first valid verdict wins inside an 8.5 s budget (past that, the rules judge answers). While it works, the player sees *Reading the transcript → Identifying tactics → Building your profile*. Reports use the channel's own words ("Conversation report", "Message timeline"). Every report explains itself under **Why N?**: the judge returns line items from a base of 50 ("Refused to share the code +20"), and the score is computed from them in code, so the table always adds up. Blocking or exposing a scam, or verifying a genuine contact, without giving anything away always passes (a floor of 75), and the prompt forbids penalising the moves the game teaches (asking, checking the story, one more reply before blocking). Emails and sites get the same treatment from rules: the verdict says what you inspected (links, sender details, site information) before you decided. |
 | **Game master** | `gemini-3.5-flash-lite` | Writes Riddle Mode scenarios adapted to your weak tactics and your location. |
 
 **What happens if you remove the AI?** There is no caller, nothing adapts, no two calls differ, nothing judges your decisions, and no riddles are written. The whole game collapses into a static quiz.
@@ -313,7 +314,7 @@ design-system/scam-city/         design system (MASTER + page overrides)
 | `ERR_PNPM_CMD_SHIM_PARSE_MANIFEST`, or `node_modules` wiped | You ran pnpm 12. Use `npx -y pnpm@10 install`. |
 | "Live AI is not configured" / calls are scripted | `GEMINI_API_KEY` is missing on the server. Restart `dev` after adding it. |
 | "The microphone is blocked" | Allow the mic from the address bar, or choose **Continue with the scripted call**. On phones, use the HTTPS URL. |
-| The caller interrupts itself | Use headphones; the mic is picking up the speakers. |
+| The caller interrupts itself | The mic is picking up the speakers. Use headphones, or turn on speaker mode. |
 | No sound from the caller | Check the tab isn't muted; the audio starts after you press **Answer the call**. |
 | Lint says typescript-eslint doesn't support TS 7 | Keep the two TypeScript aliases in `package.json` (`typescript` → TS 6 API, `@typescript/native` → TS 7 `tsc`). |
 

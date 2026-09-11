@@ -1,17 +1,14 @@
 "use client";
 
 import { Lock } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useId } from "react";
 import { BONUS, DISTRICTS } from "@/content/districts";
 import { RIDDLES_TO_UNLOCK, useProgressStore } from "@/features/progress/progress-store";
 import { cn } from "@/lib/cn";
 import type { DistrictId } from "@/lib/live/types";
-
-/** Route segments between consecutive districts (viewBox 800×500), transit-map style. */
-const ROUTE = ["130,120 130,280 230,380", "230,380 430,380", "430,380 560,250", "560,250 560,100", "560,100 690,100 690,300"];
-/** The bonus call sits on a spur off the Bank. */
-const SPUR = "130,120 300,120";
+import { ROUTE_SEGMENTS, SPUR } from "./geometry";
 
 export type NodeStatus = "cleared" | "current" | "open" | "locked";
 export const STATUS_WORD: Record<NodeStatus, string> = { cleared: "Cleared", current: "Play next", open: "Open", locked: "Locked" };
@@ -30,7 +27,7 @@ export interface MapNode {
   map: { x: number; y: number; label: "above" | "below" | "left" };
 }
 
-/** Label placement around a node (full map, md and up). */
+/** Label placement around a node (md and up). */
 const PLACE = {
   below: "md:-translate-x-1/2 md:-translate-y-[10px] md:flex-col md:items-center md:text-center",
   above: "md:-translate-x-1/2 md:-translate-y-[calc(100%-10px)] md:flex-col-reverse md:items-center md:text-center",
@@ -90,12 +87,7 @@ export function useCityProgress() {
 }
 
 type Props = {
-  /**
-   * full: the labelled map (a vertical line below md).
-   * compact: an unlabelled thumbnail that only names the focused place.
-   */
-  variant?: "full" | "compact";
-  /** The place this map points at: ringed in its district's light. */
+  /** The place this map points at: ringed in its district's light, and the ring glides when it changes. */
   focus?: MapKey;
   /** When set, nodes pick a place instead of linking to its call (the overlay). */
   onSelect?: (key: MapKey) => void;
@@ -103,24 +95,24 @@ type Props = {
 };
 
 /**
- * The city as a transit map: six districts on one line, the bonus call on a
- * spur. One component for "Your city", the district plates' thumbnails and the
- * full-screen overlay, so every view shows the same city and the same progress.
+ * The city as a labelled transit map: six districts on one line, the bonus
+ * call on a spur. Used by "Your city" and the full-screen overlay (the district
+ * section's scroll-linked map is `RouteMap`, drawn from the same geometry).
+ * Below md it becomes a vertical line.
  */
-export function CityMap({ variant = "full", focus, onSelect, className }: Props) {
+export function CityMap({ focus, onSelect, className }: Props) {
   const { isCleared, nodes } = useCityProgress();
-  const compact = variant === "compact";
+  const reduced = useReducedMotion();
   const pattern = `streets-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  // Thin lines stay thin when the map is shrunk to a thumbnail.
-  const stroke = compact ? { vectorEffect: "non-scaling-stroke" as const } : {};
+  const focused = nodes.find((n) => n.key === focus);
 
   return (
-    <div className={cn("relative", compact ? "aspect-[8/5]" : "md:aspect-[8/5]", className)}>
+    <div className={cn("relative md:aspect-[8/5]", className)}>
       {/* Streets, the river, the route. Decorative: the nodes carry the meaning. */}
-      <svg aria-hidden viewBox="0 0 800 500" className={cn("absolute inset-0 size-full", !compact && "hidden md:block")}>
+      <svg aria-hidden viewBox="0 0 800 500" className="absolute inset-0 hidden size-full md:block">
         <defs>
           <pattern id={pattern} width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M40 0H0V40" fill="none" stroke="var(--color-line)" strokeWidth="1" opacity={compact ? 0.35 : 0.55} />
+            <path d="M40 0H0V40" fill="none" stroke="var(--color-line)" strokeWidth="1" opacity="0.55" />
           </pattern>
         </defs>
         <rect width="800" height="500" fill={`url(#${pattern})`} />
@@ -131,150 +123,115 @@ export function CityMap({ variant = "full", focus, onSelect, className }: Props)
           strokeWidth="22"
           strokeLinecap="round"
         />
-        <polyline points={SPUR} fill="none" stroke="var(--color-dim)" strokeWidth="2" strokeDasharray="2 7" strokeLinecap="round" {...stroke} />
-        {ROUTE.map((points, i) =>
+        <polyline points={SPUR} fill="none" stroke="var(--color-dim)" strokeWidth="2" strokeDasharray="2 7" strokeLinecap="round" />
+        {ROUTE_SEGMENTS.map((points, i) =>
           isCleared(DISTRICTS[i]?.scenarioId) ? (
             <polyline
               key={points}
-              data-route={compact ? undefined : true}
+              data-route
               points={points}
               pathLength={1}
               fill="none"
               stroke="var(--color-bone)"
               strokeWidth="3"
-              strokeDasharray={compact ? undefined : "1"}
+              strokeDasharray="1"
               strokeLinejoin="round"
-              {...stroke}
             />
           ) : (
-            <polyline
-              key={points}
-              points={points}
-              fill="none"
-              stroke="var(--color-dim)"
-              strokeWidth="2"
-              strokeDasharray="6 6"
-              strokeLinejoin="round"
-              {...stroke}
-            />
+            <polyline key={points} points={points} fill="none" stroke="var(--color-dim)" strokeWidth="2" strokeDasharray="6 6" strokeLinejoin="round" />
           ),
         )}
       </svg>
 
-      {compact ? (
-        <ol aria-hidden className="absolute inset-0">
-          {nodes.map((n) => {
-            const focused = n.key === focus;
-            return (
-              <li
-                key={n.key}
-                style={{ "--x": `${n.map.x / 8}%`, "--y": `${n.map.y / 5}%` } as React.CSSProperties}
-                className="absolute top-[var(--y)] left-[var(--x)] grid -translate-x-1/2 -translate-y-1/2 place-items-center"
-              >
-                {focused && <span className="ring-wave !top-1/2 !w-9" style={{ "--hue-text": n.hue } as React.CSSProperties} />}
+      {/* One focus ring that travels from place to place (md and up). */}
+      {focused && (
+        <motion.span
+          aria-hidden
+          className="pointer-events-none absolute hidden size-9 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 md:block"
+          initial={false}
+          animate={{ left: `${focused.map.x / 8}%`, top: `${focused.map.y / 5}%` }}
+          transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 22 }}
+          style={{ borderColor: focused.hue }}
+        >
+          {!reduced && <span className="ring-wave !top-1/2 !w-16" style={{ "--hue-text": focused.hue } as React.CSSProperties} />}
+        </motion.span>
+      )}
+
+      {/* Phones: a vertical line, inset so the focus ring around a node is never clipped. */}
+      <span aria-hidden className="absolute top-4 bottom-4 left-[17px] w-px bg-line md:hidden" />
+      <ol aria-label="City map" className="relative flex flex-col gap-1 pl-2 md:absolute md:inset-0 md:pl-0">
+        {nodes.map((n) => {
+          const locked = n.status === "locked";
+          const isFocus = n.key === focus;
+          const body = (
+            <>
+              <span className="relative grid size-5 shrink-0 place-items-center">
+                {isFocus && <span aria-hidden className="absolute size-9 rounded-full border-2 md:hidden" style={{ borderColor: n.hue }} />}
+                {n.status === "current" && (
+                  <span aria-hidden className="ring-wave !top-1/2 !w-12" style={{ "--hue-text": "var(--color-signal)" } as React.CSSProperties} />
+                )}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "size-5 rounded-full border-2 transition-colors duration-[320ms]",
+                    n.status === "cleared" && "border-bone bg-bone",
+                    n.status === "current" && "border-signal bg-signal",
+                    n.status === "open" && "border-bone bg-ink",
+                    locked && "border-dim bg-ink",
+                  )}
+                />
+              </span>
+              <span className="flex flex-col gap-1 py-1">
+                <span className="meta flex items-center gap-2 text-smoke md:justify-center">
+                  <span aria-hidden className="inline-block h-0.5 w-3" style={{ background: n.hue }} />
+                  {n.tag}
+                </span>
                 <span
                   className={cn(
-                    "rounded-full",
-                    focused ? "size-3" : "size-2",
-                    !focused && n.status === "cleared" && "bg-bone",
-                    !focused && n.status === "current" && "bg-signal",
-                    !focused && n.status === "open" && "border border-bone bg-ink",
-                    !focused && n.status === "locked" && "bg-dim",
+                    "font-display text-[clamp(1.25rem,2vw,1.625rem)] leading-none tracking-[-0.015em] whitespace-nowrap uppercase transition-colors duration-[320ms]",
+                    isFocus || !locked ? "text-bone" : "text-smoke",
                   )}
-                  style={focused ? { background: n.hue, boxShadow: `0 0 0 3px var(--color-ink), 0 0 0 4px ${n.hue}` } : undefined}
-                />
-                {focused && (
-                  <span className="meta absolute bottom-full mb-2 text-[0.6875rem] whitespace-nowrap" style={{ color: n.hue }}>
-                    {n.number}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-      ) : (
-        <>
-          {/* Phones: a vertical line, inset so the focus ring around a node is never clipped. */}
-          <span aria-hidden className="absolute top-4 bottom-4 left-[17px] w-px bg-line md:hidden" />
-          <ol aria-label="City map" className="relative flex flex-col gap-1 pl-2 md:absolute md:inset-0 md:pl-0">
-            {nodes.map((n) => {
-              const locked = n.status === "locked";
-              const focused = n.key === focus;
-              const body = (
-                <>
-                  <span className="relative grid size-5 shrink-0 place-items-center">
-                    {focused && <span aria-hidden className="absolute size-9 rounded-full border-2" style={{ borderColor: n.hue }} />}
-                    {(n.status === "current" || focused) && (
-                      <span
-                        aria-hidden
-                        className="ring-wave !top-1/2 !w-12"
-                        style={{ "--hue-text": focused ? n.hue : "var(--color-signal)" } as React.CSSProperties}
-                      />
-                    )}
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "size-5 rounded-full border-2 transition-colors duration-[320ms]",
-                        n.status === "cleared" && "border-bone bg-bone",
-                        n.status === "current" && "border-signal bg-signal",
-                        n.status === "open" && "border-bone bg-ink",
-                        locked && "border-dim bg-ink",
-                      )}
-                    />
-                  </span>
-                  <span className="flex flex-col gap-1 py-1">
-                    <span className="meta flex items-center gap-2 text-smoke md:justify-center">
-                      <span aria-hidden className="inline-block h-0.5 w-3" style={{ background: n.hue }} />
-                      {n.tag}
-                    </span>
-                    <span
-                      className={cn(
-                        "font-display text-[clamp(1.25rem,2vw,1.625rem)] leading-none tracking-[-0.015em] whitespace-nowrap uppercase",
-                        focused || !locked ? "text-bone" : "text-smoke",
-                      )}
-                    >
-                      {n.title}
-                    </span>
-                    <span
-                      className={cn(
-                        "meta flex items-center gap-1.5 md:justify-center",
-                        n.status === "current" ? "text-signal" : n.status === "cleared" ? "text-safe" : "text-smoke",
-                      )}
-                    >
-                      {locked && <Lock aria-hidden strokeWidth={1.25} className="size-3 text-dim" />}
-                      {STATUS_WORD[n.status]}
-                    </span>
-                  </span>
-                </>
-              );
-              const row = cn("group flex items-start gap-4 text-left md:gap-2", PLACE[n.map.label]);
-              return (
-                <li
-                  key={n.key}
-                  data-node
-                  aria-current={focused ? "location" : undefined}
-                  style={{ "--x": `${n.map.x / 8}%`, "--y": `${n.map.y / 5}%` } as React.CSSProperties}
-                  className="md:absolute md:top-[var(--y)] md:left-[var(--x)]"
                 >
-                  {onSelect ? (
-                    <button type="button" onClick={() => onSelect(n.key)} aria-pressed={focused} className={cn(row, "transition-opacity hover:opacity-80")}>
-                      {body}
-                    </button>
-                  ) : n.href && !locked ? (
-                    <Link href={n.href} data-cursor="enter" className={cn(row, "transition-opacity hover:opacity-80")}>
-                      {body}
-                    </Link>
-                  ) : (
-                    <div aria-disabled className={row}>
-                      {body}
-                    </div>
+                  {n.title}
+                </span>
+                <span
+                  className={cn(
+                    "meta flex items-center gap-1.5 md:justify-center",
+                    n.status === "current" ? "text-signal" : n.status === "cleared" ? "text-safe" : "text-smoke",
                   )}
-                </li>
-              );
-            })}
-          </ol>
-        </>
-      )}
+                >
+                  {locked && <Lock aria-hidden strokeWidth={1.25} className="size-3 text-dim" />}
+                  {STATUS_WORD[n.status]}
+                </span>
+              </span>
+            </>
+          );
+          const row = cn("group flex items-start gap-4 text-left md:gap-2", PLACE[n.map.label]);
+          return (
+            <li
+              key={n.key}
+              data-node
+              aria-current={isFocus ? "location" : undefined}
+              style={{ "--x": `${n.map.x / 8}%`, "--y": `${n.map.y / 5}%` } as React.CSSProperties}
+              className="md:absolute md:top-[var(--y)] md:left-[var(--x)]"
+            >
+              {onSelect ? (
+                <button type="button" onClick={() => onSelect(n.key)} aria-pressed={isFocus} className={cn(row, "transition-opacity hover:opacity-80")}>
+                  {body}
+                </button>
+              ) : n.href && !locked ? (
+                <Link href={n.href} data-cursor="enter" className={cn(row, "transition-opacity hover:opacity-80")}>
+                  {body}
+                </Link>
+              ) : (
+                <div aria-disabled className={row}>
+                  {body}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

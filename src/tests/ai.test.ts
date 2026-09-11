@@ -22,8 +22,11 @@ const call: CompletedCall = {
 
 describe("judge → score composition", () => {
   it("clamps times to the call, dedupes tactics and applies the pass mark itself", () => {
-    const score = composeScore(call, {
-      score: 64.6,
+    const score = composeScore({ ...call, outcome: "hung-up" }, {
+      breakdown: [
+        { label: "Asked for his ID", points: 20 },
+        { label: "Slow to end it", points: -5.4 },
+      ],
       caught: [
         { tactic: "urgency", atSeconds: 30 },
         { tactic: "authority", atSeconds: 8 },
@@ -47,9 +50,32 @@ describe("judge → score composition", () => {
   });
 
   it("always ends the timeline with the end of the call", () => {
-    const score = composeScore(call, { score: 10, caught: [], missed: [], events: [], notes: ["x"] });
+    const score = composeScore({ ...call, outcome: "hung-up" }, { breakdown: [{ label: "x", points: -40 }], caught: [], missed: [], events: [], notes: ["x"] });
     expect(score.events.at(-1)).toEqual({ at: 60_000, label: "ended" });
     expect(score.passed).toBe(false);
+  });
+
+  it("computes the score from the judge's line items, so 'Why N?' always adds up", () => {
+    const items = [
+      { label: "Refused the code", points: 20 },
+      { label: "Checked the official number", points: 10 },
+      { label: "Kept replying after the demand", points: -25 },
+    ];
+    const score = composeScore({ ...call, outcome: "hung-up" }, { breakdown: items, caught: [], missed: [], events: [], notes: ["x"] });
+    expect(score.score).toBe(55);
+    expect(score.breakdown).toMatchObject({ base: 50, items, floor: undefined });
+  });
+
+  it("never fails a player who blocked a scam without giving anything away", () => {
+    const low = { breakdown: [{ label: "Blocked one reply late", points: -5 }], caught: [], missed: [], events: [], notes: ["x"] };
+    const safe = composeScore({ ...call, outcome: "exposed", revealed: [] }, low);
+    expect(safe.score).toBe(75);
+    expect(safe.passed).toBe(true);
+    expect(safe.breakdown?.floor?.to).toBe(75);
+    // …but a reveal still counts: no floor once something was given away.
+    const leaked = composeScore({ ...call, outcome: "exposed", revealed: ["One-time passcode"] }, low);
+    expect(leaked.score).toBe(45);
+    expect(leaked.breakdown?.floor).toBeUndefined();
   });
 });
 

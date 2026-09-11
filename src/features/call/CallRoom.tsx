@@ -1,6 +1,6 @@
 "use client";
 
-import { Mic, MicOff, Phone, PhoneOff, SendHorizontal } from "lucide-react";
+import { Headphones, Mic, MicOff, Phone, PhoneOff, SendHorizontal, Volume2 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -37,7 +37,12 @@ const ON_CALL: CallStatus[] = ["ringing", "live", "ending", "scoring"];
  * with its own caller ID and pretext, before a word is said.
  */
 export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
-  const { answer, choose, sendText, hangUp, toggleMute } = useLiveCall(scenarioId);
+  const { answer, choose, sendText, hangUp, toggleMute, toggleSpeakerMode } = useLiveCall(scenarioId);
+  const speakerMode = useCallStore((s) => s.speakerMode);
+  // The speakers/headphones choice is remembered between calls.
+  useEffect(() => {
+    useCallStore.getState().loadSpeakerMode();
+  }, []);
   const status = useCallStore((s) => s.status);
   // In a live call the director writes a new caller each time.
   const caller = useCallStore((s) => s.caller);
@@ -134,6 +139,8 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
               bonus={bonus}
               precise={precise}
               onPrecise={setPrecise}
+              speakerMode={speakerMode}
+              onSpeaker={toggleSpeakerMode}
               onAnswer={() => answer({ precise })}
             />
           )}
@@ -146,7 +153,7 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
         </section>
       </div>
 
-      {onCall && <Controls muted={muted} status={status} onMute={toggleMute} onEnd={hangUp} />}
+      {onCall && <Controls muted={muted} status={status} onMute={toggleMute} onSpeaker={toggleSpeakerMode} onEnd={hangUp} />}
       <Announcer level={level} />
     </div>
   );
@@ -345,12 +352,16 @@ function Incoming({
   bonus,
   precise,
   onPrecise,
+  speakerMode,
+  onSpeaker,
   onAnswer,
 }: {
   district: District;
   bonus: boolean;
   precise: boolean;
   onPrecise: (v: boolean) => void;
+  speakerMode: boolean;
+  onSpeaker: () => void;
   onAnswer: () => void;
 }) {
   const ai = useAiStatus();
@@ -413,6 +424,21 @@ function Incoming({
             Scripted replies stand in for your voice here. With a Gemini key on the server, this becomes a live AI caller.
           </p>
         )
+      )}
+
+      {live && (
+        <label className="flex max-w-[46ch] cursor-pointer items-start gap-3 text-sm leading-relaxed text-ash">
+          <input
+            type="checkbox"
+            checked={speakerMode}
+            onChange={onSpeaker}
+            className="mt-0.5 size-5 shrink-0 accent-[var(--color-bone)]"
+          />
+          <span>
+            <span className="text-bone">No headphones?</span> Use speaker mode, so the caller can&rsquo;t hear its own voice.
+            <span className="block text-smoke">You take turns: talk when the caller stops. Typing still interrupts.</span>
+          </span>
+        </label>
       )}
 
       <div className="flex flex-wrap items-center gap-3">
@@ -629,6 +655,7 @@ function Conversation({
 function TalkBar({ onSend }: { onSend: (text: string) => void }) {
   const [text, setText] = useState("");
   const muted = useCallStore((s) => s.muted);
+  const speakerMode = useCallStore((s) => s.speakerMode);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -641,7 +668,11 @@ function TalkBar({ onSend }: { onSend: (text: string) => void }) {
   return (
     <form onSubmit={submit} className="mt-3 flex shrink-0 flex-col gap-2 border-t border-line pt-3 lg:mt-6 lg:gap-3 lg:pt-4">
       <p className="meta text-smoke">
-        {muted ? "Muted · type your reply" : "Speak naturally · interrupt any time · or type"}
+        {muted
+          ? "Muted · type your reply"
+          : speakerMode
+            ? "Speaker mode · talk when the caller stops · or type"
+            : "Speak naturally · interrupt any time · or type"}
       </p>
       <div className="flex items-center gap-3">
         <label htmlFor="talk-text" className="sr-only">
@@ -667,14 +698,18 @@ function Controls({
   muted,
   status,
   onMute,
+  onSpeaker,
   onEnd,
 }: {
   muted: boolean;
   status: CallStatus;
   onMute: () => void;
+  onSpeaker: () => void;
   onEnd: () => void;
 }) {
   const agent = useCallStore((s) => s.agent);
+  const mode = useCallStore((s) => s.mode);
+  const speakerMode = useCallStore((s) => s.speakerMode);
   const detected = useCallStore((s) => s.detected);
   const learned = useProgressStore((s) => s.learned);
   const canEnd = status === "live" || status === "ringing";
@@ -691,6 +726,24 @@ function Controls({
       </div>
 
       <div className="flex items-center justify-between gap-3 md:justify-end">
+        {mode === "gemini" && (
+          <Button
+            variant="ghost"
+            size="md"
+            onClick={onSpeaker}
+            aria-pressed={speakerMode}
+            aria-label="Speaker mode"
+            title={speakerMode ? "Speakers: the mic waits while the caller talks" : "Headphones: talk over the caller any time"}
+            className="min-h-14 md:min-h-12"
+          >
+            {speakerMode ? (
+              <Volume2 aria-hidden strokeWidth={1.25} className="size-4" />
+            ) : (
+              <Headphones aria-hidden strokeWidth={1.25} className="size-4" />
+            )}
+            <span className="hidden sm:inline">{speakerMode ? "Speakers" : "Headphones"}</span>
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="md"

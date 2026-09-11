@@ -6,7 +6,7 @@ import { tacticLabel } from "@/content/tactics";
 import { lessonFrom } from "@/features/profile/defense";
 import { LessonNote } from "@/features/profile/Profile";
 import { cn } from "@/lib/cn";
-import type { CallScore } from "@/lib/live/types";
+import type { CallScore, ScoreBreakdown } from "@/lib/live/types";
 import { gsap, MQ, useGSAP } from "@/lib/motion/gsap";
 import { fmt } from "./mock-judge";
 
@@ -149,6 +149,11 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
             <LessonNote lesson={lesson} />
           </div>
         )}
+        {score.breakdown && (
+          <div data-seq>
+            <Breakdown score={score} breakdown={score.breakdown} />
+          </div>
+        )}
         <p data-seq className="meta text-smoke">
           Pass mark {score.threshold} · {chat ? "Conversation" : "Call"} {fmt(score.durationMs)}
           {score.judge === "gemini" && " · Judged by Gemini"}
@@ -184,6 +189,57 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
         </div>
       )}
     </div>
+  );
+}
+
+const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "±0");
+
+/**
+ * "Why 72?": the judge's line items from the starting point, adding up to the
+ * score on screen, and the safety floor when a safe decision lifted it.
+ */
+function Breakdown({ score, breakdown: b }: { score: CallScore; breakdown: ScoreBreakdown }) {
+  const total = Math.max(0, Math.min(100, b.base + b.items.reduce((sum, i) => sum + i.points, 0)));
+  return (
+    <section aria-label={`Why ${score.score}?`} className="max-w-[40rem]">
+      <h3 className="meta mb-3 text-smoke">Why {score.score}?</h3>
+      <dl className="border-t border-line">
+        <div className="flex items-baseline justify-between gap-6 border-b border-line py-2.5">
+          <dt className="text-smoke">Starting point</dt>
+          <dd className="tabular text-ash">{b.base}</dd>
+        </div>
+        {b.items.map((item, i) => (
+          <div key={`${item.label}-${i}`} className="flex items-baseline justify-between gap-6 border-b border-line py-2.5">
+            <dt className="text-bone">{item.label}</dt>
+            <dd className={cn("shrink-0 font-medium tabular", item.points > 0 ? "text-safe" : item.points < 0 ? "text-signal" : "text-smoke")}>
+              {signed(item.points)}
+            </dd>
+          </div>
+        ))}
+        {b.floor && (
+          <>
+            <div className="flex items-baseline justify-between gap-6 border-b border-line py-2.5">
+              <dt className="text-smoke">Line items total</dt>
+              <dd className="tabular text-ash">{total}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-6 border-b border-line py-2.5">
+              <dt className="text-bone">
+                {b.floor.reason}
+                <span className="meta mt-1 block text-safe">A safe decision always passes</span>
+              </dt>
+              <dd className="shrink-0 font-medium tabular text-safe">↑ {b.floor.to}</dd>
+            </div>
+          </>
+        )}
+        <div className="flex items-baseline justify-between gap-6 pt-3">
+          <dt className="meta text-bone">Score</dt>
+          <dd className="font-display text-2xl tabular">
+            {score.score}
+            <span className="meta ml-3 text-smoke">pass mark {score.threshold}</span>
+          </dd>
+        </div>
+      </dl>
+    </section>
   );
 }
 

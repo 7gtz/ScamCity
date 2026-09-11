@@ -1,6 +1,11 @@
 import type { CallScore, CompletedCall, TacticId } from "@/lib/live/types";
 import type { JudgeOutput } from "@/lib/validation/schemas";
-import { PASS_THRESHOLD } from "./mock-judge";
+import { PASS_THRESHOLD, safetyFloor } from "./mock-judge";
+
+/** The AI judge explains its score as line items from this base. */
+export const JUDGE_BASE = 50;
+
+const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
 /** Timeline labels are one or two whole words — never cut mid-word ("threatened to ha"). */
 function shortLabel(label: string) {
@@ -11,8 +16,9 @@ function shortLabel(label: string) {
 
 /**
  * Turns the judge model's structured verdict into the CallScore the UI renders.
- * Times are clamped to the call, duplicates dropped, and the pass mark applied
- * here — never trusted to the model.
+ * The score is the base plus the judge's line items, so "Why 55?" always adds
+ * up; a safe decision is lifted to the floor. Times are clamped to the call,
+ * duplicates dropped, and the pass mark applied here — never trusted to the model.
  */
 export function composeScore(call: CompletedCall, out: JudgeOutput): CallScore {
   const ms = (s: number) => Math.min(call.durationMs, Math.max(0, Math.round(s * 1000)));
@@ -30,7 +36,15 @@ export function composeScore(call: CompletedCall, out: JudgeOutput): CallScore {
     .sort((a, b) => a.at - b.at);
   if (!events.some((e) => e.at >= call.durationMs - 1500)) events.push({ at: call.durationMs, label: "ended" });
 
-  const score = Math.max(0, Math.min(100, Math.round(out.score)));
+  const items = out.breakdown.slice(0, 6).map((i) => ({
+    label: i.label.length > 90 ? `${i.label.slice(0, 87).trimEnd()}…` : i.label,
+    points: Math.round(Math.max(-60, Math.min(60, i.points))),
+  }));
+  const total = clamp(JUDGE_BASE + items.reduce((sum, i) => sum + i.points, 0));
+  const floor = safetyFloor(call);
+  const lifted = floor !== null && total < floor.to;
+  const score = lifted ? floor.to : total;
+
   return {
     sessionId: call.sessionId,
     scenarioId: call.scenarioId,
@@ -47,5 +61,6 @@ export function composeScore(call: CompletedCall, out: JudgeOutput): CallScore {
     notes: out.notes.slice(0, 4).map((n) => (n.length > 320 ? `${n.slice(0, 317).trimEnd()}…` : n)),
     judge: "gemini",
     brief: call.brief,
+    breakdown: { base: JUDGE_BASE, items, floor: lifted ? floor : undefined },
   };
 }
