@@ -4,6 +4,8 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import { SplitReveal } from "@/components/motion/SplitReveal";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { DISTRICTS, type District } from "@/content/districts";
+import { CityMap, type MapKey } from "@/features/districts/CityMap";
+import { CityMapDialog } from "@/features/districts/CityMapDialog";
 import { DistrictArtifact } from "@/features/districts/DistrictArtifact";
 import { cn } from "@/lib/cn";
 import { EASE, gsap, MQ, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
@@ -36,6 +38,8 @@ export function City() {
   const trigger = useRef<ScrollTrigger | null>(null);
   const [active, setActive] = useState(0);
   const [pinned, setPinned] = useState(false);
+  /** The place the map overlay points at; null while it's closed. */
+  const [mapFor, setMapFor] = useState<MapKey | null>(null);
   const lg = useLg();
   const last = DISTRICTS.length - 1;
 
@@ -136,6 +140,7 @@ export function City() {
             <Plate
               key={d.id}
               district={d}
+              onMap={() => setMapFor(d.id)}
               inert={lg && i !== active}
               className={cn(
                 !pinned && "lg:transition-opacity lg:duration-[900ms] lg:ease-out",
@@ -145,11 +150,23 @@ export function City() {
           ))}
         </div>
       </div>
+      <CityMapDialog focus={mapFor} onClose={() => setMapFor(null)} />
     </Section>
   );
 }
 
-function Plate({ district: d, inert, className }: { district: District; inert: boolean; className?: string }) {
+function Plate({
+  district: d,
+  inert,
+  onMap,
+  className,
+}: {
+  district: District;
+  inert: boolean;
+  /** Opens the city map overlay, pointing at this district. */
+  onMap: () => void;
+  className?: string;
+}) {
   return (
     <article
       data-plate
@@ -178,7 +195,26 @@ function Plate({ district: d, inert, className }: { district: District; inert: b
         </span>
 
         <div className="relative flex flex-1 flex-col justify-between gap-10 p-6 lg:p-10">
-          <DistrictArtifact artifact={d.artifact} className="w-full self-end sm:w-[21rem] lg:w-[min(22rem,48%)]" />
+          <div className="flex items-start justify-between gap-6">
+            {/* Where this district sits in the city: a live thumbnail of the same map, opening it full-screen. */}
+            <button
+              type="button"
+              onClick={onMap}
+              data-cursor="view"
+              aria-label={`Show District ${d.number}, ${d.title}, on the city map`}
+              className="group hidden w-[min(16rem,38%)] flex-col gap-2 text-left lg:flex"
+            >
+              <CityMap
+                variant="compact"
+                focus={d.id}
+                className="w-full border border-line bg-ink/60 transition-colors duration-[320ms] group-hover:border-dim"
+              />
+              <span className="meta flex items-center gap-2 text-smoke transition-colors duration-[320ms] group-hover:text-bone">
+                On the city map <span aria-hidden>→</span>
+              </span>
+            </button>
+            <DistrictArtifact artifact={d.artifact} className="ml-auto w-full sm:w-[21rem] lg:w-[min(22rem,48%)]" />
+          </div>
           <div className="flex flex-col gap-4 lg:gap-5">
             <p className="meta text-[color:var(--hue-text)]">
               District {d.number} · Runs on {d.lever.toLowerCase()}
@@ -187,11 +223,12 @@ function Plate({ district: d, inert, className }: { district: District; inert: b
               {d.title}
             </p>
             <p className="lead max-w-[36ch] text-ash">{d.line}</p>
-            {d.scenarioId && (
-              <CtaLink href={`/play/${d.scenarioId}`} className="self-start">
-                Enter the district
-              </CtaLink>
-            )}
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+              {d.scenarioId && <CtaLink href={`/play/${d.scenarioId}`}>Enter the district</CtaLink>}
+              <button type="button" onClick={onMap} className="meta min-h-11 text-smoke transition-colors hover:text-bone lg:hidden">
+                On the city map →
+              </button>
+            </div>
           </div>
         </div>
       </div>

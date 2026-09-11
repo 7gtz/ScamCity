@@ -158,13 +158,13 @@ Order and ids come from **`content/sections.ts`**, which also drives the index m
 | `Section.tsx` | Wrapper for every section | Sets `id`, `data-section="NN"` and `aria-labelledby="{id}-title"`. **Each section must contain an element with id `{id}-title`.** |
 | `Opening.tsx` | Hero ("You're already on the call.") | Reveals on load. |
 | `IncomingCall.tsx` + `RingTimer.tsx` | The first caller | Answer button → `/play/bank-security`; the timer counts while visible. |
-| `City.tsx` | The six districts | **Pinned** on desktop with scroll-scrubbed clip wipes and snapping (`inertia: false`); rows switch plates when not pinned. |
+| `City.tsx` | The six districts | **Pinned** on desktop with scroll-scrubbed clip wipes and snapping (`inertia: false`); rows switch plates when not pinned. Each plate carries a live thumbnail of the city map (`CityMap variant="compact"`, lg) or an "On the city map" button (below lg) that opens `CityMapDialog` pointing at that district. |
 | `Threat.tsx` | "They attack your decision" | **Pinned**, scrubbed, snaps to timeline labels; stacked with CSS grid only while pinned (`data-pinned`). |
 | `Opponent.tsx` | Shows adaptation | A sequence that plays once. |
 | `LiveCallPreview.tsx` | Static preview of the call room | `inert` + `aria-hidden` (it's a picture, not controls). |
 | `Judge.tsx` | An example score report | Hard-coded example, labelled "Example report". |
 | `RiddleSection.tsx` | Embeds `RiddlePlayer` and the false-positive message | |
-| `Progression.tsx` | "Your city" | Reads `progress-store`. **Its `LEVELS` must match `SCENARIO_ORDER`.** |
+| `Progression.tsx` | "Your city" | Renders the shared `features/districts/CityMap` (the same map as the district overlay) and the progress footer. Unlock rules live in one place, `useCityProgress()`; route draw-in animates `[data-route]`/`[data-node]`, which only the full map carries. |
 | `Impact.tsx`, `FinalCta.tsx` | Closing | FinalCta → `/modes`. |
 
 Maximum two pinned sections (City, Threat); more makes mobile scrolling fight the user. Reduced motion and widths under 1024px get no pinning.

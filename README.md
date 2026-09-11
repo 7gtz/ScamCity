@@ -63,7 +63,7 @@ Get a Gemini API key at https://aistudio.google.com/apikey.
 ENTER THE CITY → PICK A DISTRICT → ANSWER THE CALL → TALK / DECIDE → HANG UP OR GET SCAMMED → AI JUDGE → PROGRESS
 ```
 
-1. **Enter the city.** The landing page (`/`) introduces the game. Scroll to *The City*, or open the **Index** menu (top right).
+1. **Enter the city.** The landing page (`/`) introduces the game. Scroll to *The City*, or open the **Index** menu (top right). Each district's plate carries a live thumbnail of the city map; click it (or **On the city map** on a phone) to open the full map as an overlay, pointing at that district, with its status and a way in.
 2. **Pick a district.** Each is a different con:
 
    Six districts, six ways people get manipulated. Each rings with its own caller ID, brand and pretext.
