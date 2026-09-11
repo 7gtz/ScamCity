@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, Lock, LockOpen, RotateCw, ShieldAlert, ShieldCheck, Star, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { gradeDecision, type Decision } from "@/features/encounters/grade";
+import { describeBehaviour, gradeDecision, type Check, type Decision } from "@/features/encounters/grade";
 import { recordEncounter } from "@/features/encounters/record";
 import { Highlight, Verdict } from "@/features/encounters/Verdict";
 import { freestyleEncounter } from "@/features/freestyle/freestyle-store";
@@ -26,6 +26,8 @@ export function WebPlayer() {
   const [fromFreestyle, setFromFreestyle] = useState(false);
   const [decision, setDecision] = useState<Decision | null>(null);
   const [info, setInfo] = useState(false);
+  /** What the player inspected before deciding: the judge comments on it. */
+  const [checked, setChecked] = useState<Check[]>([]);
   const served = useRef<string[]>([]);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export function WebPlayer() {
     setSite(null);
     setDecision(null);
     setInfo(false);
+    setChecked([]);
     const s = await fetchSite({ avoid: served.current });
     served.current.push(`${s.brand} ${s.domain}`);
     setSite(s);
@@ -86,7 +89,10 @@ export function WebPlayer() {
           <div className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-full bg-paper-2 px-2">
             <button
               type="button"
-              onClick={() => setInfo((v) => !v)}
+              onClick={() => {
+                setInfo((v) => !v);
+                if (!decision) setChecked((cs) => (cs.includes("site-info") ? cs : [...cs, "site-info"]));
+              }}
               aria-expanded={info}
               aria-label="View site information"
               className={cn(
@@ -160,8 +166,10 @@ export function WebPlayer() {
         <Verdict
           grade={gradeDecision(site.scam, decision)}
           scam={site.scam}
+          behaviour={describeBehaviour({ scam: site.scam, decision, checked })}
           explanation={site.explanation}
           tells={site.tells}
+          targets={site.targets}
           freestyle={fromFreestyle}
           onNext={() => void next()}
           nextLabel="Next website"

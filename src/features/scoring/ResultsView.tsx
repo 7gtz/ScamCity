@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { nextScenarioId } from "@/content/scenarios";
 import { useFreestyle } from "@/features/freestyle/freestyle-store";
+import { DefenseCard } from "@/features/profile/Profile";
 import { useResultsStore } from "./results-store";
 import { ScoreReport } from "./ScoreReport";
 
@@ -58,6 +59,7 @@ export function ResultsView({ sessionId }: { sessionId: string }) {
             <Link href="/modes">All modes</Link>
           </Button>
         </ScoreReport>
+        <DefenseCard className="mt-24 md:mt-32" />
       </div>
     </Paper>
   );

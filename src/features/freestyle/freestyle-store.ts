@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { EmailEncounter, SiteEncounter } from "@/lib/encounters";
-import type { RealWorldContext } from "@/lib/live/types";
+import type { RealWorldContext, TacticId } from "@/lib/live/types";
 import type { ChatPlan } from "@/lib/validation/schemas";
-import type { Channel, EncounterSpec, Pace } from "./schedule";
+import { goalFor, type Channel, type Difficulty, type EncounterSpec, type Pace } from "./schedule";
 
-/** Falling for a scam costs a life. Lose them all and the day is over. */
+export { GOAL } from "./schedule";
+
+/** Falling for a scam costs a life; so does turning away something genuine. Lose them all and the day is over. */
 export const LIVES = 3;
-/** Encounters to survive to win the day. */
-export const GOAL = 8;
 
 export interface Encounter {
   id: string;
@@ -26,11 +26,19 @@ export interface LogEntry {
   title: string;
   legit: boolean;
   correct: boolean;
+  /** Took a scam's bait. Costs a life. */
   caught: boolean;
   /** Ignored or let ring out. */
   missed?: boolean;
+  difficulty?: Difficulty;
+  /** The tactics this encounter was built around. */
+  targets?: TacticId[];
   at: number;
 }
+
+/** Reported, ignored or hung up on something genuine. Costs a life: distrusting everyone is not a strategy. */
+export const isFalseAlarm = (e: Pick<LogEntry, "legit" | "correct">) => e.legit && !e.correct;
+export const costsLife = (e: Pick<LogEntry, "legit" | "correct" | "caught">) => e.caught || isFalseAlarm(e);
 
 export type FreestyleStatus = "idle" | "active" | "won" | "lost";
 
@@ -55,13 +63,18 @@ interface FreestyleState {
   ring: (encounter: Encounter) => void;
   accept: () => Encounter | null;
   ignore: () => void;
-  resolve: (result: { correct: boolean; caught: boolean; title?: string; legit?: boolean }) => void;
+  /** Walk away from an accepted encounter without deciding (the page was closed or left). */
+  abandon: () => void;
+  resolve: (result: { correct: boolean; caught: boolean; title?: string; legit?: boolean; targets?: TacticId[] }) => void;
 }
 
 const fresh = { lives: LIVES, handled: 0, incoming: null, current: null, log: [] as LogEntry[], nextAt: null };
 
-function settle(s: FreestyleState, entry: LogEntry): Partial<FreestyleState> {
-  const lives = s.lives - (entry.caught ? 1 : 0);
+type Tally = Pick<FreestyleState, "lives" | "handled" | "log" | "pace">;
+
+/** Applies one finished encounter to the day. Pure, so the rules are testable. */
+export function settle(s: Tally, entry: LogEntry) {
+  const lives = s.lives - (costsLife(entry) ? 1 : 0);
   const handled = s.handled + 1;
   return {
     log: [entry, ...s.log],
@@ -70,9 +83,22 @@ function settle(s: FreestyleState, entry: LogEntry): Partial<FreestyleState> {
     incoming: null,
     current: null,
     nextAt: null,
-    status: lives <= 0 ? "lost" : handled >= GOAL ? "won" : "active",
+    status: (lives <= 0 ? "lost" : handled >= goalFor(s.pace) ? "won" : "active") as FreestyleStatus,
   };
 }
+
+/** Walking away is safe for a scam and a miss for something genuine. */
+const walkedAway = (e: Encounter): LogEntry => ({
+  id: e.id,
+  channel: e.spec.channel,
+  title: e.title,
+  legit: e.spec.legit,
+  correct: !e.spec.legit,
+  caught: false,
+  missed: true,
+  difficulty: e.spec.difficulty,
+  at: Date.now(),
+});
 
 /** Freestyle session state. Per browser tab (sessionStorage), survives in-site navigation and reloads. */
 export const useFreestyle = create<FreestyleState>()(
@@ -95,16 +121,29 @@ export const useFreestyle = create<FreestyleState>()(
       },
       ignore: () => {
         const s = get();
-        if (!s.incoming) return;
-        const e = s.incoming;
-        // Ignoring a scam is safe; ignoring something genuine is a miss. Neither costs a life.
-        set(settle(s, { id: e.id, channel: e.spec.channel, title: e.title, legit: e.spec.legit, correct: !e.spec.legit, caught: false, missed: true, at: Date.now() }));
+        if (s.incoming) set(settle(s, walkedAway(s.incoming)));
       },
-      resolve: ({ correct, caught, title, legit }) => {
+      abandon: () => {
+        const s = get();
+        if (s.current && s.status === "active") set(settle(s, walkedAway(s.current)));
+      },
+      resolve: ({ correct, caught, title, legit, targets }) => {
         const s = get();
         const e = s.current;
         if (!e || s.status !== "active") return;
-        set(settle(s, { id: e.id, channel: e.spec.channel, title: title ?? e.title, legit: legit ?? e.spec.legit, correct, caught, at: Date.now() }));
+        set(
+          settle(s, {
+            id: e.id,
+            channel: e.spec.channel,
+            title: title ?? e.title,
+            legit: legit ?? e.spec.legit,
+            correct,
+            caught,
+            difficulty: e.spec.difficulty,
+            targets,
+            at: Date.now(),
+          }),
+        );
       },
     }),
     {
@@ -114,6 +153,16 @@ export const useFreestyle = create<FreestyleState>()(
     },
   ),
 );
+
+/** The day so far, in the terms the HUD shows. */
+export function tally(log: LogEntry[]) {
+  return {
+    scamsStopped: log.filter((l) => !l.legit && l.correct).length,
+    genuineTrusted: log.filter((l) => l.legit && l.correct).length,
+    falseAlarms: log.filter(isFalseAlarm).length,
+    scammed: log.filter((l) => l.caught).length,
+  };
+}
 
 /** Where an accepted encounter is played. */
 export function routeFor(e: Encounter) {

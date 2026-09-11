@@ -219,11 +219,12 @@ Scam-or-genuine and then category, as native radio groups. The first riddle is b
 
 | File | Why | What it does |
 |---|---|---|
-| `schedule.ts` | The rules, as pure functions | `firstDelay()` is always under 20 s; paces (`intense \| normal \| relaxed`); `pickEncounter()` chooses the channel mix, about 30% genuine, and difficulty that ramps. Unit-tested. |
-| `freestyle-store.ts` | Session state | sessionStorage `scam-city:freestyle`. `status`, `lives` (3), `handled` (goal 8), `incoming` (arrived), `current` (accepted), `log`, `nextAt`, `context`. Actions: `wake`, `stop`, `ring`, `accept`, `ignore`, `resolve`. Also `routeFor(encounter)` and `freestyleEncounter(channel)`. |
-| `FreestyleEngine.tsx` | The clock (mounted globally) | Schedules the next encounter and **prepares its content ahead of time** (so it arrives on time). It pauses while an encounter is `incoming` or `current`, or while a call is active. It fires a desktop notification plus the in-app **IncomingCard**, which rings and auto-ignores after 30 s. Answer → `router.push(routeFor(e))`. |
-| `FreestyleConsole.tsx` | `/freestyle` | Wake up (**inside the click**: requests notification permission and unlocks the ringtone audio), then the live log, then the win or lose screen. |
-| `FreestylePill.tsx` | "You're still awake" | A fixed status chip (lives, progress). Hidden in `/play` and on `/freestyle`. |
+| `schedule.ts` | The rules, as pure functions | `firstDelay()` is always under 20 s; paces (`demo \| intense \| normal \| relaxed`); `goalFor(pace)` (8, or 3 in the demo); `ceilingFor()` (difficulty climbs every 3 encounters, every 1 in the demo); `pickEncounter(handled, r, { pace, genuineSeen })` chooses the channel mix, about 30% genuine with at least `MIN_GENUINE` (2) per day, and runs the demo as email → sms → call. Unit-tested. |
+| `freestyle-store.ts` | Session state | sessionStorage `scam-city:freestyle`. `status`, `lives` (3), `handled`, `incoming` (arrived), `current` (accepted), `log`, `nextAt`, `context`, `pace`. Actions: `wake`, `stop`, `ring`, `accept`, `ignore`, `abandon`, `resolve`. **`settle()` is the rule book:** a life is lost when scammed **or** on a false alarm (anything genuine reported, ignored or not verified; `isFalseAlarm`/`costsLife`). Also `tally(log)`, `routeFor(encounter)` and `freestyleEncounter(channel)`. |
+| `FreestyleEngine.tsx` | The clock (mounted globally) | Schedules the next encounter and **prepares its content ahead of time** (so it arrives on time). It pauses while an encounter is `incoming` or `current`, or while a call is active. It fires a desktop notification plus the in-app **IncomingCard**, drawn as an OS notification (heads-up at the top on phones, bottom-right on desktop, a `ring-out` hairline for the 30 s ring, `buzz` on calls). It auto-ignores after 30 s. Answer → `router.push(routeFor(e))`. |
+| `FreestyleConsole.tsx` | `/freestyle` | Wake up (**inside the click**: requests notification permission and unlocks the ringtone audio). `?demo=1` preselects the demo pace (read with `useSyncExternalStore`, since the page is static). Active: `DayHud`, a "Still open" block (Go back to it / Walk away → `abandon`) so a half-played encounter can't stall the clock, "The city is learning", the log. End: `DefenseCard`. |
+| `DayHud.tsx` | The day at a glance | `DayHud` (lives, survived, level, encounter track, scams stopped / genuine trusted / false alarms), plus `Lives`, `EncounterTrack`, `outcomeWord`. |
+| `FreestylePill.tsx` | "You're still awake" | A fixed status chip (lives, progress, level). Hidden in `/play` (the call room's header carries a `FreestyleChip`) and on `/freestyle`. |
 | `ringtone.ts` | Call ring | A synthesised two-tone ring (no audio files). It only plays after Wake Up has unlocked audio. |
 
 **The Freestyle contract:**
@@ -235,9 +236,9 @@ Scam-or-genuine and then category, as native radio groups. The first riddle is b
 
 | File | Why | What it does |
 |---|---|---|
-| `encounters/grade.ts` | One grading rule for every channel | `report` / `trust` / `engaged`. Engaging with a scam = caught (costs a Freestyle life). Reporting something genuine = wrong. |
-| `encounters/record.ts` | One player model across channels | Updates learned and weak tactics (which steer every generator) and resolves Freestyle. |
-| `encounters/Verdict.tsx` | The verdict panel | Headline, explanation, "what gave it away" list; `Highlight` underlines the quoted clue text in place. |
+| `encounters/grade.ts` | One grading rule for every channel | `report` / `trust` / `engaged`. Engaging with a scam = caught (costs a Freestyle life). Reporting something genuine = a false alarm (also costs a life). `describeBehaviour({ scam, decision, checked })` writes the judge's one-sentence read of what the player did, from what they inspected (`link`, `sender`, `site-info`). |
+| `encounters/record.ts` | One player model across channels | Updates learned, weak and strong tactics (which steer every generator) and resolves Freestyle. |
+| `encounters/Verdict.tsx` | The verdict panel | Headline, behaviour sentence, explanation, `LessonNote` ("The city noticed"), the Freestyle consequence (−1 life), and at most 3 clues; `Highlight` underlines the quoted clue text in place. Inbox and Web track `checked` **only before the decision**, so the sentence can't change afterwards. |
 | `inbox/InboxPlayer.tsx` | Email and phishing | Mail client in "paper" tokens. Body paragraphs contain `[link:N]` markers that become buttons. **Hover (or first tap on touch) shows the link's real `actualUrl`** in a status bar, which is the core lesson. "To me" reveals the reply-to. Opening a link or attachment = engaged. |
 | `web/WebPlayer.tsx` | Scam websites | Simulated browser: tab, address bar, padlock → site-info panel (https, **domain age**, certificate). `SitePage` renders the generated JSON; submitting the form or adding to cart = engaged. Brand accent colours are content, not game UI. |
 | `messages/ChatPlayer.tsx` | Social engineering by text | Phone-style chat. Each turn calls `/api/chat` (reply plus the analyst's read). The contact can end the chat itself. "Block & report" / "End conversation" → `scoreCall` → results (`channel: "sms"`). Without AI it shows an "unavailable" state. |
@@ -247,7 +248,8 @@ Generated content is rendered as **text**. The AI never produces HTML, which pre
 ### 6.6 Modes and progress
 
 - **`modes/ModeRing.tsx`:** the 3D menu. Six plates on a `rotateY` ring (`preserve-3d`), sized from the container width; the title size comes from the plate width. Drag, arrow keys and buttons turn it, and the front plate is the link. Reduced motion → `FlatModes` grid. Data in `content/modes.ts`.
-- **`progress/progress-store.ts`:** localStorage `scam-city:progress`. Stores `cleared` levels, `learned` tactics (the HUD only shows learned red flags), `weak` tactic counts (the adaptive target for every AI generator), `recentHooks` (so the director never repeats a caller), and riddle accuracy. `weakest()` picks the targets.
+- **`progress/progress-store.ts`:** localStorage `scam-city:progress`. Stores `cleared` levels, `learned` tactics (the HUD only shows learned red flags), `weak` tactic counts (the adaptive target for every AI generator), `strong` tactic counts (caught), `recentHooks` (so the director never repeats a caller), and riddle accuracy. `weakest()` picks the targets.
+- **`profile/defense.ts`** (pure, unit-tested): `defenseProfile({ weak, strong, falseAlarms, trusted })` → archetype, strong/weak tactic, next-threat district (each district has a `lever`: Authority, Urgency, Fear, Greed, Obedience, Trust). `lessonFrom(...)` → the one-line "The city noticed" evidence after an encounter. **Keep it honest:** it must only claim what `recordTactics` actually feeds the generators. `profile/Profile.tsx` renders `LessonNote` and `DefenseCard` (on results and the Freestyle end screen).
 
 ---
 

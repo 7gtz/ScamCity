@@ -319,6 +319,16 @@ html.has-custom-cursor textarea {
   animation: buzz 3s linear infinite;
 }
 
+/* An incoming notification's time running out. */
+@keyframes ring-out {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 /* A verdict stamped onto the evidence. */
 @keyframes stamp-in {
   0% {

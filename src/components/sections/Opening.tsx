@@ -1,10 +1,15 @@
+import Link from "next/link";
 import { CityRain } from "@/components/gl/CityRain";
 import { Reveal } from "@/components/motion/Reveal";
 import { SplitReveal } from "@/components/motion/SplitReveal";
+import { Button } from "@/components/ui/Button";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { Section } from "./Section";
 
-/** 01 — Curiosity first; explain nothing yet (brief §8). */
+/**
+ * Curiosity first; explain nothing yet (brief §8). The first action is the
+ * game itself: wake up in Freestyle, or take one call.
+ */
 export function Opening() {
   return (
     <Section
@@ -27,11 +32,21 @@ export function Opening() {
         />
 
         <Reveal trigger="load" delay={1.2} className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-          <p data-reveal className="lead max-w-[30ch] text-ash">
-            An AI is trying to convince you of something.
+          <p data-reveal className="lead max-w-[34ch] text-ash">
+            An AI is trying to convince you of something. It learns what works on you.
           </p>
-          <div data-reveal>
-            <CtaLink href="#incoming">Enter the city</CtaLink>
+          <div data-reveal className="flex flex-col gap-4 md:items-end">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+              <Button asChild>
+                <Link href="/freestyle" data-cursor="enter">
+                  Wake up
+                </Link>
+              </Button>
+              <CtaLink href="#incoming">Or take one call</CtaLink>
+            </div>
+            <Link href="/freestyle?demo=1" className="meta min-h-11 content-center text-smoke transition-colors hover:text-bone">
+              Judging? The three-minute demo →
+            </Link>
           </div>
         </Reveal>
       </div>

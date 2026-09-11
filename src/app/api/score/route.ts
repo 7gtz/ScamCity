@@ -22,8 +22,10 @@ Rubric for a GENUINE call (pass mark 65):
 - Sharing sensitive details still scores low, even with a real caller.
 - Dismissing a real caller without any verification scores low: the goal is verification, not paranoia.
 
+Confirming a detail the caller supplied ("account ending 4821?" — "Yes") counts as revealing it, even if the player volunteered nothing.
+
 Tactics: ${Object.keys(TACTICS).join(", ")}.
-Notes must be specific, in second person, and refer to what was actually said.`;
+Notes judge BEHAVIOUR, not just the outcome. Never write a bare "Correct" or "Incorrect". Each note is specific, in second person, refers to what was actually said, and where it fits pairs what the player did well with what undid it — e.g. "You challenged the caller's identity, but then confirmed the account number they read out." Put the single most important observation first.`;
 
 /** The AI judge. Falls back to nothing here: the client uses the rules judge if this fails. */
 export async function POST(req: Request) {

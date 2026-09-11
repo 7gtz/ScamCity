@@ -16,6 +16,7 @@ function turnSystem(plan: ChatPlan, difficulty: number) {
   const who = plan.scam
     ? `You are ${plan.contactName} (${plan.contactLabel}) on ${plan.platform}, secretly a social engineer. Pattern: ${plan.pattern}. Objective: ${plan.objective}
 Reach for tactics roughly in this order: ${plan.tacticPlan.join(" → ")}. When the player complies, escalate. When challenged, don't repeat the same tactic — pivot. Difficulty ${difficulty} of 3.
+Read the player and never be predictable: if they stay defensive, reframe instead of arguing (agree with their caution, back off, sound hurt, offer "proof" or a number of your own); volunteer a believable detail and invite them to confirm it.
 Tactics:
 ${tactics}`
     : `You are ${plan.contactName} (${plan.contactLabel}) on ${plan.platform}, a GENUINE contact. ${plan.objective} You never ask for codes, passwords or money, and you're happy to be verified another way.`;
@@ -26,7 +27,7 @@ Facts you can use:
 ${plan.facts.map((f) => `- ${f}`).join("\n")}
 
 Write "reply" as your next message in natural texting style — short, casual, sometimes two short lines. Stay in character; never mention AI or games unless the player is distressed or says "stop" (then say it's a training game and set end to "hung-up").
-Also report, as the game's analyst: tactics used in your reply; tactics the player has explicitly recognised or resisted so far; kinds of sensitive detail the player has given (never the values); how guarded the player is (suspicion 0–1).
+Also report, as the game's analyst: tactics used in your reply; tactics the player has explicitly recognised or resisted so far; kinds of sensitive detail the player has given, including details you supplied that they confirmed (never the values); how guarded the player is (suspicion 0–1).
 Set "end" when the conversation reaches an outcome — scam: "scammed" if they handed over what you wanted, "exposed" if they refused and said they'd verify/block/report; genuine: "verified-legit" or "rejected-legit". Otherwise "none".`;
 }
 

@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/Button";
 import { Meter } from "@/components/ui/Meter";
 import { BONUS, DISTRICTS, type District } from "@/content/districts";
 import { tacticLabel } from "@/content/tactics";
+import { Lives } from "@/features/freestyle/DayHud";
 import { useFreestyle } from "@/features/freestyle/freestyle-store";
+import { goalFor } from "@/features/freestyle/schedule";
 import { startRing, stopRing, unlockRingtone } from "@/features/freestyle/ringtone";
 import { useProgressStore } from "@/features/progress/progress-store";
 import { fmt } from "@/features/scoring/mock-judge";
@@ -240,6 +242,7 @@ function Hud({ level, status }: { level: string; status: CallStatus }) {
         {mode && (
           <span className="hidden border border-line px-2 py-0.5 md:inline">{mode === "gemini" ? "Live AI" : "Simulation"}</span>
         )}
+        <FreestyleChip />
       </div>
       <div className="meta flex items-center gap-4 lg:gap-6">
         {status === "live" && (
@@ -262,6 +265,24 @@ function Hud({ level, status }: { level: string; status: CallStatus }) {
         <CallTimer />
       </div>
     </header>
+  );
+}
+
+/** A Freestyle call is one encounter of the day: keep the day's stakes in view. */
+function FreestyleChip() {
+  const status = useFreestyle((s) => s.status);
+  const lives = useFreestyle((s) => s.lives);
+  const handled = useFreestyle((s) => s.handled);
+  const pace = useFreestyle((s) => s.pace);
+  if (status !== "active") return null;
+  return (
+    <span className="hidden items-center gap-2 border border-line px-2 py-0.5 text-ash sm:flex">
+      Freestyle
+      <Lives lives={lives} />
+      <span className="tabular text-smoke">
+        {Math.min(handled + 1, goalFor(pace))}/{goalFor(pace)}
+      </span>
+    </span>
   );
 }
 
@@ -402,18 +423,6 @@ function Incoming({
         </Button>
       </div>
 
-      {live && ai?.models && (
-        <dl className="meta grid max-w-[46ch] grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-dim">
-          <dt>Director</dt>
-          <dd className="text-smoke normal-case tracking-[0.04em]">{ai.models.director}</dd>
-          <dt>Voice</dt>
-          <dd className="text-smoke normal-case tracking-[0.04em]">{ai.models.live}</dd>
-          <dt>Analyst</dt>
-          <dd className="text-smoke normal-case tracking-[0.04em]">{ai.models.analyst}</dd>
-          <dt>Judge</dt>
-          <dd className="text-smoke normal-case tracking-[0.04em]">{ai.models.judge}</dd>
-        </dl>
-      )}
     </div>
   );
 }

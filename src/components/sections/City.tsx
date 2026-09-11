@@ -181,7 +181,7 @@ function Plate({ district: d, inert, className }: { district: District; inert: b
           <DistrictArtifact artifact={d.artifact} className="w-full self-end sm:w-[21rem] lg:w-[min(22rem,48%)]" />
           <div className="flex flex-col gap-4 lg:gap-5">
             <p className="meta text-[color:var(--hue-text)]">
-              District {d.number} · {d.department}
+              District {d.number} · Runs on {d.lever.toLowerCase()}
             </p>
             <p className="font-display text-[clamp(2.25rem,9vw,4rem)] leading-[0.9] font-[380] tracking-[-0.03em] uppercase lg:text-[clamp(3rem,6vw,6.5rem)]">
               {d.title}

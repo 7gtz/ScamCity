@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GOAL, LIVES, useFreestyle } from "./freestyle-store";
+import { Lives } from "./DayHud";
+import { useFreestyle } from "./freestyle-store";
+import { ceilingFor, goalFor } from "./schedule";
 
-/** Always-visible reminder that the city is awake. Hidden inside the call room. */
+/** Always-visible reminder that the city is awake. The call room carries its own chip. */
 export function FreestylePill() {
   const status = useFreestyle((s) => s.status);
   const lives = useFreestyle((s) => s.lives);
   const handled = useFreestyle((s) => s.handled);
+  const pace = useFreestyle((s) => s.pace);
   const pathname = usePathname();
 
   if (status === "idle" || pathname.startsWith("/play") || pathname === "/freestyle") return null;
@@ -22,13 +25,11 @@ export function FreestylePill() {
         <>
           <span aria-hidden className="live-dot" />
           Active
-          <span className="text-smoke" aria-label={`${lives} of ${LIVES} lives`}>
-            {"♥".repeat(lives)}
-            <span className="text-dim">{"♥".repeat(LIVES - lives)}</span>
-          </span>
+          <Lives lives={lives} />
           <span className="tabular text-smoke">
-            {handled}/{GOAL}
+            {handled}/{goalFor(pace)}
           </span>
+          <span className="text-smoke">Lv {ceilingFor(handled, pace)}</span>
         </>
       ) : (
         <>Freestyle over · {status === "won" ? "you made it" : "they got you"} →</>

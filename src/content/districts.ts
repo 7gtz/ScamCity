@@ -17,6 +17,8 @@ export interface District {
   /** Progression-list name (brief §18). */
   level: string;
   line: string;
+  /** The human lever the district's con pulls: six districts, six ways people get manipulated. */
+  lever: "Authority" | "Urgency" | "Fear" | "Greed" | "Obedience" | "Trust";
   scenarioId?: string;
   image?: string;
   /**
@@ -45,6 +47,7 @@ export const DISTRICTS: District[] = [
     number: "01",
     title: "The Bank",
     level: "Bank security",
+    lever: "Authority",
     line: "A calm voice from account security. Something is wrong with your money.",
     scenarioId: "bank-security",
     hue: "#4f7185",
@@ -70,6 +73,7 @@ export const DISTRICTS: District[] = [
     number: "02",
     title: "The Delivery",
     level: "Delivery",
+    lever: "Urgency",
     line: "A parcel you weren't expecting. A small fee you didn't owe.",
     scenarioId: "parcel-hold",
     hue: "#b4774d",
@@ -96,6 +100,7 @@ export const DISTRICTS: District[] = [
     number: "03",
     title: "The Desk",
     level: "Tech support",
+    lever: "Fear",
     line: "Your computer is infected. They can fix it — if you let them in.",
     scenarioId: "desk-support",
     hue: "#66758f",
@@ -122,6 +127,7 @@ export const DISTRICTS: District[] = [
     number: "04",
     title: "The Prize",
     level: "Prize & reward",
+    lever: "Greed",
     line: "You've won. There is only one small step before it's yours.",
     scenarioId: "prize-claim",
     hue: "#a88a4a",
@@ -147,6 +153,7 @@ export const DISTRICTS: District[] = [
     number: "05",
     title: "The Impostor",
     level: "Executive impersonation",
+    lever: "Obedience",
     line: "Your manager needs a favour. Quietly, and before the end of the day.",
     scenarioId: "ceo-favour",
     hue: "#70677e",
@@ -168,6 +175,7 @@ export const DISTRICTS: District[] = [
     number: "06",
     title: "The Romance",
     level: "Romance",
+    lever: "Trust",
     line: "Months of warmth. Then one emergency only you can solve.",
     scenarioId: "romance-emergency",
     hue: "#9a5d68",

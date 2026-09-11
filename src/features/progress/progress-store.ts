@@ -13,8 +13,10 @@ interface ProgressState {
    * so the HUD teaches without spoiling (spec "Gamification Layer").
    */
   learned: TacticId[];
-  /** How often each tactic has slipped past this player. Steers generated riddles. */
+  /** How often each tactic has slipped past this player. Steers every generator and the director. */
   weak: Partial<Record<TacticId, number>>;
+  /** How often the player has caught each tactic. With `weak`, it draws the defense profile. */
+  strong: Partial<Record<TacticId, number>>;
   /** Recent call pretexts, so the director never repeats itself. */
   recentHooks: string[];
   riddle: { answered: number; correct: number; seen: string[] };
@@ -31,6 +33,7 @@ const initial = {
   cleared: [] as string[],
   learned: ["authority", "urgency"] as TacticId[],
   weak: {} as Partial<Record<TacticId, number>>,
+  strong: {} as Partial<Record<TacticId, number>>,
   recentHooks: [] as string[],
   riddle: { answered: 0, correct: 0, seen: [] as string[] },
 };
@@ -54,9 +57,13 @@ export const useProgressStore = create<ProgressState>()(
       recordTactics: (missed, caught) =>
         set((s) => {
           const weak = { ...s.weak };
+          const strong = { ...s.strong };
           for (const t of missed) weak[t] = (weak[t] ?? 0) + 1;
-          for (const t of caught) weak[t] = Math.max(0, (weak[t] ?? 0) - 1);
-          return { weak };
+          for (const t of caught) {
+            weak[t] = Math.max(0, (weak[t] ?? 0) - 1);
+            strong[t] = (strong[t] ?? 0) + 1;
+          }
+          return { weak, strong };
         }),
       answerRiddle: (id, correct) =>
         set((s) =>

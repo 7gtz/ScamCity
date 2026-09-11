@@ -3,6 +3,8 @@
 import { useRef } from "react";
 import { Counter } from "@/components/motion/Counter";
 import { tacticLabel } from "@/content/tactics";
+import { lessonFrom } from "@/features/profile/defense";
+import { LessonNote } from "@/features/profile/Profile";
 import { cn } from "@/lib/cn";
 import type { CallScore } from "@/lib/live/types";
 import { gsap, MQ, useGSAP } from "@/lib/motion/gsap";
@@ -73,6 +75,12 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
       ? [{ key: "legit", label: score.outcome === "rejected-legit" ? "Rejected a legitimate caller" : "Verify a genuine caller" }]
       : []),
   ];
+  const lesson = lessonFrom({
+    missed: score.missed,
+    caught: score.caught.map((c) => c.tactic),
+    legit: score.legitimate,
+    rejectedGenuine: legitRejected,
+  });
   const caught: { key: string; label: string; at?: number }[] = score.legitimate
     ? legitRejected
       ? []
@@ -134,6 +142,11 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
         <p data-seq className="font-display text-[clamp(1.5rem,2.8vw,2.5rem)] leading-tight tracking-[-0.01em]">
           {summary}
         </p>
+        {lesson && (
+          <div data-seq>
+            <LessonNote lesson={lesson} />
+          </div>
+        )}
         <p data-seq className="meta text-smoke">
           Pass mark {score.threshold} · Call {fmt(score.durationMs)}
           {score.judge === "gemini" && " · Judged by Gemini"}

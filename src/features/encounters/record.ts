@@ -21,6 +21,6 @@ export function recordEncounter(r: {
 
   const freestyle = useFreestyle.getState();
   if (freestyle.current?.spec.channel === r.channel) {
-    freestyle.resolve({ correct: r.correct, caught: r.caught, title: r.title, legit: !r.scam });
+    freestyle.resolve({ correct: r.correct, caught: r.caught, title: r.title, legit: !r.scam, targets: r.targets });
   }
 }

@@ -66,21 +66,25 @@ ENTER THE CITY → PICK A DISTRICT → ANSWER THE CALL → TALK / DECIDE → HAN
 1. **Enter the city.** The landing page (`/`) introduces the game. Scroll to *The City*, or open the **Index** menu (top right).
 2. **Pick a district.** Each is a different con:
 
-   | # | District | Call | Route |
-   |---|---|---|---|
-   | 01 | The Bank | Account-security impersonation | `/play/bank-security` |
-   | 02 | The Bank | A **genuine** fraud alert (verify, don't dismiss) | `/play/card-alert` |
-   | 03 | The Delivery | Redelivery fee / payment link | `/play/parcel-hold` |
-   | 04 | The Desk | Tech support / remote access | `/play/desk-support` |
-   | 05 | The Prize | "You've won" / release fee | `/play/prize-claim` |
-   | 06 | The Impostor | Executive gift-card favour | `/play/ceo-favour` |
-   | 07 | The Romance | Online partner's emergency | `/play/romance-emergency` |
+   Six districts, six ways people get manipulated. Each rings with its own caller ID, brand and pretext.
+
+   | # | District | Runs on | Call | Route |
+   |---|---|---|---|---|
+   | 01 | The Bank | Authority | Account-security impersonation | `/play/bank-security` |
+   | 02 | The Delivery | Urgency | Redelivery fee / payment link | `/play/parcel-hold` |
+   | 03 | The Desk | Fear | Tech support / remote access | `/play/desk-support` |
+   | 04 | The Prize | Greed | "You've won" / release fee | `/play/prize-claim` |
+   | 05 | The Impostor | Obedience | Executive gift-card favour | `/play/ceo-favour` |
+   | 06 | The Romance | Trust | Online partner's emergency | `/play/romance-emergency` |
+   | Bonus | The legitimate call | Verification | A **genuine** fraud alert (verify, don't dismiss) | `/play/card-alert` |
+
+   The legitimate call is a bonus on a spur off the Bank, not a seventh district. It opens once you clear the Bank or solve 3 riddles, and leads back onto the route.
 
 3. **Answer the call.** Press **Answer the call**. In live mode, allow the microphone. You can optionally let the caller use your real location and weather.
 4. **Talk.** Speak naturally, as you would on a real call. Question the caller, ask for proof, refuse, or play along. You can interrupt the caller mid-sentence. In a noisy room, type into the reply box instead.
-5. **Decide.** Hang up with **End call** whenever you like, or let the call reach its end: the caller hangs up on its own when you've been scammed, exposed it, or verified it.
-6. **Read the verdict.** The judge shows your score (pass mark 65), the tactics you caught and missed, a suspicion timeline, and notes quoting the call.
-7. **Progress.** Passing a call clears the level (see *Your City* on the landing page). Scoring 3 correct in Riddle Mode unlocks level 02 early.
+5. **Decide.** Hang up with **Hang up** whenever you like, or let the call reach its end: the caller hangs up on its own when you've been scammed, exposed it, or verified it.
+6. **Read the verdict.** One stamped result first (score out of 100, pass mark 65), then the tactics you caught and missed, what the city learned from you, a suspicion timeline, and the judge's notes on your behaviour, quoting the call. Your defense profile sits underneath.
+7. **Progress.** Passing a call clears the district and opens the next on the *Your City* transit map.
 
 ### Controls
 
@@ -90,8 +94,8 @@ ENTER THE CITY → PICK A DISTRICT → ANSWER THE CALL → TALK / DECIDE → HAN
 | Talk | Just speak (live mode) |
 | Type a reply | Reply box under the transcript (live mode) |
 | Pick a scripted reply | Click it, or press **1** / **2** / **3** (simulation mode) |
-| Mute / unmute the mic | **M**, or the **Mic active** button |
-| Hang up | **End call** |
+| Mute / unmute the mic | **M**, or the **Mic on** button |
+| Hang up | **Hang up** |
 | Skip the results animation | Click or press any key |
 | Section index | **Index** (top right) |
 
@@ -99,7 +103,10 @@ ENTER THE CITY → PICK A DISTRICT → ANSWER THE CALL → TALK / DECIDE → HAN
 
 - **Suspicion meter:** how guarded you are acting, as read by the AI analyst each turn. It turns red when high.
 - **Red-flag chips:** tactics you have already learned. A chip lights up when you catch that tactic. Tactics you haven't learned stay hidden, so the HUD teaches without spoiling.
+- **Pressure line:** a hairline across the call room that grows and turns amber, then red, as the caller escalates. "Caller changed tactic" flashes on a pivot, without naming the tactic: spotting it is your job.
 - **In play:** the real-world details the caller can use against you.
+- **The city noticed:** after every call, email, site or chat, one line on what got past you (or what you shut down) and what the next encounter may lean on. This is the same player model every generator actually reads.
+- **Defense profile:** an archetype (the Skeptic, the Accommodator, the Verifier, the Realist), the tactic you're strongest against, the one that works on you, and the district most likely to test you next.
 
 ### Riddle Mode (`/riddle`)
 
@@ -117,14 +124,22 @@ Choose a mode from the 3D ring. Drag it, swipe it, or use the arrow keys; the pl
 
 | Mode | Route | What happens |
 |---|---|---|
-| **Freestyle** | `/freestyle` | Press **Wake up**, allow notifications, and carry on with your day. Calls, emails, texts and links arrive as desktop notifications at random times: the first within 20 seconds, then at the pace you pick (Intense 15–40 s, Normal 45 s–2 min, Relaxed 2–5 min). Difficulty ramps up and about 30% are genuine. You have 3 lives, and falling for a scam costs one. Survive 8 encounters to win the day. |
+| **Freestyle** (the main game) | `/freestyle` | Press **Wake up**, allow notifications, and carry on with your day. Calls, emails, texts and links arrive as desktop notifications at random times: the first within 20 seconds, then at the pace you pick (Intense 15–40 s, Normal 45 s–2 min, Relaxed 2–5 min). About 30% are genuine, and never fewer than 2 in a day. You have 3 lives: **falling for a scam costs one, and so does turning away something genuine** (reporting it, ignoring it, or hanging up without verifying). Distrusting everything is not a strategy. Difficulty climbs every three encounters (Approachable → Polished → Subtle). Survive 8 to win the day. The HUD shows lives, an encounter track, the level, scams stopped, genuine contacts trusted and false alarms. |
 | **Calls** | `/play` | A live AI voice caller (see above). |
 | **Inbox** | `/inbox` | An AI-written email in a real-feeling mail client. Hover links to see where they really go, open the sender details to check the reply-to, look at attachments, then report it or mark it safe. |
 | **Messages** | `/messages` | A live AI texting conversation, for example "Hi Mum, new number", a fake recruiter, a friend asking for an OTP, or a genuine contact. It adapts to every reply, and the AI judge scores the thread. |
 | **Web** | `/web` | An AI-written website in a simulated browser: a lookalike login, a shop, an investment site or a delivery fee. The address bar, the padlock's site info (domain age) and the form are the clues. Using a scam site counts as being caught. |
 | **Riddles** | `/riddle` | Quick scam-or-genuine training. |
 
-Keep the tab open during Freestyle; you can browse other tabs, and desktop notifications will reach you. Clicking a notification brings SCAM CITY forward, and you answer on the in-app card.
+Keep the tab open during Freestyle; you can browse other tabs, and desktop notifications will reach you. Clicking a notification brings SCAM CITY forward, and you answer on the in-app card (drawn like an OS notification; its hairline runs out with the 30-second ring). If you leave an encounter half-played, `/freestyle` offers **Go back to it** or **Walk away**.
+
+### The three-minute demo (for judges)
+
+Open `/freestyle?demo=1` (or **Judging? The three-minute demo** on the landing page) and press **Wake up**. Three encounters arrive back to back, each one level harder:
+
+1. **A scam email.** Decide, and the verdict tells you what you checked, what gave it away, and what the city noticed.
+2. **A text in a different channel**, aimed at whatever the email exposed. The contact replies live and adapts. Without a Gemini key, a scam website arrives instead.
+3. **A live call**, sometimes genuine. The judge scores it and your defense profile appears.
 
 ### How the expansion meets the brief
 
@@ -158,9 +173,9 @@ Five AI roles, each load-bearing. Remove any of them and a core system disappear
 | Role | Model (default) | Job |
 |---|---|---|
 | **Director** | `gemini-3.5-flash-lite` | Before every call, writes a unique plan: caller name, organisation, voice, pretext, facts and tactic order. The plan is aimed at the tactics this player keeps missing, scaled to their record, and never repeats a recent pretext. In districts 3–7, about one call in five is secretly **genuine**. |
-| **Caller** | `gemini-3.1-flash-live-preview` | Performs the plan as a real-time voice call. Escalates when you comply, and pivots to a new tactic when you challenge it. Hangs up on its own through an `end_call` tool. |
+| **Caller** | `gemini-3.1-flash-live-preview` | Performs the plan as a real-time voice call. Escalates when you comply, and pivots to a new tactic when you challenge it. It reads the player: if you stay defensive it reframes instead of arguing (agrees with your caution, backs off, offers its own "callback number", sounds hurt), and it volunteers a believable detail to get you to confirm it. Hangs up on its own through an `end_call` tool. |
 | **Analyst** | `gemini-3.5-flash-lite` | After every caller turn, reads the transcript and returns structured state: your suspicion, the tactics in play, what you detected and what you revealed. This drives the HUD. |
-| **Judge** | `gemini-3.8-flash` | Scores the whole transcript against a rubric covering verifying questions, how early suspicion appeared, tactics caught, information revealed, and the final decision. Pass mark and time clamping are enforced in code, not trusted to the model. |
+| **Judge** | `gemini-3.8-flash` | Scores the whole transcript against a rubric covering verifying questions, how early suspicion appeared, tactics caught, information revealed (confirming a detail the caller read out counts), and the final decision. Its notes judge behaviour, never a bare "correct": "You challenged the caller's identity, but then confirmed the account number they read out." Pass mark and time clamping are enforced in code, not trusted to the model. Emails and sites get the same treatment from rules: the verdict says what you inspected (links, sender details, site information) before you decided. |
 | **Game master** | `gemini-3.5-flash-lite` | Writes Riddle Mode scenarios adapted to your weak tactics and your location. |
 
 **What happens if you remove the AI?** There is no caller, nothing adapts, no two calls differ, nothing judges your decisions, and no riddles are written. The whole game collapses into a static quiz.
@@ -274,7 +289,10 @@ src/
     call/                     CallRoom, state machine, store, useLiveCall
     scoring/                  ScoreReport, rules judge, verdict composition
     riddle/                   RiddlePlayer
-    progress/                 progression, learned and weak tactics
+    freestyle/                the day: schedule, lives, HUD, notifications
+    encounters/, inbox/, web/, messages/   everyday channels and their verdicts
+    profile/                  defense profile and "the city noticed"
+    progress/                 progression, learned, weak and strong tactics
   lib/
     live/                     provider interface, Gemini + mock providers, audio pipeline, real-world context
     gemini/                   models, director, persona prompts, district briefs, server client

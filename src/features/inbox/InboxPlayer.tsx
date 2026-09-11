@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown, Flag, Inbox as InboxIcon, Paperclip, Search, Send, Star, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { gradeDecision, type Decision } from "@/features/encounters/grade";
+import { describeBehaviour, gradeDecision, type Check as Inspected, type Decision } from "@/features/encounters/grade";
 import { recordEncounter } from "@/features/encounters/record";
 import { Highlight, Verdict } from "@/features/encounters/Verdict";
 import { freestyleEncounter } from "@/features/freestyle/freestyle-store";
@@ -23,7 +23,13 @@ export function InboxPlayer() {
   const [statusUrl, setStatusUrl] = useState<string | null>(null);
   const [peek, setPeek] = useState<number | null>(null);
   const [details, setDetails] = useState(false);
+  /** What the player inspected before deciding: the judge comments on it. */
+  const [checked, setChecked] = useState<Inspected[]>([]);
   const served = useRef<string[]>([]);
+
+  const check = (c: Inspected) => {
+    if (!decision) setChecked((cs) => (cs.includes(c) ? cs : [...cs, c]));
+  };
 
   const load = async () => {
     const e = await fetchEmail({ avoid: served.current });
@@ -52,6 +58,7 @@ export function InboxPlayer() {
     setStatusUrl(null);
     setPeek(null);
     setDetails(false);
+    setChecked([]);
     void load();
   };
 
@@ -70,6 +77,7 @@ export function InboxPlayer() {
     if (window.matchMedia("(hover: none)").matches && peek !== i) {
       setPeek(i);
       setStatusUrl(link.actualUrl);
+      check("link");
       return;
     }
     setStatusUrl(`Opened ${link.actualUrl}`);
@@ -184,7 +192,15 @@ export function InboxPlayer() {
                         &lt;{email.fromAddress}&gt;
                       </span>
                     </p>
-                    <button type="button" onClick={() => setDetails((d) => !d)} className="flex min-h-8 items-center gap-1 text-paper-muted" aria-expanded={details}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetails((d) => !d);
+                        check("sender");
+                      }}
+                      className="flex min-h-8 items-center gap-1 text-paper-muted"
+                      aria-expanded={details}
+                    >
                       to me <ChevronDown aria-hidden className={cn("size-3.5 transition-transform", details && "rotate-180")} />
                     </button>
                     {details && (
@@ -237,9 +253,17 @@ export function InboxPlayer() {
                           <button
                             key={i}
                             type="button"
-                            onMouseEnter={() => !decided && setStatusUrl(link.actualUrl)}
+                            onMouseEnter={() => {
+                              if (decided) return;
+                              setStatusUrl(link.actualUrl);
+                              check("link");
+                            }}
                             onMouseLeave={() => !decided && peek === null && setStatusUrl(null)}
-                            onFocus={() => !decided && setStatusUrl(link.actualUrl)}
+                            onFocus={() => {
+                              if (decided) return;
+                              setStatusUrl(link.actualUrl);
+                              check("link");
+                            }}
                             onClick={() => openLink(idx)}
                             className={cn(
                               "inline text-paper-link underline underline-offset-2",
@@ -277,8 +301,10 @@ export function InboxPlayer() {
         <Verdict
           grade={gradeDecision(email.scam, decision)}
           scam={email.scam}
+          behaviour={describeBehaviour({ scam: email.scam, decision, checked })}
           explanation={email.explanation}
           tells={email.tells}
+          targets={email.targets}
           freestyle={fromFreestyle}
           onNext={next}
           nextLabel="Next email"

@@ -69,7 +69,9 @@ export const AnalysisSchema = z.object({
   revealed: z
     .array(z.string().max(160))
     .max(12)
-    .describe('Kinds of sensitive detail the player gave away, e.g. "One-time passcode". Never the values themselves.'),
+    .describe(
+      'Kinds of sensitive detail the player gave away — including confirming a detail the caller read out — e.g. "One-time passcode", "Confirmed account number". Never the values themselves.',
+    ),
   intent: z.string().max(400).describe("At most 10 words: what the caller is attempting right now."),
 });
 export type Analysis = z.infer<typeof AnalysisSchema>;

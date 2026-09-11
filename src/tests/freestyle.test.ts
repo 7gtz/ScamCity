@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { gradeDecision } from "@/features/encounters/grade";
-import { FIRST_RANGE, firstDelay, nextDelay, PACES, pickEncounter } from "@/features/freestyle/schedule";
+import { describeBehaviour, gradeDecision } from "@/features/encounters/grade";
+import { LIVES, settle, type LogEntry } from "@/features/freestyle/freestyle-store";
+import {
+  ceilingFor,
+  DEMO_GOAL,
+  FIRST_RANGE,
+  firstDelay,
+  GOAL,
+  MIN_GENUINE,
+  nextDelay,
+  PACES,
+  pickEncounter,
+} from "@/features/freestyle/schedule";
 import { FALLBACK_EMAILS, FALLBACK_SITES } from "@/content/fallback-encounters";
 import { GeneratedEmailSchema, GeneratedSiteSchema } from "@/lib/validation/schemas";
 
@@ -51,6 +62,72 @@ describe("freestyle schedule", () => {
 
   it("rings the genuine fraud-alert call for genuine calls", () => {
     expect(pickEncounter(0, seq(0.01, 0.1, 0.5, 0.5))).toMatchObject({ channel: "call", legit: true, scenarioId: "card-alert" });
+  });
+});
+
+describe("the demo", () => {
+  it("runs email → text → call, one level harder each time, in under 20 s of waiting", () => {
+    const specs = [0, 1, 2].map((h) => pickEncounter(h, () => 0.5, { pace: "demo" }));
+    expect(specs.map((s) => s.channel)).toEqual(["email", "sms", "call"]);
+    expect(specs.map((s) => s.difficulty)).toEqual([1, 2, 3]);
+    expect(specs[0]!.legit || specs[1]!.legit).toBe(false);
+    expect(firstDelay(() => 1, "demo") + 2 * PACES.demo.range[1]).toBeLessThan(30_000);
+  });
+
+  it("ramps a normal day every three encounters", () => {
+    expect([0, 2, 3, 6, 9].map((h) => ceilingFor(h))).toEqual([1, 1, 2, 3, 3]);
+  });
+});
+
+describe("the day's rules", () => {
+  const entry = (o: Partial<LogEntry>): LogEntry => ({
+    id: "e",
+    channel: "email",
+    title: "t",
+    legit: false,
+    correct: true,
+    caught: false,
+    at: 0,
+    ...o,
+  });
+  const day = { lives: LIVES, handled: 0, log: [] as LogEntry[], pace: "normal" as const };
+
+  it("costs a life for being scammed and for turning away something genuine — nothing else", () => {
+    expect(settle(day, entry({ caught: true, correct: false })).lives).toBe(LIVES - 1);
+    expect(settle(day, entry({ legit: true, correct: false })).lives).toBe(LIVES - 1);
+    expect(settle(day, entry({ legit: true, correct: false, missed: true })).lives).toBe(LIVES - 1);
+    expect(settle(day, entry({ legit: false, correct: true, missed: true })).lives).toBe(LIVES);
+    expect(settle(day, entry({ legit: false, correct: false })).lives).toBe(LIVES);
+  });
+
+  it("makes ignoring everything cost at least two lives over a full day", () => {
+    let s = { ...day };
+    let genuine = 0;
+    for (let i = 0; i < GOAL; i++) {
+      const spec = pickEncounter(s.handled, () => 0.9, { genuineSeen: genuine });
+      if (spec.legit) genuine++;
+      const next = settle(s, entry({ legit: spec.legit, correct: !spec.legit, missed: true }));
+      s = { ...s, lives: next.lives, handled: next.handled, log: next.log };
+    }
+    expect(genuine).toBeGreaterThanOrEqual(MIN_GENUINE);
+    expect(s.lives).toBeLessThanOrEqual(LIVES - MIN_GENUINE);
+  });
+
+  it("wins the demo after three encounters and a day after eight", () => {
+    expect(settle({ ...day, pace: "demo", handled: DEMO_GOAL - 1 }, entry({})).status).toBe("won");
+    expect(settle({ ...day, handled: DEMO_GOAL - 1 }, entry({})).status).toBe("active");
+    expect(settle({ ...day, handled: GOAL - 1 }, entry({})).status).toBe("won");
+    expect(settle({ ...day, lives: 1 }, entry({ caught: true, correct: false })).status).toBe("lost");
+  });
+});
+
+describe("the judge's read of behaviour", () => {
+  it("describes what the player did, not only whether they were right", () => {
+    expect(describeBehaviour({ scam: true, decision: "report", checked: ["sender"] })).toMatch(/checked the sender details before reporting/);
+    expect(describeBehaviour({ scam: true, decision: "engaged", checked: ["link"] })).toMatch(/went ahead anyway/);
+    expect(describeBehaviour({ scam: true, decision: "report", checked: [] })).toMatch(/on instinct/);
+    expect(describeBehaviour({ scam: false, decision: "report", checked: [] })).toMatch(/without checking anything/);
+    expect(describeBehaviour({ scam: false, decision: "trust", checked: ["site-info"] })).toMatch(/site information before trusting/);
   });
 });
 
