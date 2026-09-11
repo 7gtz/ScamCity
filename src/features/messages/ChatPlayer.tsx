@@ -15,6 +15,8 @@ import { JudgingProgress } from "@/features/scoring/JudgingProgress";
 import { useResultsStore } from "@/features/scoring/results-store";
 import { scoreCall } from "@/features/scoring/score-call";
 import { cn } from "@/lib/cn";
+import { pickFallbackChat } from "@/content/fallback-chats";
+import { getAiStatus } from "@/lib/ai-status";
 import { chatTurn, startChat } from "@/lib/encounters";
 import type { CallOutcome, CompletedCall, TacticId, TranscriptMessage } from "@/lib/live/types";
 import type { ChatPlan } from "@/lib/validation/schemas";
@@ -22,6 +24,23 @@ import { duration, ease } from "@/lib/motion/tokens";
 
 type Phase = "loading" | "unavailable" | "live" | "ending";
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** How long the phone waits for the AI's own opening before a built-in one arrives. */
+const OPENING_BUDGET_MS = 2500;
+
+/**
+ * Standalone Messages: the AI's own conversation if it's ready quickly;
+ * otherwise a built-in opening, so the phone never sits on "connecting".
+ * Every reply after the first message is live AI either way.
+ */
+async function firstChat() {
+  const ai = startChat();
+  const first = await Promise.race([ai, wait(OPENING_BUDGET_MS).then(() => "slow" as const)]);
+  if (first !== "slow" && first) return first;
+  // Answered with nothing: only give up if the server has no AI at all.
+  if (first === null && !(await getAiStatus()).gemini) return null;
+  return { plan: pickFallbackChat(), difficulty: 1 };
+}
 
 /**
  * Messages mode: a live AI texting conversation. The contact adapts to every
@@ -35,7 +54,8 @@ export function ChatPlayer() {
   const [plan, setPlan] = useState<ChatPlan | null>(null);
   const [difficulty, setDifficulty] = useState(1);
   const [messages, setMessages] = useState<TranscriptMessage[]>([]);
-  const [typing, setTyping] = useState(false);
+  // Someone is typing from the moment the phone opens.
+  const [typing, setTyping] = useState(true);
   const [text, setText] = useState("");
   const [suspicion, setSuspicion] = useState(0);
   /** Why the guard just moved, e.g. "+40 · Asked to verify their identity". */
@@ -52,11 +72,13 @@ export function ChatPlayer() {
 
   useEffect(() => {
     let alive = true;
+    const openedAt = performance.now();
     void (async () => {
       const encounter = freestyleEncounter("sms");
-      const chat = encounter?.chat ?? (await startChat());
+      const chat = encounter?.chat ?? (await firstChat());
       if (!alive) return;
       if (!chat) {
+        setTyping(false);
         setPhase("unavailable");
         return;
       }
@@ -64,8 +86,8 @@ export function ChatPlayer() {
       setDifficulty(chat.difficulty);
       started.current = performance.now();
       setPhase("live");
-      setTyping(true);
-      await wait(900);
+      // The dots have shown since the phone opened: a short beat, not another second.
+      await wait(Math.max(300, 1200 - (performance.now() - openedAt)));
       if (!alive) return;
       setTyping(false);
       setMessages([{ id: "c0", speaker: "scammer", text: chat.plan.opening, at: 0 }]);
@@ -184,8 +206,8 @@ export function ChatPlayer() {
               {plan?.contactName.charAt(0) ?? "·"}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-semibold">{plan?.contactLabel ?? "Connecting…"}</span>
-              <span className="block text-xs text-paper-muted">{plan?.platform ?? ""}</span>
+              <span className="block truncate font-semibold">{plan?.contactLabel ?? "New message"}</span>
+              <span className="block text-xs text-paper-muted">{plan?.platform ?? "Delivering…"}</span>
             </span>
           </header>
 
@@ -206,6 +228,7 @@ export function ChatPlayer() {
                 {m.text}
               </motion.li>
             ))}
+            {phase === "loading" && <li className="self-center text-xs text-paper-muted">A new message is arriving…</li>}
             <AnimatePresence>
               {typing && (
                 <motion.li

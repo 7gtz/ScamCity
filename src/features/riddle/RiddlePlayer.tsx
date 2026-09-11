@@ -180,7 +180,8 @@ function Riddle({
                 <p className="meta text-bone">Step 2 of 2 · Identify the tactic</p>
                 <p className="max-w-[40ch] text-ash">What kind of scam is it?</p>
               </div>
-              <div role="group" aria-label="Scam type" className="grid grid-cols-2 gap-3">
+              {/* One column on phones: labels like "IMPERSONATION" never break mid-word. */}
+              <div role="group" aria-label="Scam type" className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
                 {RIDDLE_CATEGORIES.map((c) => (
                   <AnswerTile key={c.id} label={c.label} small onClick={() => finish(true, c.id)} />
                 ))}
@@ -240,14 +241,13 @@ function AnswerTile({ label, hint, small, onClick }: { label: string; hint?: str
       className={cn(
         "group flex flex-col items-start justify-between gap-3 border border-line text-left transition-colors duration-[180ms] ease-out hover:border-bone hover:bg-raised",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bone",
-        small ? "min-h-16 p-4" : "min-h-28 p-5",
+        small ? "min-h-14 justify-center p-4 sm:min-h-16 sm:justify-between" : "min-h-28 p-5",
       )}
     >
       <span
         className={cn(
-          "max-w-full font-display leading-none tracking-[-0.015em] break-words uppercase",
-          // "IMPERSONATION" must fit a half-width tile on a 390px phone.
-          small ? "text-[1.0625rem] sm:text-xl" : "text-[clamp(1.75rem,3vw,2.5rem)]",
+          "font-display leading-none tracking-[-0.015em] uppercase",
+          small ? "text-xl" : "text-[clamp(1.75rem,3vw,2.5rem)]",
         )}
       >
         {label}

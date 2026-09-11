@@ -12,8 +12,9 @@ import {
   PACES,
   pickEncounter,
 } from "@/features/freestyle/schedule";
+import { FALLBACK_CHATS, pickFallbackChat } from "@/content/fallback-chats";
 import { FALLBACK_EMAILS, FALLBACK_SITES } from "@/content/fallback-encounters";
-import { GeneratedEmailSchema, GeneratedSiteSchema } from "@/lib/validation/schemas";
+import { ChatPlanSchema, GeneratedEmailSchema, GeneratedSiteSchema } from "@/lib/validation/schemas";
 
 /** Deterministic sequence of "random" numbers. */
 const seq = (...values: number[]) => {
@@ -157,5 +158,11 @@ describe("built-in encounters", () => {
     for (const e of FALLBACK_EMAILS) {
       for (const m of e.paragraphs.join(" ").matchAll(/\[link:(\d+)\]/g)) expect(e.links[Number(m[1])]).toBeDefined();
     }
+  });
+
+  it("have built-in Messages openings that follow the AI's plan schema, scam and genuine", () => {
+    for (const c of FALLBACK_CHATS) expect(ChatPlanSchema.safeParse(c).success, c.pattern).toBe(true);
+    expect(pickFallbackChat(() => 0.1).scam).toBe(false);
+    expect(pickFallbackChat(() => 0.9).scam).toBe(true);
   });
 });

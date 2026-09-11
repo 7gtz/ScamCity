@@ -46,7 +46,9 @@ export async function POST(req: Request) {
         system: PLAN_SYSTEM,
         prompt: encounterBrief(body),
         temperature: 1.1,
-        timeoutMs: 7000,
+        // Race the chain: the player is looking at an empty phone.
+        hedgeMs: 1500,
+        budgetMs: 9000,
       });
       return Response.json({ plan: { ...plan, scam: !body.wantLegit } });
     }
