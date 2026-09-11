@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { nextScenarioId } from "@/content/scenarios";
+import { useFreestyle } from "@/features/freestyle/freestyle-store";
 import { useResultsStore } from "./results-store";
 import { ScoreReport } from "./ScoreReport";
 
@@ -14,6 +15,7 @@ const hasHydrated = () => useResultsStore.persist.hasHydrated();
 export function ResultsView({ sessionId }: { sessionId: string }) {
   const score = useResultsStore((s) => s.scores[sessionId]);
   const hydrated = useSyncExternalStore(subscribe, hasHydrated, () => false);
+  const freestyle = useFreestyle((s) => s.status);
 
   if (!score) {
     if (!hydrated) return <div className="min-h-dvh" />;
@@ -23,23 +25,27 @@ export function ResultsView({ sessionId }: { sessionId: string }) {
         <p className="lead max-w-[48ch] text-ash">
           Scorecards live in this browser session only. Take another call to get a new report.
         </p>
-        <CtaLink href="/play">Take a call</CtaLink>
+        <CtaLink href="/modes">Choose a mode</CtaLink>
       </div>
     );
   }
 
-  const next = score.passed ? nextScenarioId(score.scenarioId) : undefined;
+  const chat = score.channel === "sms";
+  const next = score.passed && !chat ? nextScenarioId(score.scenarioId) : undefined;
 
   return (
     <div className="gutter-x mx-auto max-w-[1600px] pt-[calc(var(--nav-h)+4rem)] pb-32">
-      <h1 className="sr-only">Call report</h1>
+      <h1 className="sr-only">{chat ? "Conversation report" : "Call report"}</h1>
       <ScoreReport score={score}>
-        {next && <CtaLink href={`/play/${next}`}>Next call</CtaLink>}
+        {freestyle !== "idle" && <CtaLink href="/freestyle">Back to Freestyle</CtaLink>}
+        {freestyle === "idle" && next && <CtaLink href={`/play/${next}`}>Next call</CtaLink>}
+        {freestyle === "idle" && (
+          <Button asChild variant="ghost" size="md">
+            <Link href={chat ? "/messages" : `/play/${score.scenarioId}`}>{chat ? "New conversation" : "Replay this call"}</Link>
+          </Button>
+        )}
         <Button asChild variant="ghost" size="md">
-          <Link href={`/play/${score.scenarioId}`}>Replay this call</Link>
-        </Button>
-        <Button asChild variant="ghost" size="md">
-          <Link href="/#progression">Back to the city</Link>
+          <Link href="/modes">All modes</Link>
         </Button>
       </ScoreReport>
     </div>

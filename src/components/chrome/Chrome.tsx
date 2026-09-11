@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { FreestyleEngine } from "@/features/freestyle/FreestyleEngine";
+import { FreestylePill } from "@/features/freestyle/FreestylePill";
 import { Cursor } from "./Cursor";
 import { Grain } from "./Grain";
 import { Nav } from "./Nav";
@@ -23,6 +25,8 @@ export function Chrome({ children }: { children: React.ReactNode }) {
       {!immersive && <ScrollProgress />}
       <main id="main">{children}</main>
       <StoreHydrator />
+      <FreestyleEngine />
+      <FreestylePill />
       <Cursor />
       <Grain />
     </>

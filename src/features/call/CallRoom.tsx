@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Meter } from "@/components/ui/Meter";
 import { DISTRICTS } from "@/content/districts";
 import { tacticLabel } from "@/content/tactics";
+import { useFreestyle } from "@/features/freestyle/freestyle-store";
 import { useProgressStore } from "@/features/progress/progress-store";
 import { fmt } from "@/features/scoring/mock-judge";
 import { useAiStatus } from "@/lib/ai-status";
@@ -40,6 +41,14 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
   const district = DISTRICTS.find((d) => d.id === persona.district);
   const onCall = ON_CALL.includes(status);
   const level = `Level ${String(persona.level).padStart(2, "0")} · ${district?.title ?? ""}`;
+
+  // Freestyle answers for you: the player already pressed Answer on the incoming card.
+  const autoAnswered = useRef(false);
+  useEffect(() => {
+    if (autoAnswered.current || new URLSearchParams(window.location.search).get("auto") !== "1") return;
+    autoAnswered.current = true;
+    void answer({ precise: useFreestyle.getState().context?.source === "gps" });
+  }, [answer]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

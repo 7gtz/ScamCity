@@ -20,7 +20,7 @@ export function FinalCta() {
         </h2>
         <Reveal delay={0.6}>
           <div data-reveal>
-            <CtaLink href="/play">Enter the city</CtaLink>
+            <CtaLink href="/modes">Enter the city</CtaLink>
           </div>
         </Reveal>
       </div>

@@ -67,6 +67,13 @@ export function Nav() {
               </li>
             ))}
           </ul>
+          <Link
+            href="/modes"
+            className="meta flex min-h-11 items-center border border-line px-3 text-bone transition-colors duration-[180ms] hover:border-bone"
+            data-cursor="magnetic"
+          >
+            Play
+          </Link>
           <IndexMenu />
         </div>
       </nav>

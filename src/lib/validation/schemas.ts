@@ -127,6 +127,112 @@ export const GeneratedRiddleSchema = z.object({
   targets: z.array(Tactic).max(6),
 });
 
+// --- Day-to-day encounters: email, websites, text chats -----------------------
+
+const Difficulty = z.number().int().min(1).max(3);
+
+/** Shared request for generated encounters. */
+export const EncounterRequestSchema = z.object({
+  difficulty: Difficulty,
+  wantLegit: z.boolean(),
+  weak: z.array(Tactic).max(3),
+  avoid: z.array(z.string().max(400)).max(10),
+  context: RealWorldContextSchema.optional(),
+});
+export type EncounterRequest = z.infer<typeof EncounterRequestSchema>;
+
+/** A clue the player should have noticed (scam) or a sign it was genuine (legit). */
+const Tell = z.object({
+  where: z.string().max(40).describe('Where to look, e.g. "sender", "link", "url", "padlock", "form".'),
+  text: z.string().max(300).describe("The exact text the clue refers to, copied from the content."),
+  note: z.string().max(400).describe("One sentence explaining why it matters."),
+});
+export type EncounterTell = z.infer<typeof Tell>;
+
+export const GeneratedEmailSchema = z.object({
+  fromName: z.string().max(120),
+  fromAddress: z.string().max(160),
+  replyTo: z.string().max(160).optional(),
+  subject: z.string().max(200),
+  receivedAt: z.string().max(40).describe('e.g. "Today, 09:14".'),
+  paragraphs: z.array(z.string().max(900)).min(1).max(8).describe("Plain text. Write [link:0], [link:1]… where each link appears."),
+  links: z
+    .array(z.object({ text: z.string().max(120), shownUrl: z.string().max(200), actualUrl: z.string().max(200) }))
+    .max(4)
+    .describe("shownUrl is what the email claims; actualUrl is where the link really goes."),
+  attachments: z.array(z.object({ name: z.string().max(120), size: z.string().max(20) })).max(3),
+  scam: z.boolean(),
+  category: z.string().max(40),
+  tells: z.array(Tell).min(1).max(6),
+  explanation: z.string().max(900),
+  targets: z.array(Tactic).max(6),
+});
+export type GeneratedEmail = z.infer<typeof GeneratedEmailSchema>;
+
+export const GeneratedSiteSchema = z.object({
+  kind: z.enum(["login", "shop", "investment", "delivery", "prize", "support", "charity"]),
+  brand: z.string().max(80),
+  domain: z.string().max(160).describe("The domain shown in the address bar, no protocol."),
+  https: z.boolean(),
+  domainAgeDays: z.number().int().min(0).max(20000).describe("How long ago the domain was registered."),
+  headline: z.string().max(200),
+  subheadline: z.string().max(300),
+  body: z.array(z.string().max(600)).max(4),
+  cta: z.string().max(60),
+  formFields: z.array(z.string().max(60)).max(6).describe("Fields the page asks for, e.g. Email, Password, Card number, OTP."),
+  products: z.array(z.object({ name: z.string().max(100), price: z.string().max(30), was: z.string().max(30).optional() })).max(4),
+  badges: z.array(z.string().max(60)).max(4),
+  contact: z.string().max(200),
+  footer: z.string().max(300),
+  scam: z.boolean(),
+  category: z.string().max(40),
+  tells: z.array(Tell).min(1).max(6),
+  explanation: z.string().max(900),
+  targets: z.array(Tactic).max(6),
+});
+export type GeneratedSite = z.infer<typeof GeneratedSiteSchema>;
+
+/** A text-chat persona: the social engineer (or genuine contact) the player messages with. */
+export const ChatPlanSchema = z.object({
+  contactName: z.string().max(80),
+  contactLabel: z.string().max(80).describe('How the contact appears, e.g. "+91 98301 55012" or "Mum (new number)".'),
+  platform: z.enum(["SMS", "WhatsApp", "Instagram", "LinkedIn", "Marketplace"]),
+  scam: z.boolean(),
+  pattern: z.string().max(80),
+  objective: z.string().max(400),
+  facts: z.array(z.string().max(300)).min(1).max(6),
+  tacticPlan: z.array(Tactic).min(1).max(6),
+  opening: z.string().max(500).describe("The first message the contact sends."),
+});
+export type ChatPlan = z.infer<typeof ChatPlanSchema>;
+
+export const ChatTurnSchema = z.object({
+  reply: z.string().max(700).describe("The contact's next message, in texting style."),
+  tactics: z.array(Tactic).max(12),
+  playerDetected: z.array(Tactic).max(12),
+  revealed: z.array(z.string().max(160)).max(12),
+  suspicion: z.number().min(0).max(1),
+  end: z.enum(["none", "hung-up", "scammed", "exposed", "verified-legit", "rejected-legit"]),
+});
+export type ChatTurn = z.infer<typeof ChatTurnSchema>;
+
+export const ChatRequestSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("start"),
+    difficulty: Difficulty,
+    wantLegit: z.boolean(),
+    weak: z.array(Tactic).max(3),
+    avoid: z.array(z.string().max(400)).max(10),
+    context: RealWorldContextSchema.optional(),
+  }),
+  z.object({
+    action: z.literal("turn"),
+    plan: ChatPlanSchema,
+    difficulty: Difficulty,
+    history: z.array(z.object({ speaker: z.enum(["player", "scammer"]), text: z.string().max(2000) })).min(1).max(40),
+  }),
+]);
+
 /** The director's plan for one unique call. The live persona improvises inside it. */
 export const CallPlanSchema = z.object({
   callerName: z.string().max(120).describe("A realistic full name. Vary cultures and genders between calls."),

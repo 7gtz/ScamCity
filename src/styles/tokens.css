@@ -14,6 +14,15 @@
   --color-ash: #a39d93;
   --color-bone: #efeae2;
   --color-signal: #f0503a;
+
+  /* "Paper": simulated everyday apps (mail, browser, chat) framed inside the
+     game. Light and neutral so they read as real third-party interfaces. */
+  --color-paper: #f7f6f3;
+  --color-paper-2: #ecebe6;
+  --color-paper-line: #d9d6cf;
+  --color-paper-ink: #1c1b19;
+  --color-paper-muted: #5f5b54;
+  --color-paper-link: #1f4fbf;
   --color-transparent: transparent;
   --color-current: currentColor;
 

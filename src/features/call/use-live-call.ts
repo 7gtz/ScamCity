@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
+import { useFreestyle } from "@/features/freestyle/freestyle-store";
 import { useProgressStore, weakest } from "@/features/progress/progress-store";
 import { useResultsStore } from "@/features/scoring/results-store";
 import { scoreCall } from "@/features/scoring/score-call";
@@ -40,6 +41,17 @@ export function useLiveCall(scenarioId: string) {
       progress.learn([...caught, ...score.missed]);
       progress.recordTactics(score.missed, caught);
       if (score.passed) progress.clear(call.scenarioId);
+
+      // Freestyle: this call was one of the day's encounters.
+      const freestyle = useFreestyle.getState();
+      if (freestyle.current?.spec.channel === "call") {
+        freestyle.resolve({
+          correct: score.passed,
+          caught: call.outcome === "scammed",
+          title: call.brief?.caller ?? "Phone call",
+          legit: call.legitimate,
+        });
+      }
 
       useCallStore.getState().setStatus("results");
       router.push(`/results/${score.sessionId}`);

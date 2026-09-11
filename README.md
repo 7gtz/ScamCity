@@ -109,6 +109,27 @@ This is the quick, voice-free training mode. Read a message, decide whether it's
 - Speak in short turns. You can cut in whenever you like.
 - To stop at any time, say "stop" or "end game": the caller drops character.
 
+### Modes (`/modes`)
+
+Choose a mode from the 3D ring. Drag it, swipe it, or use the arrow keys; the plate facing you is the one you enter.
+
+| Mode | Route | What happens |
+|---|---|---|
+| **Freestyle** | `/freestyle` | Press **Wake up**, allow notifications, and carry on with your day. Calls, emails, texts and links arrive as desktop notifications at random times: the first within 20 seconds, then at the pace you pick (Intense 15–40 s, Normal 45 s–2 min, Relaxed 2–5 min). Difficulty ramps up and about 30% are genuine. You have 3 lives, and falling for a scam costs one. Survive 8 encounters to win the day. |
+| **Calls** | `/play` | A live AI voice caller (see above). |
+| **Inbox** | `/inbox` | An AI-written email in a real-feeling mail client. Hover links to see where they really go, open the sender details to check the reply-to, look at attachments, then report it or mark it safe. |
+| **Messages** | `/messages` | A live AI texting conversation, for example "Hi Mum, new number", a fake recruiter, a friend asking for an OTP, or a genuine contact. It adapts to every reply, and the AI judge scores the thread. |
+| **Web** | `/web` | An AI-written website in a simulated browser: a lookalike login, a shop, an investment site or a delivery fee. The address bar, the padlock's site info (domain age) and the form are the clues. Using a scam site counts as being caught. |
+| **Riddles** | `/riddle` | Quick scam-or-genuine training. |
+
+Keep the tab open during Freestyle; you can browse other tabs, and desktop notifications will reach you. Clicking a notification brings SCAM CITY forward, and you answer on the in-app card.
+
+### How the expansion meets the brief
+
+- **The real world changes the game.** Freestyle arrives during your actual day as real desktop notifications. Every generated email, website and conversation is written for your real local time and weather, and, with consent, your city: a delivery fee "because of tonight's rain", or a boss's favour near the end of your working day.
+- **The AI matters in every channel.** Emails, websites and texting personas are generated fresh for each player, and Messages is a live adaptive AI conversation. One player model connects everything: the tactics you miss in an email are the ones the next call, chat or website leans on. Without AI you'd get three fixed emails and three fixed sites.
+- **A clear game loop.** Wake up → encounters arrive → decide (answer, report, trust, reply) → AI verdict explaining the clues → lives and progress → win the day or lose it.
+
 ---
 
 ## Live AI vs. simulation mode

@@ -163,4 +163,6 @@ export interface CallScore {
   /** Who scored it: the Gemini judge, or the deterministic fallback. */
   judge?: "gemini" | "rules";
   brief?: CallBrief;
+  /** Voice call, or a text conversation from Messages. */
+  channel?: "call" | "sms";
 }

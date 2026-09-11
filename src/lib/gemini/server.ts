@@ -42,6 +42,7 @@ export async function generateJson<T extends z.ZodType>(
   let lastError: unknown;
 
   for (const model of chain) {
+    const started = Date.now();
     try {
       const res = await gemini().models.generateContent({
         model,
@@ -54,11 +55,13 @@ export async function generateJson<T extends z.ZodType>(
           abortSignal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
         },
       });
-      return schema.parse(JSON.parse(res.text ?? ""));
+      const parsed = schema.parse(JSON.parse(res.text ?? ""));
+      console.info(`[gemini] ${model} ok in ${Date.now() - started}ms`);
+      return parsed;
     } catch (err) {
       lastError = err;
       const reason = err instanceof Error ? err.message.slice(0, 160) : String(err);
-      console.warn(`[gemini] ${model} failed — ${chain.at(-1) === model ? "no fallback left" : "falling back"}: ${reason}`);
+      console.warn(`[gemini] ${model} failed after ${Date.now() - started}ms — ${chain.at(-1) === model ? "no fallback left" : "falling back"}: ${reason}`);
     }
   }
   throw lastError;
