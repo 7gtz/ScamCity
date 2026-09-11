@@ -32,7 +32,9 @@ export async function POST(req: Request) {
   const scenario = getScenario(parsed.data.scenarioId);
   if (!scenario) return Response.json({ error: "Unknown scenario." }, { status: 404 });
 
-  const prompt = `The caller is ${scenario.persona.legitimate ? "GENUINE (a real fraud-prevention officer): report any pressure tactics only if they truly appear" : "a SCAMMER"}.
+  const legitimate = parsed.data.legitimate ?? scenario.persona.legitimate;
+  const prompt = `The caller is ${legitimate ? "GENUINE: report pressure tactics only if they truly appear" : "a SCAMMER"}.
+${parsed.data.objective ? `The caller's objective: ${parsed.data.objective}` : ""}
 Tactics the player has already detected: ${parsed.data.detected.join(", ") || "none"}.
 
 Transcript so far:

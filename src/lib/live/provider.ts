@@ -1,3 +1,4 @@
+import type { PlayerProfile } from "@/lib/validation/schemas";
 import { GeminiLiveCallProvider } from "./gemini-provider";
 import { MockLiveCallProvider } from "./mock-provider";
 import type { LiveCallProvider, RealWorldContext } from "./types";
@@ -11,6 +12,10 @@ export const mockForced = () => process.env.NEXT_PUBLIC_LIVE_PROVIDER === "mock"
  * The call room depends only on LiveCallProvider; this is the single place a
  * concrete provider is chosen.
  */
-export function createLiveCallProvider(kind: ProviderKind, context?: RealWorldContext): LiveCallProvider {
-  return kind === "gemini" ? new GeminiLiveCallProvider(context) : new MockLiveCallProvider();
+export function createLiveCallProvider(
+  kind: ProviderKind,
+  context?: RealWorldContext,
+  profile?: PlayerProfile,
+): LiveCallProvider {
+  return kind === "gemini" ? new GeminiLiveCallProvider(context, profile) : new MockLiveCallProvider();
 }

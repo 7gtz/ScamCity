@@ -35,6 +35,7 @@ export async function POST(req: Request) {
   const call = parsed.data as CompletedCall;
 
   const prompt = `Caller type: ${call.legitimate ? "GENUINE" : "SCAMMER"}
+${call.brief ? `The caller: ${call.brief.caller}. Pretext: ${call.brief.hook} Objective: ${call.brief.objective}` : ""}
 Outcome: ${call.outcome}
 Call length: ${Math.round(call.durationMs / 1000)} seconds
 Sensitive details the player revealed: ${call.revealed.join(", ") || "none"}

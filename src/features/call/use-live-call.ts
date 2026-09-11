@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { useProgressStore } from "@/features/progress/progress-store";
+import { useProgressStore, weakest } from "@/features/progress/progress-store";
 import { useResultsStore } from "@/features/scoring/results-store";
 import { scoreCall } from "@/features/scoring/score-call";
 import { getAiStatus } from "@/lib/ai-status";
@@ -57,6 +57,10 @@ export function useLiveCall(scenarioId: string) {
       p.on("speaking", (e) => s().setSpeaking(e.speaker));
       p.on("tactic-detected", (e) => s().addDetected(e.tactic, e.at));
       p.on("error", (e) => s().fail(e.code, e.message));
+      p.on("persona", (e) => {
+        s().setCaller(e.caller, e.brief, e.planner);
+        useProgressStore.getState().rememberHook(e.brief.hook);
+      });
       p.on("ended", (e) => void complete(e.call));
     },
     [complete],
@@ -98,7 +102,13 @@ export function useLiveCall(scenarioId: string) {
       const context = await getRealWorldContext(precise);
       setContext(context);
 
-      const p = createLiveCallProvider("gemini", context);
+      // The director aims the next call at what this player keeps missing.
+      const progress = useProgressStore.getState();
+      const p = createLiveCallProvider("gemini", context, {
+        weak: weakest(progress.weak, 3),
+        cleared: progress.cleared.length,
+        recentHooks: progress.recentHooks.slice(-6),
+      });
       provider.current = p;
       wire(p);
       try {

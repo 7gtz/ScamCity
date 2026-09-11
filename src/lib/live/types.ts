@@ -66,6 +66,20 @@ export interface RealWorldContext {
   source: "gps" | "timezone";
 }
 
+/** What this particular call was — the director writes a new one every time. */
+export interface CallBrief {
+  /** "Jordan Reyes, Delivery Support · SwiftParcel" */
+  caller: string;
+  hook: string;
+  objective: string;
+}
+
+export interface CallerIdentity {
+  name: string;
+  role: string;
+  organization: string;
+}
+
 export type CallStatus =
   | "idle"
   | "permission-requested"
@@ -99,6 +113,7 @@ export interface CompletedCall {
   /** Score bonus a scripted ending grants for a well-judged decision. */
   decisionQuality?: number;
   context?: RealWorldContext;
+  brief?: CallBrief;
 }
 
 export interface LiveCallConfig {
@@ -112,6 +127,7 @@ export type LiveCallEvent =
   | { type: "speaking"; speaker: Speaker | null }
   | { type: "options"; options: PlayerAction[] }
   | { type: "tactic-detected"; tactic: TacticId; at: number }
+  | { type: "persona"; caller: CallerIdentity; brief: CallBrief; planner: "director" | "static" }
   | { type: "ended"; call: CompletedCall }
   | { type: "error"; code: string; message: string };
 
@@ -146,4 +162,5 @@ export interface CallScore {
   notes: string[];
   /** Who scored it: the Gemini judge, or the deterministic fallback. */
   judge?: "gemini" | "rules";
+  brief?: CallBrief;
 }

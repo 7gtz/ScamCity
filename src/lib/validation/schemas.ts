@@ -22,9 +22,24 @@ export const RealWorldContextSchema = z.object({
   source: z.enum(["gps", "timezone"]),
 });
 
+/** What the director knows about the player: it aims each new call at them. */
+export const PlayerProfileSchema = z.object({
+  weak: z.array(Tactic).max(3),
+  cleared: z.number().int().min(0).max(50),
+  recentHooks: z.array(z.string().max(160)).max(6),
+});
+export type PlayerProfile = z.infer<typeof PlayerProfileSchema>;
+
+export const CallBriefSchema = z.object({
+  caller: z.string().max(200),
+  hook: z.string().max(160),
+  objective: z.string().max(240),
+});
+
 export const TokenRequestSchema = z.object({
   scenarioId: z.string().max(64),
   context: RealWorldContextSchema.optional(),
+  profile: PlayerProfileSchema.optional(),
 });
 
 const Turn = z.object({
@@ -37,6 +52,9 @@ export const AnalyzeRequestSchema = z.object({
   scenarioId: z.string().max(64),
   transcript: z.array(Turn).max(40),
   detected: z.array(Tactic).max(6),
+  /** Per-call truth: the director may have made this call secretly genuine. */
+  legitimate: z.boolean().optional(),
+  objective: z.string().max(240).optional(),
 });
 
 /** The analyst's per-turn read of the call. */
@@ -66,6 +84,7 @@ export const CompletedCallSchema = z.object({
   suspicion: z.array(z.object({ at: z.number().nonnegative(), value: z.number().min(0).max(1) })).max(400),
   decisionQuality: z.number().optional(),
   context: RealWorldContextSchema.optional(),
+  brief: CallBriefSchema.optional(),
 });
 
 /** What the judge model must return. */
@@ -103,3 +122,20 @@ export const GeneratedRiddleSchema = z.object({
   explanation: z.string().max(320),
   targets: z.array(Tactic).max(3),
 });
+
+/** The director's plan for one unique call. The live persona improvises inside it. */
+export const CallPlanSchema = z.object({
+  callerName: z.string().max(60).describe("A realistic full name. Vary cultures and genders between calls."),
+  callerRole: z.string().max(60),
+  organization: z.string().max(60).describe("A plausible but FICTIONAL organisation — never a real brand."),
+  voice: z.enum(["male", "female"]),
+  hook: z.string().max(160).describe("One sentence: the specific pretext that opens this call."),
+  objective: z.string().max(240).describe("What the caller is trying to get from the player."),
+  facts: z.array(z.string().max(200)).min(2).max(5).describe("Specific fictional details the caller can use."),
+  tacticPlan: z.array(Tactic).min(1).max(4).describe("The order the caller reaches for tactics."),
+  tells: z
+    .array(z.string().max(180))
+    .max(3)
+    .describe("Scam: small mistakes left for a careful player. Genuine: the verification routes the caller offers."),
+});
+export type CallPlan = z.infer<typeof CallPlanSchema>;

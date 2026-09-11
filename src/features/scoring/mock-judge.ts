@@ -64,6 +64,7 @@ export function judgeCall(call: CompletedCall): CallScore {
     durationMs: call.durationMs,
     notes: notes.slice(0, 4),
     judge: "rules",
+    brief: call.brief,
   };
 }
 

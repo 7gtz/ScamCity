@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export interface AiStatus {
   gemini: boolean;
-  models?: { live: string; analyst: string; judge: string; riddle: string };
+  models?: { live: string; director: string; analyst: string; judge: string; riddle: string };
 }
 
 let cached: Promise<AiStatus> | null = null;

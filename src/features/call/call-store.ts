@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import type {
+  CallBrief,
+  CallerIdentity,
   CallStatus,
   PlayerAction,
   RealWorldContext,
@@ -16,6 +18,10 @@ interface CallState {
   scenarioId: string | null;
   mode: ProviderKind | null;
   context: RealWorldContext | null;
+  /** The director's caller for this call; overrides the district's default persona. */
+  caller: CallerIdentity | null;
+  brief: CallBrief | null;
+  planner: "director" | "static" | null;
   transcript: TranscriptMessage[];
   agent: ScammerState | null;
   options: PlayerAction[];
@@ -30,6 +36,7 @@ interface CallState {
   setStatus: (status: CallStatus) => void;
   setMode: (mode: ProviderKind) => void;
   setContext: (context: RealWorldContext) => void;
+  setCaller: (caller: CallerIdentity, brief: CallBrief, planner: "director" | "static") => void;
   /** Insert, or replace a message with the same id (live transcription grows in place). */
   push: (message: TranscriptMessage) => void;
   setAgent: (agent: ScammerState) => void;
@@ -45,6 +52,9 @@ const initial = {
   scenarioId: null,
   mode: null,
   context: null,
+  caller: null,
+  brief: null,
+  planner: null,
   transcript: [],
   agent: null,
   options: [],
@@ -66,6 +76,7 @@ export const useCallStore = create<CallState>()((set) => ({
     }),
   setMode: (mode) => set({ mode }),
   setContext: (context) => set({ context }),
+  setCaller: (caller, brief, planner) => set({ caller, brief, planner }),
   push: (message) =>
     set((s) => {
       const i = s.transcript.findIndex((m) => m.id === message.id);

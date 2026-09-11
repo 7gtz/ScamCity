@@ -39,5 +39,6 @@ export function composeScore(call: CompletedCall, out: JudgeOutput): CallScore {
     durationMs: call.durationMs,
     notes: out.notes.slice(0, 4),
     judge: "gemini",
+    brief: call.brief,
   };
 }

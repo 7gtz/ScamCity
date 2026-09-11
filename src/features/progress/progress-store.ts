@@ -15,9 +15,12 @@ interface ProgressState {
   learned: TacticId[];
   /** How often each tactic has slipped past this player. Steers generated riddles. */
   weak: Partial<Record<TacticId, number>>;
+  /** Recent call pretexts, so the director never repeats itself. */
+  recentHooks: string[];
   riddle: { answered: number; correct: number; seen: string[] };
 
   clear: (scenarioId: string) => void;
+  rememberHook: (hook: string) => void;
   learn: (tactics: TacticId[]) => void;
   recordTactics: (missed: TacticId[], caught: TacticId[]) => void;
   answerRiddle: (id: string, correct: boolean) => void;
@@ -28,6 +31,7 @@ const initial = {
   cleared: [] as string[],
   learned: ["authority", "urgency"] as TacticId[],
   weak: {} as Partial<Record<TacticId, number>>,
+  recentHooks: [] as string[],
   riddle: { answered: 0, correct: 0, seen: [] as string[] },
 };
 
@@ -45,6 +49,7 @@ export const useProgressStore = create<ProgressState>()(
     (set) => ({
       ...initial,
       clear: (id) => set((s) => (s.cleared.includes(id) ? s : { cleared: [...s.cleared, id] })),
+      rememberHook: (hook) => set((s) => ({ recentHooks: [...s.recentHooks.filter((h) => h !== hook), hook].slice(-6) })),
       learn: (tactics) => set((s) => ({ learned: [...new Set([...s.learned, ...tactics])] })),
       recordTactics: (missed, caught) =>
         set((s) => {

@@ -26,9 +26,15 @@ type Props = { scenarioId: string; persona: ScammerPersona };
 const ON_CALL: CallStatus[] = ["ringing", "live", "ending", "scoring"];
 
 /** The flagship call room (pages/call-room.md). */
-export function CallRoom({ scenarioId, persona }: Props) {
+export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
   const { answer, choose, sendText, hangUp, toggleMute } = useLiveCall(scenarioId);
   const status = useCallStore((s) => s.status);
+  // In a live call the director writes a new caller each time.
+  const caller = useCallStore((s) => s.caller);
+  const persona = useMemo(
+    () => (caller ? { ...districtPersona, ...caller, portrait: undefined } : districtPersona),
+    [caller, districtPersona],
+  );
   const muted = useCallStore((s) => s.muted);
   const [precise, setPrecise] = useState(true);
   const district = DISTRICTS.find((d) => d.id === persona.district);
@@ -207,6 +213,8 @@ function Idle({
 
       {live && ai?.models && (
         <dl className="meta grid max-w-[46ch] grid-cols-[auto_1fr] gap-x-4 gap-y-1 border-t border-line pt-4 text-smoke">
+          <dt>Director</dt>
+          <dd className="text-ash normal-case tracking-[0.04em]">{ai.models.director}</dd>
           <dt>Voice</dt>
           <dd className="text-ash normal-case tracking-[0.04em]">{ai.models.live}</dd>
           <dt>Analyst</dt>
@@ -280,6 +288,7 @@ function Conversation({
   const options = useCallStore((s) => s.options);
   const mode = useCallStore((s) => s.mode);
   const context = useCallStore((s) => s.context);
+  const planner = useCallStore((s) => s.planner);
   const reduced = useReducedMotion();
   const log = useRef<HTMLOListElement>(null);
   const settled = status === "ending" || status === "scoring";
@@ -319,6 +328,7 @@ function Conversation({
             In play · <span className="text-ash normal-case tracking-[0.04em]">{describeContext(context)}</span>
           </p>
         )}
+        {planner === "director" && <p className="meta mt-2 text-smoke">A new call, written for you</p>}
       </div>
 
       <ol

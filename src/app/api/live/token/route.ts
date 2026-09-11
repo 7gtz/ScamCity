@@ -1,17 +1,23 @@
 import { Modality, type LiveConnectConfig } from "@google/genai";
 import { getScenario } from "@/content/scenarios";
-import { MODELS, VOICES } from "@/lib/gemini/models";
+import { BRIEFS } from "@/lib/gemini/briefs";
+import { difficultyFor, planCall } from "@/lib/gemini/director";
+import { MODELS, pickVoice } from "@/lib/gemini/models";
 import { buildLiveSystemInstruction, END_CALL } from "@/lib/gemini/persona";
 import { gemini, hasGemini } from "@/lib/gemini/server";
 import { rateLimit, tooMany } from "@/lib/rate-limit";
-import { TokenRequestSchema } from "@/lib/validation/schemas";
+import { TokenRequestSchema, type CallPlan } from "@/lib/validation/schemas";
 
 export const dynamic = "force-dynamic";
 
+/** Share of calls in twist districts that are secretly genuine (false-positive training). */
+const LEGIT_TWIST = 0.2;
+
 /**
- * Mints a one-use ephemeral token with the persona, voice, tools and
- * transcription locked in. The browser can open exactly this call and nothing
- * else; GEMINI_API_KEY never leaves the server.
+ * 1. The director writes a unique plan for this call, aimed at this player.
+ * 2. The plan, voice, tools and transcription are locked into a one-use
+ *    ephemeral token. The browser can open exactly this call and nothing
+ *    else; GEMINI_API_KEY never leaves the server.
  */
 export async function POST(req: Request) {
   if (!hasGemini()) return Response.json({ error: "Live AI is not configured on this server." }, { status: 503 });
@@ -19,13 +25,32 @@ export async function POST(req: Request) {
 
   const parsed = TokenRequestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Invalid request." }, { status: 400 });
-  const scenario = getScenario(parsed.data.scenarioId);
-  if (!scenario) return Response.json({ error: "Unknown scenario." }, { status: 404 });
+  const { scenarioId, context, profile } = parsed.data;
+  const scenario = getScenario(scenarioId);
+  const brief = BRIEFS[scenarioId];
+  if (!scenario || !brief) return Response.json({ error: "Unknown scenario." }, { status: 404 });
+
+  let legitimate = scenario.persona.legitimate || Boolean(scenario.twist && brief.legitGuide && Math.random() < LEGIT_TWIST);
+  let plan: CallPlan = brief.plan;
+  let planner: "director" | "static" = "static";
+  try {
+    plan = await planCall({ scenario, legitimate, context, profile });
+    planner = "director";
+  } catch (err) {
+    console.error("[live/token] director failed, using the district's own plan", err);
+    // The hand-written plans are scams; only the director can write a genuine twist.
+    legitimate = scenario.persona.legitimate;
+  }
 
   const config: LiveConnectConfig = {
     responseModalities: [Modality.AUDIO],
-    systemInstruction: buildLiveSystemInstruction(scenario, parsed.data.context),
-    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICES[scenario.persona.id] ?? "Charon" } } },
+    systemInstruction: buildLiveSystemInstruction(plan, {
+      legitimate,
+      difficulty: difficultyFor(scenario, profile),
+      context,
+      weak: profile?.weak,
+    }),
+    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: pickVoice(plan.voice) } } },
     inputAudioTranscription: {},
     outputAudioTranscription: {},
     tools: [{ functionDeclarations: [END_CALL] }],
@@ -44,7 +69,18 @@ export async function POST(req: Request) {
       },
     });
     return Response.json(
-      { token: token.name, model: MODELS.live, legitimate: scenario.persona.legitimate },
+      {
+        token: token.name,
+        model: MODELS.live,
+        legitimate,
+        planner,
+        caller: { name: plan.callerName, role: plan.callerRole, organization: plan.organization },
+        brief: {
+          caller: `${plan.callerName}, ${plan.callerRole} · ${plan.organization}`,
+          hook: plan.hook,
+          objective: plan.objective,
+        },
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (err) {

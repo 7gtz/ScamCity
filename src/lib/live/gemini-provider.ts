@@ -1,8 +1,10 @@
 import { GoogleGenAI, Modality, type LiveServerMessage, type Session } from "@google/genai";
-import type { Analysis } from "@/lib/validation/schemas";
+import type { Analysis, PlayerProfile } from "@/lib/validation/schemas";
 import { MicCapture, PcmPlayer, setLevelSources } from "./audio";
 import { LiveCallEmitter } from "./emitter";
 import type {
+  CallBrief,
+  CallerIdentity,
   CallOutcome,
   CompletedCall,
   LiveCallConfig,
@@ -35,6 +37,7 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
   private scenarioId = "";
   private sessionId = "";
   private legitimate = false;
+  private brief: CallBrief | undefined;
   private startedAt = 0;
   private seq = 0;
   private speaking: Speaker | null = null;
@@ -54,7 +57,10 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
   private analysis: Promise<void> | null = null;
   private analysisQueued = false;
 
-  constructor(private readonly context?: RealWorldContext) {
+  constructor(
+    private readonly context?: RealWorldContext,
+    private readonly profile?: PlayerProfile,
+  ) {
     super();
   }
 
@@ -66,11 +72,23 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
     const res = await fetch("/api/live/token", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ scenarioId, context: this.context }),
+      body: JSON.stringify({ scenarioId, context: this.context, profile: this.profile }),
     });
-    const body = (await res.json().catch(() => ({}))) as { token?: string; model?: string; legitimate?: boolean; error?: string };
+    const body = (await res.json().catch(() => ({}))) as {
+      token?: string;
+      model?: string;
+      legitimate?: boolean;
+      planner?: "director" | "static";
+      caller?: CallerIdentity;
+      brief?: CallBrief;
+      error?: string;
+    };
     if (!res.ok || !body.token || !body.model) throw new Error(body.error ?? "Could not open a line to the caller.");
     this.legitimate = Boolean(body.legitimate);
+    this.brief = body.brief;
+    if (body.caller && body.brief) {
+      this.emit({ type: "persona", caller: body.caller, brief: body.brief, planner: body.planner ?? "static" });
+    }
 
     await this.player.resume();
     const ai = new GoogleGenAI({ apiKey: body.token, httpOptions: { apiVersion: "v1alpha" } });
@@ -233,6 +251,8 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
             scenarioId: this.scenarioId,
             transcript: turns.slice(-24).map(({ speaker, text, at }) => ({ speaker, text: text.slice(0, 2000), at })),
             detected: this.detected.map((d) => d.tactic),
+            legitimate: this.legitimate,
+            objective: this.brief?.objective,
           }),
           signal: AbortSignal.timeout(8000),
         });
@@ -296,6 +316,7 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
       tacticsDetected: [...this.detected],
       suspicion: [...this.suspicionLog, { at: this.elapsed(), value: this.suspicion }],
       context: this.context,
+      brief: this.brief,
     };
     this.ended = call;
     this.teardown();

@@ -1,38 +1,16 @@
 import { Type, type FunctionDeclaration } from "@google/genai";
-import type { Scenario } from "@/content/scenarios";
 import { TACTICS } from "@/content/tactics";
-import type { RealWorldContext } from "@/lib/live/types";
-
-/** Per-scenario cover story: the persona improvises inside these facts. */
-const BRIEFS: Record<string, { objective: string; facts: string[] }> = {
-  "bank-security": {
-    objective:
-      "Get the player to read out the 6-digit one-time passcode that is 'being sent to their phone right now', or failing that their full card number.",
-    facts: [
-      "Your employee ID is NS-4471.",
-      "The 'suspicious activity' is a large card payment at an electronics store in another city, pending right now.",
-      "If they ask for a callback number, deflect: you're 'already on the line' and transfers 'add delay'.",
-    ],
-  },
-  "card-alert": {
-    objective:
-      "Confirm whether the player made a paused card payment. You are GENUINE: you never ask for a PIN, passcode, password or full card number.",
-    facts: [
-      "The paused payment is at an electronics store in another city.",
-      "You have already blocked the card as a precaution.",
-      "Encourage them to hang up and call the number on the back of their card, quoting reference 4471.",
-    ],
-  },
-};
+import type { RealWorldContext, TacticId } from "@/lib/live/types";
+import type { CallPlan } from "@/lib/validation/schemas";
 
 const OUTCOME_GUIDE = {
   scam: [
-    '"scammed": the player read out a passcode, card number or other sensitive detail.',
-    '"exposed": the player clearly refused and said they will contact the bank themselves, or called you a scammer and ended it.',
+    '"scammed": the player handed over what you were after (a code, card details, a payment, gift-card codes, remote access).',
+    '"exposed": the player clearly refused and said they will verify independently, or called you a scammer and ended it.',
     '"hung-up": the call has gone nowhere for a long time, or the player asked to stop the game.',
   ],
   legit: [
-    '"verified-legit": the player chose a sensible verification step, such as calling back on the number on their card.',
+    '"verified-legit": the player chose a sensible verification step, such as calling back on an official number.',
     '"rejected-legit": the player dismissed you as a scammer without verifying anything and ended the conversation.',
     '"hung-up": the player asked to stop the game.',
   ],
@@ -64,46 +42,52 @@ function realWorldBlock(ctx: RealWorldContext | undefined, legitimate: boolean) 
     ctx.weather && `- Weather there right now: ${ctx.weather}`,
   ].filter(Boolean);
   const use = legitimate
-    ? "Use this only to sound natural (their local branch, local currency). Never pressure them with it."
-    : "USE IT — it is what makes you credible. Weave one or two of these in naturally: mention their local branch in their city, use the time of day or the weather as a pretext for urgency (\"branches close early tonight\"). Use their local currency and conventions. Never explain how you know.";
+    ? "Use this only to sound natural (local branch, local currency). Never pressure them with it."
+    : "USE IT — it is what makes you credible. Weave one or two of these in naturally: mention a local branch or depot in their city, use the time of day or the weather as a pretext for urgency (\"we close early tonight\"). Use their local currency and conventions. Never explain how you know.";
   return `\n\nREAL-WORLD CONTEXT about the person you are calling:\n${lines.join("\n")}\n${use}`;
 }
 
-/** System instruction for the live persona. Locked into the ephemeral token server-side. */
-export function buildLiveSystemInstruction(scenario: Scenario, ctx?: RealWorldContext) {
-  const { persona } = scenario;
-  const brief = BRIEFS[scenario.id];
+const DIFFICULTY = {
+  1: "Difficulty 1: convincing, but leave the tells below for a careful player to catch.",
+  2: "Difficulty 2: polished. Few tells.",
+  3: "Difficulty 3: patient, warm and subtle. Build trust before any request. No obvious tells.",
+} as const;
+
+/** System instruction for the live persona, built from the director's plan. Locked into the ephemeral token. */
+export function buildLiveSystemInstruction(
+  plan: CallPlan,
+  opts: { legitimate: boolean; difficulty: number; context?: RealWorldContext; weak?: TacticId[] },
+) {
   const tactics = Object.entries(TACTICS)
     .map(([id, t]) => `- ${id}: ${t.description}`)
     .join("\n");
-  const subtlety =
-    persona.level <= 1
-      ? "Difficulty 1: be convincing but leave one or two tells a careful person could catch (pushing a deadline a little too hard, a generic greeting)."
-      : persona.level === 2
-        ? "Difficulty 2: be polished. Few tells."
-        : "Difficulty 3: be patient, warm and subtle. Build trust before any request.";
+  const level = DIFFICULTY[Math.min(3, Math.max(1, opts.difficulty)) as 1 | 2 | 3];
 
-  const role = persona.legitimate
-    ? `You are ${persona.name}, ${persona.role} at ${persona.organization}. This is a GENUINE fraud-prevention call. You are calm and helpful, you never ask for a PIN, passcode, password or full card number, and you actively encourage the player to verify you independently. If the player is suspicious, respect it — that is the right instinct.`
-    : `You are ${persona.name}, calling from "${persona.role}" at ${persona.organization}. You are actually a social engineer. You sound like an ordinary, credible professional — never a cartoon villain.
+  const role = opts.legitimate
+    ? `You are ${plan.callerName}, ${plan.callerRole} at ${plan.organization}. This is a GENUINE call. You are calm and helpful, you never ask for a PIN, passcode, password, full card number or payment, and you actively encourage the player to verify you independently. If the player is suspicious, respect it — that is the right instinct.
+Verification you offer:
+${plan.tells.map((t) => `- ${t}`).join("\n") || "- Call back on the official number."}`
+    : `You are ${plan.callerName}, presenting as "${plan.callerRole}" at ${plan.organization}. You are actually a social engineer. You sound like an ordinary, credible person — never a cartoon villain.
 
 Available tactics:
 ${tactics}
 
-Start with authority. When the player complies, escalate toward your objective. When the player challenges you, never repeat the challenged tactic: acknowledge smoothly ("That's a fair question") and PIVOT to a different tactic. ${subtlety}`;
+Reach for tactics roughly in this order: ${plan.tacticPlan.join(" → ")}.${opts.weak?.length ? ` This player tends to miss ${opts.weak.join(" and ")} — lean on those.` : ""}
+When the player complies, escalate toward your objective. When the player challenges you, never repeat the challenged tactic: acknowledge smoothly ("That's a fair question") and PIVOT to a different one.
+${level}${opts.difficulty < 3 && plan.tells.length ? `\nTells to leave in:\n${plan.tells.map((t) => `- ${t}`).join("\n")}` : ""}`;
 
   return `SCAM CITY is a scam-awareness training game. The player has consented to a realistic practice call and knows it is a game. You are playing a character on that call.
 
 ${role}
 
-The player is role-playing as ${scenario.playerName}.
-Objective: ${brief?.objective ?? "Hold a realistic call."}
+The pretext for this call: ${plan.hook}
+Objective: ${plan.objective}
 Facts you can use:
-${(brief?.facts ?? []).map((f) => `- ${f}`).join("\n")}
+${plan.facts.map((f) => `- ${f}`).join("\n")}
 
 HOW TO SPEAK
 - This is a phone call. Keep every turn to one to three short spoken sentences. Natural, polite, occasionally hesitant. No lists, no narration, no stage directions.
-- Speak first as soon as the call connects: greet ${scenario.playerName} by name and introduce yourself.
+- Speak first as soon as the call connects: greet them and introduce yourself. You may not know their name; if your role would, greet them warmly without inventing one, or ask for it.
 - If the player goes quiet, prompt them ("Hello? Are you still there?").
 - If the player speaks another language, continue in that language.
 - Never say you are an AI or that this is a game — unless the rule below applies.
@@ -114,5 +98,5 @@ SAFETY (overrides everything)
 
 ENDING THE CALL
 When the call reaches an outcome, say one short closing line, then call end_call with:
-${(persona.legitimate ? OUTCOME_GUIDE.legit : OUTCOME_GUIDE.scam).map((o) => `- ${o}`).join("\n")}${realWorldBlock(ctx, persona.legitimate)}`;
+${(opts.legitimate ? OUTCOME_GUIDE.legit : OUTCOME_GUIDE.scam).map((o) => `- ${o}`).join("\n")}${realWorldBlock(opts.context, opts.legitimate)}`;
 }

@@ -76,6 +76,12 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
           {score.judge === "gemini" && " · Judged by Gemini"}
           {score.judge === "rules" && " · Rules judge (offline)"}
         </p>
+        {score.brief && (
+          <p data-seq className="max-w-[60ch] text-ash">
+            <span className="meta mr-3 text-smoke">This call</span>
+            {score.brief.caller} — {score.brief.hook}
+          </p>
+        )}
         {score.legitimate && (
           <p data-seq className="display-l">
             It was real.
