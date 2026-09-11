@@ -82,6 +82,9 @@
   --color-ash: #4a463f;
   --color-bone: #17150f;
   --color-signal: #b42f1b;
+  /* State colours re-cut for a light ground: safe 5.87:1, amber 5.65:1. */
+  --color-safe: #3b6644;
+  --color-amber: #8a5212;
   color-scheme: light;
 }
 .tone-amber {
@@ -94,6 +97,9 @@
   --color-ash: #4a463f;
   --color-bone: #17150f;
   --color-signal: #b42f1b;
+  /* safe 5.01:1, amber 5.64:1 on the amber ground. */
+  --color-safe: #3b6644;
+  --color-amber: #7a4a10;
   color-scheme: light;
 }
 
@@ -255,6 +261,82 @@ html.has-custom-cursor textarea {
   border-radius: 9999px;
   background: var(--color-signal);
   animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+/* Incoming-call rings (call room, city map). Reduced motion ends them on the invisible frame. */
+@keyframes ring-wave {
+  from {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0.8;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.ring-wave {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: min(80%, 26rem);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  border: 1px solid var(--hue-text, var(--color-bone));
+  opacity: 0;
+  pointer-events: none;
+  animation: ring-wave 3s var(--ease-out) infinite;
+}
+
+/* A phone buzzing on a table: two short shudders per ring, in time with the ringtone. */
+@keyframes buzz {
+  0%,
+  13%,
+  17%,
+  30%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  2%,
+  6%,
+  10%,
+  19%,
+  23%,
+  27% {
+    transform: translate3d(-2px, 0, 0) rotate(-0.35deg);
+  }
+  4%,
+  8%,
+  12%,
+  21%,
+  25%,
+  29% {
+    transform: translate3d(2px, 0, 0) rotate(0.35deg);
+  }
+}
+
+.buzz {
+  animation: buzz 3s linear infinite;
+}
+
+/* A verdict stamped onto the evidence. */
+@keyframes stamp-in {
+  0% {
+    transform: scale(1.9) rotate(-9deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.94) rotate(-4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-4deg);
+    opacity: 1;
+  }
+}
+
+.stamp {
+  animation: stamp-in 520ms var(--ease-out) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

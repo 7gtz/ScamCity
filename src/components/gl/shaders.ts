@@ -105,6 +105,10 @@ uniform vec2 uRes;
 uniform float uTime;
 uniform float uSeed;
 uniform float uLevel;
+// The district's light (default: sodium amber).
+uniform float uTintR;
+uniform float uTintG;
+uniform float uTintB;
 
 float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
@@ -173,7 +177,7 @@ void main() {
   float dotMask = smoothstep(r, r - 0.12, length(f));
 
   vec3 ink = vec3(0.102, 0.071, 0.051);
-  vec3 amber = vec3(0.91, 0.65, 0.34);
+  vec3 amber = vec3(uTintR, uTintG, uTintB);
   vec3 bone = vec3(0.94, 0.92, 0.88);
   vec3 col = mix(ink, mix(amber, bone, smoothstep(0.75, 1.0, L)), dotMask);
 

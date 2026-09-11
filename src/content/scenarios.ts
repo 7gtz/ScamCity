@@ -644,10 +644,12 @@ export const SCENARIOS: Record<string, Scenario> = Object.fromEntries(
 
 export const DEFAULT_SCENARIO = bankSecurity.id;
 
-/** Level order. Riddle accuracy unlocks the legitimate-call test early. */
+/**
+ * The district route, in order. The legitimate call is a bonus off the route
+ * (riddles or clearing the Bank open it) and leads back onto it.
+ */
 export const SCENARIO_ORDER = [
   bankSecurity.id,
-  cardAlert.id,
   parcelHold.id,
   deskSupport.id,
   prizeClaim.id,
@@ -655,6 +657,9 @@ export const SCENARIO_ORDER = [
   romanceEmergency.id,
 ];
 
-export const nextScenarioId = (id: string) => SCENARIO_ORDER[SCENARIO_ORDER.indexOf(id) + 1];
+export const BONUS_SCENARIO = cardAlert.id;
+
+export const nextScenarioId = (id: string) =>
+  id === cardAlert.id ? parcelHold.id : SCENARIO_ORDER[SCENARIO_ORDER.indexOf(id) + 1];
 
 export const getScenario = (id: string) => SCENARIOS[id];

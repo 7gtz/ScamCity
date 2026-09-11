@@ -40,6 +40,13 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
             { clipPath: "inset(0% 100% 0% 0%)" },
             { clipPath: "inset(0% 0% 0% 0%)", duration: 1.2, ease: "none" },
             "-=0.5",
+          )
+          // The verdict lands as the counter finishes.
+          .fromTo(
+            "[data-stamp]",
+            { scale: 1.8, opacity: 0, rotate: -10 },
+            { scale: 1, opacity: 1, rotate: -3, duration: 0.5, ease: "back.out(2)" },
+            1.5,
           );
 
         const skip = () => tl.progress(1);
@@ -72,11 +79,63 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
       : [{ key: "verified", label: "Verified appropriately", at: score.durationMs }]
     : score.caught.map((c) => ({ key: c.tactic, label: tacticLabel(c.tactic), at: c.at }));
 
+  // One dominant result: the number and a stamped verdict, then one sentence.
+  const verdict = score.legitimate
+    ? score.passed
+      ? "Verified"
+      : "Rejected"
+    : score.outcome === "scammed"
+      ? "Scammed"
+      : score.passed
+        ? "Passed"
+        : "Not yet";
+  const verdictTone = score.passed
+    ? "border-safe text-safe"
+    : score.outcome === "scammed" || score.outcome === "rejected-legit"
+      ? "border-signal text-signal"
+      : "border-amber text-amber";
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const summary = score.legitimate
+    ? score.passed
+      ? "It was real — and you verified it the right way."
+      : "It was real. Verify before you hang up."
+    : score.outcome === "scammed"
+      ? `You caught ${plural(caught.length, "tactic")}, but the caller got what they came for.`
+      : `You caught ${plural(caught.length, "tactic")}. You missed ${missed.length}.`;
+
   return (
     <div ref={ref} className={cn("flex flex-col gap-16 md:gap-24", className)}>
-      <header className="flex flex-col gap-6">
+      <header className="flex flex-col gap-8">
+        <div
+          data-seq
+          role="img"
+          aria-label={`Score ${score.score} out of 100. ${verdict}. Pass mark ${score.threshold}.`}
+          className="flex flex-wrap items-end gap-x-10 gap-y-6"
+        >
+          <span className="flex items-baseline gap-4">
+            <span className="display-xl tabular">
+              <Counter value={score.score} trigger={trigger} delay={0.3} />
+            </span>
+            <span aria-hidden className="display-m text-ash">
+              / 100
+            </span>
+          </span>
+          <span
+            aria-hidden
+            data-stamp
+            className={cn(
+              "mb-[0.4em] inline-block -rotate-3 border-2 px-4 py-2 font-display text-[clamp(2rem,4.4vw,4rem)] leading-none uppercase",
+              verdictTone,
+            )}
+          >
+            {verdict}
+          </span>
+        </div>
+        <p data-seq className="font-display text-[clamp(1.5rem,2.8vw,2.5rem)] leading-tight tracking-[-0.01em]">
+          {summary}
+        </p>
         <p data-seq className="meta text-smoke">
-          Call ended · {fmt(score.durationMs)}
+          Pass mark {score.threshold} · Call {fmt(score.durationMs)}
           {score.judge === "gemini" && " · Judged by Gemini"}
           {score.judge === "rules" && " · Rules judge (offline)"}
         </p>
@@ -86,28 +145,6 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
             {score.brief.caller} — {score.brief.hook}
           </p>
         )}
-        {score.legitimate && (
-          <p data-seq className="display-l">
-            It was real.
-          </p>
-        )}
-        <div
-          data-seq
-          role="img"
-          aria-label={`Score ${score.score} out of 100, ${score.passed ? "passed" : "not passed"}. Pass mark ${score.threshold}.`}
-          className="flex flex-wrap items-baseline gap-x-6 gap-y-2"
-        >
-          <span className="display-xl tabular">
-            <Counter value={score.score} trigger={trigger} delay={0.3} />
-          </span>
-          <span aria-hidden className="display-m text-ash">
-            / 100
-          </span>
-          <span aria-hidden className="meta flex flex-col gap-1 text-smoke">
-            <span>Pass ≥ {score.threshold}</span>
-            <span className={score.passed ? "text-bone" : "text-smoke"}>{score.passed ? "Passed" : "Not yet"}</span>
-          </span>
-        </div>
       </header>
 
       <div className="grid gap-12 md:grid-cols-2 md:gap-16">

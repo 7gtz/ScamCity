@@ -14,7 +14,7 @@ export function Opening() {
       {/* The player's real evening, through a wet window. */}
       <CityRain caption className="absolute inset-0 -z-10" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,var(--color-ink)_8%,transparent_55%)]" />
-      <p className="meta text-smoke">Training system / 01</p>
+      <p className="meta text-smoke">A social-engineering training system</p>
 
       <div className="flex flex-col gap-10 md:gap-14">
         <SplitReveal

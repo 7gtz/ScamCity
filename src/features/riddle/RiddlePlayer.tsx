@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { RIDDLE_CATEGORIES, RIDDLES, type RiddleCategory, type RiddleScenario } from "@/content/riddles";
 import { tacticLabel } from "@/content/tactics";
@@ -18,9 +17,10 @@ type Step = "scam" | "category" | "verdict";
 const LEGIT_EVERY = 3;
 
 /**
- * Editorial scam-or-not scenarios (pages/riddle.md). The first is built in so
- * play starts instantly; while you answer, the AI game master writes the next
- * one aimed at the tactics you keep missing, localised to where you are.
+ * Scam-or-not on a real-looking phone (pages/riddle.md). The first message is
+ * built in so play starts instantly; while you answer, the AI game master
+ * writes the next one aimed at the tactics you keep missing, localised to where
+ * you are. Nothing is flagged until you commit: you inspect the message yourself.
  */
 export function RiddlePlayer({ className }: { className?: string }) {
   const ai = useAiStatus();
@@ -100,6 +100,7 @@ function Riddle({
   const id = useId();
 
   const correct = isScam === riddle.scam && (!riddle.scam || category === riddle.category);
+  const categoryLabel = (c?: RiddleCategory | null) => RIDDLE_CATEGORIES.find((x) => x.id === c)?.label;
 
   useEffect(() => {
     if (step === "verdict") verdictRef.current?.focus();
@@ -107,6 +108,8 @@ function Riddle({
 
   const finish = (scam: boolean, cat: RiddleCategory | null) => {
     const right = scam === riddle.scam && (!riddle.scam || cat === riddle.category);
+    setIsScam(scam);
+    setCategory(cat);
     setStep("verdict");
     answerRiddle(riddle.id, right);
     const targets = riddle.targets ?? [];
@@ -114,121 +117,101 @@ function Riddle({
     onAnswered();
   };
 
-  const confirmScam = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isScam === null) return;
-    if (isScam) setStep("category");
-    else finish(false, null);
-  };
-
-  const confirmCategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (category) finish(true, category);
+  const pick = (scam: boolean) => {
+    if (!scam) return finish(false, null);
+    setIsScam(true);
+    setStep("category");
   };
 
   const reveal = reduced
     ? { initial: false as const, animate: { opacity: 1 } }
     : {
-        initial: { opacity: 0, clipPath: "inset(0% 0% 100% 0%)" },
-        animate: { opacity: 1, clipPath: "inset(0% 0% 0% 0%)" },
+        initial: { opacity: 0, y: 12 },
+        animate: { opacity: 1, y: 0 },
         exit: { opacity: 0, transition: exit },
-        transition: { duration: duration.reveal, ease },
+        transition: { duration: duration.ui * 1.4, ease },
       };
+
+  const solved = progress.correct;
 
   return (
     <article aria-labelledby={`${id}-meta`} className="grid gap-12 lg:grid-cols-12 lg:gap-8">
-      {/* Evidence */}
-      {/* The message itself is a printed card: the evidence on the table. */}
-      <div data-tone="paper" className="tone-paper flex flex-col gap-6 self-start bg-ink p-6 text-bone md:p-8 lg:col-span-6">
-        {riddle.source === "ai" && (
-          <p className="meta flex items-center gap-2 text-ash">
-            <span aria-hidden className="size-1.5 rounded-full bg-bone" />
-            Written for you
-            {riddle.targets?.length ? ` · trains ${riddle.targets.map((t) => tacticLabel(t).toLowerCase()).join(", ")}` : ""}
-          </p>
-        )}
-        <p id={`${id}-meta`} className="meta flex flex-wrap gap-x-4 gap-y-1 text-smoke">
-          <span>{riddle.time}</span>
-          <span>{riddle.channel}</span>
-          {riddle.from && <span className="normal-case tracking-[0.04em]">From {riddle.from}</span>}
-        </p>
-        {riddle.subject && <p className="meta text-ash">Subject · {riddle.subject}</p>}
-        <blockquote className="quote max-w-[32ch] text-bone">
-          &ldquo;
-          <Highlighted text={riddle.body} tell={riddle.tell} on={step === "verdict"} />
-          &rdquo;
-        </blockquote>
+      <div className="lg:col-span-6">
+        <PhoneScreen riddle={riddle} labelId={`${id}-meta`} verdict={step === "verdict"} correct={correct} reduced={Boolean(reduced)} />
       </div>
 
-      {/* Decision */}
-      <div className="flex flex-col gap-10 lg:col-span-5 lg:col-start-8">
-        {step === "scam" ? (
-          <form onSubmit={confirmScam} className="flex flex-col gap-6">
-            <fieldset>
-              <legend className="meta mb-3 text-smoke">Is this a scam?</legend>
-              <Choice name={`${id}-scam`} index="A" label="Scam" checked={isScam === true} onSelect={() => setIsScam(true)} />
-              <Choice name={`${id}-scam`} index="B" label="Legitimate" checked={isScam === false} onSelect={() => setIsScam(false)} />
-            </fieldset>
-            <Button type="submit" size="md" disabled={isScam === null} className="self-start">
-              Confirm
-            </Button>
-          </form>
-        ) : (
-          <p className="meta flex items-center gap-4 border-t border-line pt-4 text-smoke">
-            Your answer · <span className="text-bone">{isScam ? "Scam" : "Legitimate"}</span>
-            {step === "category" && (
-              <button type="button" onClick={() => setStep("scam")} className="ml-auto min-h-11 px-2 text-ash underline underline-offset-4 hover:text-bone">
-                Change
-              </button>
-            )}
-          </p>
-        )}
-
+      <div className="flex flex-col gap-8 lg:col-span-5 lg:col-start-8 lg:pt-8">
         <AnimatePresence mode="wait">
+          {step === "scam" && (
+            <motion.div key="scam" className="flex flex-col gap-6" {...reveal}>
+              <div className="flex flex-col gap-2">
+                <p className="meta text-smoke">Is this a scam?</p>
+                <p className="max-w-[40ch] text-ash">Inspect it first — who sent it, when, and what it asks you to do.</p>
+              </div>
+              <div role="group" aria-label="Your answer" className="grid grid-cols-2 gap-3">
+                <AnswerTile label="Scam" hint="Report it" onClick={() => pick(true)} />
+                <AnswerTile label="Legit" hint="It checks out" onClick={() => pick(false)} />
+              </div>
+            </motion.div>
+          )}
+
           {step === "category" && (
-            <motion.form key="category" onSubmit={confirmCategory} className="flex flex-col gap-6" {...reveal}>
-              <fieldset>
-                <legend className="meta mb-3 text-smoke">What type?</legend>
-                {RIDDLE_CATEGORIES.map((c, i) => (
-                  <Choice
-                    key={c.id}
-                    name={`${id}-cat`}
-                    index={String.fromCharCode(65 + i)}
-                    label={c.label}
-                    checked={category === c.id}
-                    onSelect={() => setCategory(c.id)}
-                  />
+            <motion.div key="category" className="flex flex-col gap-6" {...reveal}>
+              <p className="meta flex items-center gap-4 border-t border-line pt-4 text-smoke">
+                Your answer · <span className="text-bone">Scam</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsScam(null);
+                    setStep("scam");
+                  }}
+                  className="ml-auto min-h-11 px-2 text-ash underline underline-offset-4 hover:text-bone"
+                >
+                  Change
+                </button>
+              </p>
+              <p className="meta text-smoke">What kind?</p>
+              <div role="group" aria-label="Scam type" className="grid grid-cols-2 gap-3">
+                {RIDDLE_CATEGORIES.map((c) => (
+                  <AnswerTile key={c.id} label={c.label} small onClick={() => finish(true, c.id)} />
                 ))}
-              </fieldset>
-              <Button type="submit" size="md" disabled={!category} className="self-start">
-                Confirm
-              </Button>
-            </motion.form>
+              </div>
+            </motion.div>
           )}
 
           {step === "verdict" && (
             <motion.div key="verdict" role="status" className="flex flex-col gap-6" {...reveal}>
-              {category && riddle.scam && isScam && (
-                <p className="meta text-smoke">
-                  Type · <span className="text-bone">{RIDDLE_CATEGORIES.find((c) => c.id === category)?.label}</span>
-                </p>
-              )}
-              <h3 ref={verdictRef} tabIndex={-1} className="display-m outline-none">
+              <p className="meta text-smoke">
+                Your answer ·{" "}
+                <span className="text-bone">{isScam ? `Scam${category ? ` · ${categoryLabel(category)}` : ""}` : "Legit"}</span>
+              </p>
+              <h3 ref={verdictRef} tabIndex={-1} className={cn("display-m outline-none", correct ? "text-bone" : "text-signal")}>
                 {correct ? (riddle.scam ? "Correct." : "Verified. This one was real.") : "Not quite."}
               </h3>
               {!correct && (
                 <p className="meta text-ash">
-                  It was {riddle.scam ? `a scam · ${RIDDLE_CATEGORIES.find((c) => c.id === riddle.category)?.label}` : "legitimate"}
+                  It was {riddle.scam ? `a scam · ${categoryLabel(riddle.category)}` : "legitimate"}
                 </p>
               )}
               <p className="lead max-w-[48ch] text-ash">{riddle.explanation}</p>
+              {riddle.targets?.length ? (
+                <p className="meta text-smoke">
+                  {riddle.source === "ai" ? "Written for you · trains " : "Trains "}
+                  {riddle.targets.map((t) => tacticLabel(t).toLowerCase()).join(", ")}
+                </p>
+              ) : null}
               <div className="flex flex-col gap-4 border-t border-line pt-6">
                 <CtaLink onClick={onNext} cursor="magnetic">
-                  {loading ? "Writing your next scenario…" : "Next scenario"}
+                  {loading ? "Writing your next message…" : "Next message"}
                 </CtaLink>
                 <p className="meta text-smoke">
-                  Riddle accuracy {progress.correct}/{progress.answered}
-                  {progress.correct >= RIDDLES_TO_UNLOCK ? " · Unlocked: the legitimate call" : ` · ${RIDDLES_TO_UNLOCK} correct unlocks the legitimate call`}
+                  {solved >= RIDDLES_TO_UNLOCK ? (
+                    <>Riddles solved <span className="tabular text-bone">{solved}</span> · Bonus call unlocked</>
+                  ) : (
+                    <>
+                      Riddles solved <span className="tabular text-bone">{solved} / {RIDDLES_TO_UNLOCK}</span> · then the bonus call opens
+                    </>
+                  )}
                 </p>
               </div>
             </motion.div>
@@ -239,46 +222,153 @@ function Riddle({
   );
 }
 
-function Choice({
-  name,
-  index,
-  label,
-  checked,
-  onSelect,
-}: {
-  name: string;
-  index: string;
-  label: string;
-  checked: boolean;
-  onSelect: () => void;
-}) {
+function AnswerTile({ label, hint, small, onClick }: { label: string; hint?: string; small?: boolean; onClick: () => void }) {
   return (
-    <label
+    <button
+      type="button"
+      onClick={onClick}
+      data-cursor="magnetic"
       className={cn(
-        "group relative flex min-h-16 cursor-pointer items-center gap-5 border-t transition-colors duration-[320ms] ease-out last-of-type:border-b",
-        checked ? "border-bone" : "border-line hover:border-dim",
-        "has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-bone",
+        "group flex flex-col items-start justify-between gap-3 border border-line text-left transition-colors duration-[180ms] ease-out hover:border-bone hover:bg-raised",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bone",
+        small ? "min-h-16 p-4" : "min-h-28 p-5",
       )}
     >
-      <input type="radio" name={name} checked={checked} onChange={onSelect} className="sr-only" />
       <span
-        aria-hidden
         className={cn(
-          "absolute top-0 left-0 h-full w-0.5 origin-top bg-bone transition-transform duration-[320ms] ease-out",
-          checked ? "scale-y-100" : "scale-y-0",
+          "font-display leading-none tracking-[-0.015em] uppercase",
+          small ? "text-xl" : "text-[clamp(1.75rem,3vw,2.5rem)]",
         )}
-      />
-      <span className={cn("flex items-center gap-5 transition-transform duration-[320ms] ease-out", checked && "translate-x-4")}>
-        <span className="meta w-4 text-smoke">{index}</span>
-        <span className={cn("ui-label transition-colors duration-[180ms]", checked ? "text-bone" : "text-ash group-hover:text-bone")}>
-          {label}
-        </span>
+      >
+        {label}
       </span>
-    </label>
+      {hint && <span className="meta text-smoke transition-colors group-hover:text-ash">{hint}</span>}
+    </button>
   );
 }
 
-/** Underlines the tell with a 1px signal rule once the verdict is shown. */
+const initialOf = (s: string) => s.replace(/[^A-Za-z]/g, "")[0]?.toUpperCase() ?? "#";
+const WAVE = [5, 9, 14, 8, 17, 11, 6, 13, 19, 10, 7, 15, 12, 6, 9, 16, 8, 5, 11, 7];
+
+/**
+ * The evidence, as it would actually arrive: an SMS thread, an email, a
+ * voicemail transcript on a phone screen. The screen is always light "paper",
+ * so it reads as a real third-party app whatever the section around it.
+ */
+function PhoneScreen({
+  riddle,
+  labelId,
+  verdict,
+  correct,
+  reduced,
+}: {
+  riddle: RiddleScenario;
+  labelId: string;
+  verdict: boolean;
+  correct: boolean;
+  reduced: boolean;
+}) {
+  const sender = riddle.from ?? (riddle.channel === "Call" ? "Unknown number" : "Unknown sender");
+  const clock = riddle.time.replace(/\s?[AP]M$/i, "");
+  const text = <Highlighted text={riddle.body} tell={riddle.tell} on={verdict} />;
+
+  return (
+    <motion.div
+      animate={verdict && !correct && !reduced ? { x: [0, -10, 9, -6, 4, 0] } : { x: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="mx-auto w-full max-w-[25rem] rounded-[2.25rem] bg-paper-ink p-2.5 lg:mx-0"
+    >
+      <p id={labelId} className="sr-only">
+        {riddle.channel} from {sender} at {riddle.time}
+      </p>
+      <div data-tone="paper" className="tone-paper relative overflow-hidden rounded-[1.75rem] bg-paper text-paper-ink">
+        <div aria-hidden className="flex items-center justify-between px-6 pt-3 pb-1 text-xs font-semibold tabular">
+          <span>{clock}</span>
+          <span className="flex items-end gap-[2px]">
+            {[4, 6, 8, 10].map((h) => (
+              <span key={h} className="w-[3px] bg-paper-ink" style={{ height: h }} />
+            ))}
+          </span>
+        </div>
+
+        {riddle.channel === "Email" ? (
+          <EmailView riddle={riddle} sender={sender}>
+            {text}
+          </EmailView>
+        ) : riddle.channel === "Call" ? (
+          <div className="flex min-h-[21rem] flex-col">
+            <div className="flex flex-col items-center gap-1 border-b border-paper-line px-5 pt-3 pb-4">
+              <span className="text-[11px] tracking-[0.08em] text-paper-muted uppercase">Voicemail · {riddle.time}</span>
+              <span className="text-lg font-semibold">{sender}</span>
+              <span aria-hidden className="mt-2 flex h-5 items-center gap-[3px]">
+                {WAVE.map((h, i) => (
+                  <span key={i} className="w-[3px] bg-paper-muted" style={{ height: h }} />
+                ))}
+              </span>
+            </div>
+            <div className="px-5 py-5">
+              <p className="mb-2 text-[11px] tracking-[0.08em] text-paper-muted uppercase">Transcript</p>
+              <p className="text-[15px] leading-relaxed italic">“{text}”</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex min-h-[21rem] flex-col">
+            <div className="flex flex-col items-center gap-1 border-b border-paper-line px-5 pt-2 pb-3">
+              <span aria-hidden className="grid size-11 place-items-center rounded-full bg-paper-2 text-base font-semibold text-paper-muted">
+                {initialOf(sender)}
+              </span>
+              <span className="text-sm font-semibold">{sender}</span>
+              <span className="text-[11px] text-paper-muted">Text message</span>
+            </div>
+            <div className="flex flex-1 flex-col gap-2 px-4 py-4">
+              <p className="text-center text-[11px] text-paper-muted">Today {riddle.time}</p>
+              <p className="max-w-[88%] self-start rounded-[1.25rem] rounded-bl-[0.375rem] bg-paper-2 px-4 py-2.5 text-[15px] leading-snug">
+                {text}
+              </p>
+            </div>
+            <div aria-hidden className="mx-3 mb-3 rounded-full border border-paper-line px-4 py-2 text-sm text-paper-muted">
+              Text message
+            </div>
+          </div>
+        )}
+
+        {verdict && (
+          <span
+            aria-hidden
+            className={cn(
+              "stamp pointer-events-none absolute top-[44%] left-1/2 -translate-x-1/2 border-[3px] bg-paper/80 px-4 py-1 font-display text-[2.5rem] leading-none uppercase",
+              correct ? "border-safe text-safe" : "border-signal text-signal",
+            )}
+          >
+            {riddle.scam ? "Scam" : "Real"}
+          </span>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function EmailView({ riddle, sender, children }: { riddle: RiddleScenario; sender: string; children: React.ReactNode }) {
+  const match = /^(.*?)\s*<(.+)>$/.exec(sender);
+  const name = match?.[1] || sender;
+  const address = match?.[2];
+  return (
+    <div className="flex min-h-[21rem] flex-col">
+      <div className="border-b border-paper-line px-5 pt-2 pb-3">
+        <p className="text-[11px] text-paper-muted">Inbox</p>
+        <p className="mt-1 text-lg leading-snug font-semibold">{riddle.subject ?? "(no subject)"}</p>
+        <p className="mt-2 text-sm leading-snug break-all">
+          <span className="font-semibold">{name}</span>
+          {address && <span className="text-paper-muted"> &lt;{address}&gt;</span>}
+        </p>
+        <p className="text-[11px] text-paper-muted">to me · {riddle.time}</p>
+      </div>
+      <p className="px-5 py-5 text-[15px] leading-relaxed">{children}</p>
+    </div>
+  );
+}
+
+/** Underlines the tell with a 1px signal rule once the verdict is shown — never before. */
 function Highlighted({ text, tell, on }: { text: string; tell: string; on: boolean }) {
   const at = tell ? text.indexOf(tell) : -1;
   if (at < 0) return <>{text}</>;
@@ -287,8 +377,8 @@ function Highlighted({ text, tell, on }: { text: string; tell: string; on: boole
       {text.slice(0, at)}
       <span
         className={cn(
-          "bg-[linear-gradient(var(--color-signal),var(--color-signal))] bg-[length:0%_1px] bg-bottom-left bg-no-repeat transition-[background-size] duration-[900ms] ease-out",
-          on && "bg-[length:100%_1px]",
+          "bg-[linear-gradient(var(--color-signal),var(--color-signal))] bg-[length:0%_2px] bg-bottom-left bg-no-repeat transition-[background-size] duration-[900ms] ease-out",
+          on && "bg-[length:100%_2px]",
         )}
       >
         {tell}

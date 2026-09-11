@@ -25,12 +25,11 @@ export function Section({ id, className, children, tone = "dark" }: Props) {
   );
 }
 
-/** `03 · The city` — the evidence-tag above each section. */
+/**
+ * The evidence-tag above each section. Unnumbered: numbers are kept for real
+ * progression (districts, levels); the scroll counter carries the page position.
+ */
 export function SectionMeta({ id, className }: { id: SectionId; className?: string }) {
   const label = SECTIONS.find((s) => s.id === id)?.label;
-  return (
-    <p className={cn("meta text-smoke", className)}>
-      {sectionNumber(id)} · {label}
-    </p>
-  );
+  return <p className={cn("meta text-smoke", className)}>{label}</p>;
 }

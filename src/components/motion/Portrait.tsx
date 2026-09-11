@@ -22,6 +22,8 @@ type Props = {
   kenBurns?: boolean;
   /** Pulse with the live call's audio level (call room only). */
   reactive?: boolean;
+  /** The district's light for the generative silhouette (#rrggbb). */
+  tint?: string;
 };
 
 const START = { up: "inset(100% 0% 0% 0%)", left: "inset(0% 100% 0% 0%)" } as const;
@@ -40,6 +42,7 @@ export function Portrait({
   delay = 0,
   kenBurns = true,
   reactive = false,
+  tint,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -68,7 +71,12 @@ export function Portrait({
   );
 
   return (
-    <div ref={ref} data-wipe={direction} className={cn("relative overflow-hidden bg-ember", className)}>
+    <div
+      ref={ref}
+      data-wipe={direction}
+      style={tint ? ({ "--tint": tint } as React.CSSProperties) : undefined}
+      className={cn("relative overflow-hidden bg-ember", className)}
+    >
       <div data-wipe-inner className="absolute inset-0">
         <div data-drift className="absolute inset-0">
           {src ? (
@@ -82,7 +90,7 @@ export function Portrait({
             />
           ) : (
             <div role="img" aria-label={alt} className="absolute inset-0">
-              <HalftonePortrait seed={name} reactive={reactive} />
+              <HalftonePortrait seed={name} reactive={reactive} tint={tint} />
             </div>
           )}
         </div>
@@ -96,15 +104,15 @@ export function Portrait({
 
       {!src && (
         <div aria-hidden className="pointer-events-none absolute inset-4 md:inset-6">
-          <span className="absolute top-0 left-0 size-4 border-t border-l border-amber/50" />
-          <span className="absolute top-0 right-0 size-4 border-t border-r border-amber/50" />
-          <span className="absolute bottom-0 left-0 size-4 border-b border-l border-amber/50" />
-          <span className="absolute right-0 bottom-0 size-4 border-r border-b border-amber/50" />
+          <span className="absolute top-0 left-0 size-4 border-t border-l border-[color:var(--tint,var(--color-amber))] opacity-50" />
+          <span className="absolute top-0 right-0 size-4 border-t border-r border-[color:var(--tint,var(--color-amber))] opacity-50" />
+          <span className="absolute bottom-0 left-0 size-4 border-b border-l border-[color:var(--tint,var(--color-amber))] opacity-50" />
+          <span className="absolute right-0 bottom-0 size-4 border-r border-b border-[color:var(--tint,var(--color-amber))] opacity-50" />
           <span className="meta absolute bottom-6 left-6 flex flex-col gap-1 text-ash">
             <span>
               {subject} · {name}
             </span>
-            <span className="text-amber/80">Identity unverified</span>
+            <span className="text-[color:var(--tint,var(--color-amber))]">Identity unverified</span>
           </span>
         </div>
       )}

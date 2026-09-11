@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DISTRICTS } from "@/content/districts";
-import { SCENARIO_ORDER, SCENARIOS, type Scenario } from "@/content/scenarios";
+import { BONUS_SCENARIO, nextScenarioId, SCENARIO_ORDER, SCENARIOS, type Scenario } from "@/content/scenarios";
 import { judgeCall } from "@/features/scoring/mock-judge";
 import type { CallOutcome, CompletedCall, TacticId } from "@/lib/live/types";
 
@@ -73,6 +73,12 @@ describe("the city", () => {
       expect(district.scenarioId, district.title).toBeDefined();
       expect(SCENARIO_ORDER).toContain(district.scenarioId);
     }
-    expect(new Set(SCENARIO_ORDER).size).toBe(Object.keys(SCENARIOS).length);
+    expect(SCENARIO_ORDER).toHaveLength(DISTRICTS.length);
+  });
+
+  it("keeps the legitimate call off the route as a bonus that leads back onto it", () => {
+    expect(SCENARIO_ORDER).not.toContain(BONUS_SCENARIO);
+    expect(new Set([...SCENARIO_ORDER, BONUS_SCENARIO]).size).toBe(Object.keys(SCENARIOS).length);
+    expect(nextScenarioId(BONUS_SCENARIO)).toBe(SCENARIO_ORDER[1]);
   });
 });

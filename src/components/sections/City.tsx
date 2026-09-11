@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { SplitReveal } from "@/components/motion/SplitReveal";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { DISTRICTS, type District } from "@/content/districts";
+import { DistrictArtifact } from "@/features/districts/DistrictArtifact";
 import { cn } from "@/lib/cn";
 import { EASE, gsap, MQ, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
 import { scrollToTarget } from "@/lib/motion/lenis";
@@ -12,15 +13,30 @@ import { Section, SectionMeta } from "./Section";
 const HIDDEN = "inset(0% 0% 0% 100%)";
 const SHOWN = "inset(0% 0% 0% 0%)";
 
+const LG = "(min-width: 1024px)";
+const subscribeLg = (cb: () => void) => {
+  const mq = window.matchMedia(LG);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const useLg = () =>
+  useSyncExternalStore(
+    subscribeLg,
+    () => window.matchMedia(LG).matches,
+    () => false,
+  );
+
 /**
- * 03 — The districts. Pinned on desktop; each district wipes in horizontally
- * as you scroll (MASTER §7). Without pinning, rows switch the plate directly.
+ * The districts. Pinned on desktop: each district wipes in horizontally as you
+ * scroll (MASTER §7). Below lg the same plates stack as a list — one set of
+ * DOM, never a duplicated mobile copy.
  */
 export function City() {
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<ScrollTrigger | null>(null);
   const [active, setActive] = useState(0);
   const [pinned, setPinned] = useState(false);
+  const lg = useLg();
   const last = DISTRICTS.length - 1;
 
   useGSAP(
@@ -103,82 +119,82 @@ export function City() {
                   >
                     {d.title}
                   </span>
+                  <span
+                    aria-hidden
+                    className={cn("ml-auto h-px w-8 self-center transition-opacity duration-[320ms]", i === active ? "opacity-100" : "opacity-0")}
+                    style={{ background: d.hueText }}
+                  />
                 </button>
               </li>
             ))}
           </ol>
         </div>
 
-        {/* Desktop stage */}
-        <div className="relative hidden h-[76dvh] lg:col-span-7 lg:block">
+        {/* One set of plates: stacked and wiped on desktop, a list below lg. */}
+        <div className="mt-12 flex flex-col gap-4 lg:relative lg:col-span-7 lg:mt-0 lg:block lg:h-[76dvh]">
           {DISTRICTS.map((d, i) => (
             <Plate
               key={d.id}
               district={d}
-              inert={i !== active}
-              className={cn(!pinned && "transition-opacity duration-[900ms] ease-out", !pinned && i !== active && "opacity-0")}
+              inert={lg && i !== active}
+              className={cn(
+                !pinned && "lg:transition-opacity lg:duration-[900ms] lg:ease-out",
+                !pinned && i !== active && "lg:opacity-0",
+              )}
             />
           ))}
         </div>
-
-        {/* Mobile / tablet: a readable list, no pinning */}
-        <ol className="mt-12 lg:hidden">
-          {DISTRICTS.map((d) => (
-            <li key={d.id} className="flex flex-col gap-3 border-t border-line py-6">
-              <span className="meta text-smoke">District {d.number}</span>
-              <span className="font-display text-[clamp(1.75rem,7vw,2.5rem)] leading-none tracking-[-0.02em] uppercase">
-                {d.title}
-              </span>
-              <span className="max-w-[40ch] text-ash">{d.line}</span>
-              {d.scenarioId && (
-                <CtaLink href={`/play/${d.scenarioId}`} className="self-start">
-                  Enter the district
-                </CtaLink>
-              )}
-            </li>
-          ))}
-        </ol>
       </div>
     </Section>
   );
 }
 
-function Plate({ district, inert, className }: { district: District; inert: boolean; className?: string }) {
+function Plate({ district: d, inert, className }: { district: District; inert: boolean; className?: string }) {
   return (
-    <div
+    <article
       data-plate
       inert={inert}
       aria-hidden={inert || undefined}
+      aria-label={`District ${d.number}, ${d.title}`}
+      style={{ "--hue": d.hue, "--hue-text": d.hueText } as React.CSSProperties}
       className={cn(
-        "absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_at_28%_18%,color-mix(in_srgb,var(--color-amber)_16%,var(--color-raised))_0%,var(--color-surface)_55%,var(--color-ember)_100%)]",
+        "relative flex min-h-[36rem] flex-col overflow-hidden lg:absolute lg:inset-0 lg:min-h-0",
+        // Each district under its own street light.
+        "bg-[radial-gradient(ellipse_at_78%_14%,color-mix(in_srgb,var(--hue)_34%,var(--color-raised))_0%,var(--color-surface)_52%,var(--color-ink)_100%)]",
         className,
       )}
     >
-      <div data-plate-inner className="absolute inset-0">
-        {/* Halftone streetlight glow, like a newsprint photo of the district at night. */}
+      <div data-plate-inner className="relative flex flex-1 flex-col lg:absolute lg:inset-0">
+        {/* Halftone light, like a newsprint photo of the district at night. */}
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(circle,var(--color-amber)_1px,transparent_1.7px)] [background-size:9px_9px] [mask-image:radial-gradient(ellipse_at_82%_88%,black_0%,transparent_62%)]"
+          className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle,var(--hue-text)_1px,transparent_1.7px)] [background-size:9px_9px] [mask-image:radial-gradient(ellipse_at_82%_88%,black_0%,transparent_62%)]"
         />
         <span
           aria-hidden
-          className="absolute -right-[0.04em] -bottom-[0.2em] font-display text-[clamp(14rem,30vw,32rem)] leading-none font-light text-bone/[0.06] italic"
+          className="absolute -right-[0.04em] -bottom-[0.2em] font-display text-[clamp(12rem,30vw,32rem)] leading-none font-light text-bone/[0.06] italic"
         >
-          {district.number}
+          {d.number}
         </span>
-        <div className="absolute inset-x-10 bottom-10 flex flex-col gap-5">
-          <p className="meta text-smoke">District {district.number}</p>
-          <p className="display-l">{district.title}</p>
-          <p className="lead max-w-[36ch] text-ash">{district.line}</p>
-          {district.scenarioId ? (
-            <CtaLink href={`/play/${district.scenarioId}`} className="self-start">
-              Enter the district
-            </CtaLink>
-          ) : (
-            <p className="meta text-smoke">In development</p>
-          )}
+
+        <div className="relative flex flex-1 flex-col justify-between gap-10 p-6 lg:p-10">
+          <DistrictArtifact artifact={d.artifact} className="w-full self-end sm:w-[21rem] lg:w-[min(22rem,48%)]" />
+          <div className="flex flex-col gap-4 lg:gap-5">
+            <p className="meta text-[color:var(--hue-text)]">
+              District {d.number} · {d.department}
+            </p>
+            <p className="font-display text-[clamp(2.25rem,9vw,4rem)] leading-[0.9] font-[380] tracking-[-0.03em] uppercase lg:text-[clamp(3rem,6vw,6.5rem)]">
+              {d.title}
+            </p>
+            <p className="lead max-w-[36ch] text-ash">{d.line}</p>
+            {d.scenarioId && (
+              <CtaLink href={`/play/${d.scenarioId}`} className="self-start">
+                Enter the district
+              </CtaLink>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

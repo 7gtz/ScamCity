@@ -50,7 +50,7 @@ export function IncomingCall() {
               </Link>
             </Button>
             <p className="max-w-[36ch] text-sm leading-relaxed text-smoke">
-              A scripted simulation. Nothing you say leaves this browser.
+              Talk out loud. Your voice streams to the caller for that call only and is never stored.
             </p>
           </div>
         </Reveal>

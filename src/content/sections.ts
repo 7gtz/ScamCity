@@ -1,11 +1,14 @@
-/** The landing narrative (MASTER §7). Order is the scroll order. */
+/**
+ * The landing narrative (MASTER §7). Order is the scroll order: hook, a call
+ * you can answer straight away, one short explanation, then the districts —
+ * and only then how the caller and the judge work.
+ */
 export const SECTIONS = [
   { id: "opening", label: "Opening" },
   { id: "incoming", label: "Incoming call" },
-  { id: "city", label: "The city" },
   { id: "threat", label: "The threat" },
+  { id: "city", label: "The city" },
   { id: "opponent", label: "The opponent" },
-  { id: "live", label: "Live call" },
   { id: "judge", label: "The judge" },
   { id: "riddle", label: "Riddle mode" },
   { id: "progression", label: "Your city" },
@@ -22,6 +25,6 @@ export const SECTION_TOTAL = String(SECTIONS.length).padStart(2, "0");
 
 export const NAV_LINKS: { label: string; target: SectionId }[] = [
   { label: "About", target: "threat" },
-  { label: "Simulation", target: "live" },
+  { label: "Simulation", target: "opponent" },
   { label: "Training", target: "riddle" },
 ];

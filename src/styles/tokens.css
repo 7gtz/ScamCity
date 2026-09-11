@@ -14,6 +14,8 @@
   --color-ash: #a39d93;
   --color-bone: #efeae2;
   --color-signal: #f0503a;
+  /* Game state: safe / verified (6.25:1 on ink). Amber is "uncertain", signal is "danger". */
+  --color-safe: #6f9b78;
   /* Sodium streetlight: the city's warm secondary light. Ambience and illustration, never alerts. */
   --color-amber: #e8a657;
   /* Warm near-black for "ember" surfaces (less dead than ink). */
