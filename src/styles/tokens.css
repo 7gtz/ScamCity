@@ -1,0 +1,52 @@
+/*
+ * SCAM CITY design tokens — mirrors design-system/scam-city/MASTER.md §1–§4.
+ * Change values here, never as raw hex in components.
+ */
+
+@theme {
+  --color-*: initial;
+  --color-ink: #0b0a09;
+  --color-surface: #141210;
+  --color-raised: #1d1a17;
+  --color-line: #2a2723;
+  --color-dim: #6b665e;
+  --color-smoke: #8a847b;
+  --color-ash: #a39d93;
+  --color-bone: #efeae2;
+  --color-signal: #f0503a;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --radius-*: initial;
+  --radius-full: 9999px;
+  --shadow-*: initial;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+  --breakpoint-2xl: 1920px;
+}
+
+@theme inline {
+  --font-display: var(--font-newsreader), "Times New Roman", serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "Cascadia Mono", monospace;
+}
+
+:root {
+  color-scheme: dark;
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --section: clamp(6rem, 16vh, 12rem);
+  --nav-h: 4rem;
+
+  --d-micro: 180ms;
+  --d-ui: 320ms;
+  --d-reveal: 900ms;
+  --d-headline: 1100ms;
+  --d-wipe: 1400ms;
+  --d-count: 1200ms;
+}

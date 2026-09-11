@@ -1,0 +1,34 @@
+import { Reveal } from "@/components/motion/Reveal";
+import { SplitReveal } from "@/components/motion/SplitReveal";
+import { CtaLink } from "@/components/ui/CtaLink";
+import { Section } from "./Section";
+
+/** 11 — Back to near-black. Very little UI (brief §21). */
+export function FinalCta() {
+  return (
+    <Section id="enter" className="gutter-x flex min-h-dvh flex-col justify-between pt-[var(--section)] pb-10">
+      <div className="flex flex-1 flex-col items-center justify-center gap-14 text-center">
+        <p className="meta text-smoke">Scam City</p>
+        <h2 id="enter-title" className="flex flex-col items-center gap-[0.4em]">
+          <SplitReveal as="div" className="display-l" lines={["Don’t learn", "the red flags."]} />
+          <SplitReveal
+            as="div"
+            delay={0.3}
+            className="display-l font-light normal-case italic"
+            lines={["Learn", "to think", "under pressure."]}
+          />
+        </h2>
+        <Reveal delay={0.6}>
+          <div data-reveal>
+            <CtaLink href="/play">Enter the city</CtaLink>
+          </div>
+        </Reveal>
+      </div>
+
+      <footer className="meta flex flex-col gap-2 border-t border-line pt-6 text-smoke sm:flex-row sm:justify-between">
+        <span>AI-driven social engineering training</span>
+        <span>2026</span>
+      </footer>
+    </Section>
+  );
+}
