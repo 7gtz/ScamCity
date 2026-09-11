@@ -8,6 +8,8 @@ SCAM CITY is a voice-driven training game built for KICKR CODEMANIA 2026 (*Real 
 
 ---
 
+> **Working on the front end?** Read [`docs/FRONTEND-HANDOFF.md`](docs/FRONTEND-HANDOFF.md) first. It explains why every component exists, what it must keep doing, and what breaks silently.
+
 ## Contents
 
 - [Quick start](#quick-start)
