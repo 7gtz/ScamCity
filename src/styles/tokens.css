@@ -10,7 +10,8 @@
   --color-raised: #1d1a17;
   --color-line: #2a2723;
   --color-dim: #6b665e;
-  --color-smoke: #8a847b;
+  /* Labels and instructions: 6.4:1 on ink, 6.0:1 on ember. */
+  --color-smoke: #9a9488;
   --color-ash: #a39d93;
   --color-bone: #efeae2;
   --color-signal: #f0503a;

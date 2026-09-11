@@ -8,9 +8,10 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { Meter } from "@/components/ui/Meter";
-import { tacticLabel } from "@/content/tactics";
+import { TacticChip } from "@/components/ui/TacticChip";
 import { freestyleEncounter, useFreestyle } from "@/features/freestyle/freestyle-store";
 import { useProgressStore } from "@/features/progress/progress-store";
+import { JudgingProgress } from "@/features/scoring/JudgingProgress";
 import { useResultsStore } from "@/features/scoring/results-store";
 import { scoreCall } from "@/features/scoring/score-call";
 import { cn } from "@/lib/cn";
@@ -37,6 +38,10 @@ export function ChatPlayer() {
   const [typing, setTyping] = useState(false);
   const [text, setText] = useState("");
   const [suspicion, setSuspicion] = useState(0);
+  /** Why the guard just moved, e.g. "+40 · Asked to verify their identity". */
+  const [guard, setGuard] = useState<{ delta: number; note: string; key: number } | null>(null);
+  /** Tactics the contact has used so far: learned chips turn "suspected". */
+  const [used, setUsed] = useState<TacticId[]>([]);
   const [detected, setDetected] = useState<{ tactic: TacticId; at: number }[]>([]);
   const started = useRef(0);
   const revealed = useRef<string[]>([]);
@@ -99,7 +104,7 @@ export function ChatPlayer() {
     if (freestyle.current?.spec.channel === "sms") {
       freestyle.resolve({ correct: score.passed, caught: outcome === "scammed", title: `${plan.contactLabel} · ${plan.platform}`, legit: !plan.scam });
     }
-    router.push(`/results/${score.sessionId}`);
+    router.push(`/results/${score.sessionId}?channel=messages`);
   };
 
   const send = async (e: React.FormEvent) => {
@@ -126,6 +131,12 @@ export function ChatPlayer() {
     // Human typing speed, not instant replies.
     await wait(Math.max(0, Math.min(2600, 500 + turn.reply.length * 25) - (performance.now() - t0)));
 
+    const delta = Math.round((turn.suspicion - suspicion) * 100);
+    if (delta !== 0) {
+      const note = turn.guardNote?.trim().replace(/[.!]+$/, "") || (delta > 0 ? "Your guard went up" : "Your guard dropped");
+      setGuard({ delta, note, key: Date.now() });
+    }
+    setUsed((u) => [...new Set([...u, ...turn.tactics])]);
     setSuspicion(turn.suspicion);
     suspicionLog.current.push({ at: elapsed(), value: turn.suspicion });
     for (const r of turn.revealed) if (!revealed.current.includes(r)) revealed.current.push(r);
@@ -240,17 +251,31 @@ export function ChatPlayer() {
 
       {/* Game HUD */}
       <aside className="flex flex-col gap-8 lg:col-span-4 lg:col-start-8 lg:pt-10">
-        <Meter value={suspicion} label="Your guard" />
+        <p className="meta -mb-4 text-smoke">Channel · Messages{plan ? ` · ${plan.platform}` : ""}</p>
+        <div className="flex flex-col gap-2">
+          <Meter value={suspicion} label="Your guard" />
+          <div aria-live="polite" className="min-h-5">
+            <AnimatePresence mode="wait">
+              {guard && (
+                <motion.p
+                  key={guard.key}
+                  initial={reduced ? false : { opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: duration.ui, ease }}
+                  className={cn("meta", guard.delta > 0 ? "text-safe" : "text-amber")}
+                >
+                  {guard.delta > 0 ? "+" : "−"}
+                  {Math.abs(guard.delta)} · {guard.note}
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
         <ul aria-label="Red flags you have learned" className="flex flex-wrap gap-2">
-          {learned.map((t) => {
-            const hit = detected.some((d) => d.tactic === t);
-            return (
-              <li key={t} className={cn("meta border px-2 py-1 transition-colors duration-[320ms]", hit ? "border-signal text-signal" : "border-line text-smoke")}>
-                {tacticLabel(t)}
-                <span className="sr-only">{hit ? ", detected" : ", not yet detected"}</span>
-              </li>
-            );
-          })}
+          {learned.map((t) => (
+            <TacticChip key={t} tactic={t} hit={detected.some((d) => d.tactic === t)} inPlay={used.includes(t)} />
+          ))}
         </ul>
         <p className="max-w-[40ch] text-sm leading-relaxed text-ash">
           Reply as you would. Ask questions, check their story, or block them. The contact adapts to what you write, and
@@ -268,7 +293,7 @@ export function ChatPlayer() {
             End conversation
           </Button>
         </div>
-        {phase === "ending" && <p className="meta text-bone">Reviewing the conversation…</p>}
+        {phase === "ending" && <JudgingProgress />}
         <Link href="/modes" className="meta min-h-11 self-start text-smoke hover:text-bone">
           All modes
         </Link>

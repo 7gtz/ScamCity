@@ -27,7 +27,7 @@ Facts you can use:
 ${plan.facts.map((f) => `- ${f}`).join("\n")}
 
 Write "reply" as your next message in natural texting style — short, casual, sometimes two short lines. Stay in character; never mention AI or games unless the player is distressed or says "stop" (then say it's a training game and set end to "hung-up").
-Also report, as the game's analyst: tactics used in your reply; tactics the player has explicitly recognised or resisted so far; kinds of sensitive detail the player has given, including details you supplied that they confirmed (never the values); how guarded the player is (suspicion 0–1).
+Also report, as the game's analyst: tactics used in your reply; tactics the player has explicitly recognised or resisted so far; kinds of sensitive detail the player has given, including details you supplied that they confirmed (never the values); how guarded the player is (suspicion 0–1), and in "guardNote" what the player just did that moved it.
 Set "end" when the conversation reaches an outcome — scam: "scammed" if they handed over what you wanted, "exposed" if they refused and said they'd verify/block/report; genuine: "verified-legit" or "rejected-legit". Otherwise "none".`;
 }
 
@@ -58,7 +58,9 @@ export async function POST(req: Request) {
         .map((m) => `${m.speaker === "scammer" ? "CONTACT" : "PLAYER"}: ${m.text}`)
         .join("\n")}\n\nWrite CONTACT's next message.`,
       temperature: 0.9,
-      timeoutMs: 6000,
+      // A texting contact must answer in seconds: race the lite models almost at once.
+      hedgeMs: 600,
+      budgetMs: 9000,
     });
     return Response.json(turn);
   } catch (err) {

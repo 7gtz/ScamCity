@@ -103,12 +103,14 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
       ? "border-signal text-signal"
       : "border-amber text-amber";
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  // A text conversation is reported in its own words: never "call".
+  const chat = score.channel === "sms";
   const summary = score.legitimate
     ? score.passed
       ? "It was real — and you verified it the right way."
       : "It was real. Verify before you hang up."
     : score.outcome === "scammed"
-      ? `You caught ${plural(caught.length, "tactic")}, but the caller got what they came for.`
+      ? `You caught ${plural(caught.length, "tactic")}, but the ${chat ? "contact" : "caller"} got what they came for.`
       : `You caught ${plural(caught.length, "tactic")}. You missed ${missed.length}.`;
 
   return (
@@ -148,13 +150,13 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
           </div>
         )}
         <p data-seq className="meta text-smoke">
-          Pass mark {score.threshold} · Call {fmt(score.durationMs)}
+          Pass mark {score.threshold} · {chat ? "Conversation" : "Call"} {fmt(score.durationMs)}
           {score.judge === "gemini" && " · Judged by Gemini"}
           {score.judge === "rules" && " · Rules judge (offline)"}
         </p>
         {score.brief && (
           <p data-seq className="max-w-[60ch] text-ash">
-            <span className="meta mr-3 text-smoke">This call</span>
+            <span className="meta mr-3 text-smoke">{chat ? "This conversation" : "This call"}</span>
             {score.brief.caller} — {score.brief.hook}
           </p>
         )}
@@ -165,7 +167,7 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
         <Findings title="You missed" items={missed} empty="Nothing slipped past you." offset={caught.length} signal />
       </div>
 
-      <Timeline score={score} />
+      <Timeline score={score} chat={chat} />
 
       <div data-seq className="flex max-w-[60ch] flex-col gap-3">
         <p className="meta text-smoke">Judge&rsquo;s notes</p>
@@ -222,14 +224,14 @@ function Findings({
   );
 }
 
-function Timeline({ score }: { score: CallScore }) {
+function Timeline({ score, chat }: { score: CallScore; chat: boolean }) {
   const total = Math.max(score.durationMs, 1);
   const pct = (at: number) => Math.min(100, Math.max(0, (at / total) * 100));
   const points = score.suspicion.map((p) => `${pct(p.at).toFixed(2)},${(38 - p.value * 34).toFixed(2)}`).join(" ");
 
   return (
     <section data-seq aria-label="Timeline">
-      <h3 className="meta mb-8 text-smoke">Timeline</h3>
+      <h3 className="meta mb-8 text-smoke">{chat ? "Message timeline" : "Call timeline"}</h3>
 
       {/* Desktop: horizontal */}
       <div aria-hidden className="hidden md:block">
@@ -281,7 +283,7 @@ function Timeline({ score }: { score: CallScore }) {
       </ol>
 
       <table className="sr-only">
-        <caption>Call timeline</caption>
+        <caption>{chat ? "Message timeline" : "Call timeline"}</caption>
         <thead>
           <tr>
             <th scope="col">Time</th>

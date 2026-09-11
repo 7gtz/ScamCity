@@ -155,7 +155,15 @@ function IncomingCard() {
     stopRing();
     notification?.close();
     const e = useFreestyle.getState().accept();
-    if (e) router.push(routeFor(e));
+    if (!e) return;
+    const url = routeFor(e);
+    router.push(url);
+    // Demo-critical: if the client router hasn't moved (a stuck transition, an
+    // overlay swallowing it), load the encounter directly. Its state persists.
+    const path = url.split("?")[0];
+    setTimeout(() => {
+      if (window.location.pathname !== path) window.location.assign(url);
+    }, 5000);
   };
   const ignore = () => {
     stopRing();

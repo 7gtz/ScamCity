@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Flag, Inbox as InboxIcon, Paperclip, Search, Send, Star, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Flag, Inbox as InboxIcon, Link2, Paperclip, Search, Send, Star, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { describeBehaviour, gradeDecision, type Check as Inspected, type Decision } from "@/features/encounters/grade";
 import { recordEncounter } from "@/features/encounters/record";
@@ -23,6 +23,8 @@ export function InboxPlayer() {
   const [statusUrl, setStatusUrl] = useState<string | null>(null);
   const [peek, setPeek] = useState<number | null>(null);
   const [details, setDetails] = useState(false);
+  /** Every link's real destination, listed: the touch- and keyboard-friendly way to inspect. */
+  const [inspect, setInspect] = useState(false);
   /** What the player inspected before deciding: the judge comments on it. */
   const [checked, setChecked] = useState<Inspected[]>([]);
   const served = useRef<string[]>([]);
@@ -58,6 +60,7 @@ export function InboxPlayer() {
     setStatusUrl(null);
     setPeek(null);
     setDetails(false);
+    setInspect(false);
     setChecked([]);
     void load();
   };
@@ -175,7 +178,34 @@ export function InboxPlayer() {
                   >
                     <Check aria-hidden className="size-4" strokeWidth={1.5} /> Looks safe
                   </button>
+                  {email.links.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInspect((v) => !v);
+                        check("link");
+                      }}
+                      aria-expanded={inspect}
+                      aria-controls="link-inspector"
+                      className="flex min-h-10 items-center gap-2 rounded-[6px] px-3 text-sm font-medium text-paper-muted hover:bg-paper-2 sm:ml-auto"
+                    >
+                      <Link2 aria-hidden className="size-4" strokeWidth={1.5} /> Inspect links
+                    </button>
+                  )}
                 </div>
+
+                {inspect && (
+                  <dl id="link-inspector" className="mb-5 flex flex-col gap-2 rounded-[6px] border border-paper-line bg-paper-2 p-3 text-sm">
+                    {email.links.map((l, i) => (
+                      <div key={`${l.text}-${i}`} className="flex flex-col gap-0.5">
+                        <dt className="text-paper-muted">&ldquo;{l.text}&rdquo; really goes to</dt>
+                        <dd className={cn("font-mono text-xs break-all", decided && flagged(l.text) && "underline decoration-signal decoration-2")}>
+                          {l.actualUrl}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
 
                 <h2 className="text-xl leading-snug font-semibold md:text-2xl">
                   <Highlight text={email.subject} needles={needles} on={decided} />
@@ -299,6 +329,7 @@ export function InboxPlayer() {
 
       {email && decision && (
         <Verdict
+          channel="Email"
           grade={gradeDecision(email.scam, decision)}
           scam={email.scam}
           behaviour={describeBehaviour({ scam: email.scam, decision, checked })}

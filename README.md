@@ -102,7 +102,8 @@ ENTER THE CITY → PICK A DISTRICT → ANSWER THE CALL → TALK / DECIDE → HAN
 ### The HUD
 
 - **Suspicion meter:** how guarded you are acting, as read by the AI analyst each turn. It turns red when high.
-- **Red-flag chips:** tactics you have already learned. A chip lights up when you catch that tactic. Tactics you haven't learned stay hidden, so the HUD teaches without spoiling.
+- **Red-flag chips:** tactics you have already learned, in three states: not seen yet → **suspected** (amber: the other side is using it) → **called out** (green: you named or resisted it). Tactics you haven't learned stay hidden, so the HUD teaches without spoiling.
+- **Guard readout (Messages):** when your guard moves, it says why, e.g. "+40 · Asked to verify their identity".
 - **Pressure line:** a hairline across the call room that grows and turns amber, then red, as the caller escalates. "Caller changed tactic" flashes on a pivot, without naming the tactic: spotting it is your job.
 - **In play:** the real-world details the caller can use against you.
 - **The city noticed:** after every call, email, site or chat, one line on what got past you (or what you shut down) and what the next encounter may lean on. This is the same player model every generator actually reads.
@@ -126,7 +127,7 @@ Choose a mode from the 3D ring. Drag it, swipe it, or use the arrow keys; the pl
 |---|---|---|
 | **Freestyle** (the main game) | `/freestyle` | Press **Wake up**, allow notifications, and carry on with your day. Calls, emails, texts and links arrive as desktop notifications at random times: the first within 20 seconds, then at the pace you pick (Intense 15–40 s, Normal 45 s–2 min, Relaxed 2–5 min). About 30% are genuine, and never fewer than 2 in a day. You have 3 lives: **falling for a scam costs one, and so does turning away something genuine** (reporting it, ignoring it, or hanging up without verifying). Distrusting everything is not a strategy. Difficulty climbs every three encounters (Approachable → Polished → Subtle). Survive 8 to win the day. The HUD shows lives, an encounter track, the level, scams stopped, genuine contacts trusted and false alarms. |
 | **Calls** | `/play` | A live AI voice caller (see above). |
-| **Inbox** | `/inbox` | An AI-written email in a real-feeling mail client. Hover links to see where they really go, open the sender details to check the reply-to, look at attachments, then report it or mark it safe. |
+| **Inbox** | `/inbox` | An AI-written email in a real-feeling mail client. Hover links (tap once on a phone, or use **Inspect links**) to see where they really go, open the sender details to check the reply-to, look at attachments, then report it or mark it safe. |
 | **Messages** | `/messages` | A live AI texting conversation, for example "Hi Mum, new number", a fake recruiter, a friend asking for an OTP, or a genuine contact. It adapts to every reply, and the AI judge scores the thread. |
 | **Web** | `/web` | An AI-written website in a simulated browser: a lookalike login, a shop, an investment site or a delivery fee. The address bar, the padlock's site info (domain age) and the form are the clues. Using a scam site counts as being caught. |
 | **Riddles** | `/riddle` | Quick scam-or-genuine training. |
@@ -175,7 +176,7 @@ Five AI roles, each load-bearing. Remove any of them and a core system disappear
 | **Director** | `gemini-3.5-flash-lite` | Before every call, writes a unique plan: caller name, organisation, voice, pretext, facts and tactic order. The plan is aimed at the tactics this player keeps missing, scaled to their record, and never repeats a recent pretext. In districts 3–7, about one call in five is secretly **genuine**. |
 | **Caller** | `gemini-3.1-flash-live-preview` | Performs the plan as a real-time voice call. Escalates when you comply, and pivots to a new tactic when you challenge it. It reads the player: if you stay defensive it reframes instead of arguing (agrees with your caution, backs off, offers its own "callback number", sounds hurt), and it volunteers a believable detail to get you to confirm it. Hangs up on its own through an `end_call` tool. |
 | **Analyst** | `gemini-3.5-flash-lite` | After every caller turn, reads the transcript and returns structured state: your suspicion, the tactics in play, what you detected and what you revealed. This drives the HUD. |
-| **Judge** | `gemini-3.8-flash` | Scores the whole transcript against a rubric covering verifying questions, how early suspicion appeared, tactics caught, information revealed (confirming a detail the caller read out counts), and the final decision. Its notes judge behaviour, never a bare "correct": "You challenged the caller's identity, but then confirmed the account number they read out." Pass mark and time clamping are enforced in code, not trusted to the model. Emails and sites get the same treatment from rules: the verdict says what you inspected (links, sender details, site information) before you decided. |
+| **Judge** | `gemini-3.8-flash` | Scores the whole transcript against a rubric covering verifying questions, how early suspicion appeared, tactics caught, information revealed (confirming a detail the caller read out counts), and the final decision. Its notes judge behaviour, never a bare "correct": "You challenged the caller's identity, but then confirmed the account number they read out." Pass mark and time clamping are enforced in code, not trusted to the model. The judges are raced, not queued: if the flagship hasn't answered in 2 s a lite model starts too, and the first valid verdict wins inside an 8.5 s budget (past that, the rules judge answers). While it works, the player sees *Reading the transcript → Identifying tactics → Building your profile*. Reports use the channel's own words ("Conversation report", "Message timeline"). Emails and sites get the same treatment from rules: the verdict says what you inspected (links, sender details, site information) before you decided. |
 | **Game master** | `gemini-3.5-flash-lite` | Writes Riddle Mode scenarios adapted to your weak tactics and your location. |
 
 **What happens if you remove the AI?** There is no caller, nothing adapts, no two calls differ, nothing judges your decisions, and no riddles are written. The whole game collapses into a static quiz.
@@ -193,7 +194,7 @@ Five AI roles, each load-bearing. Remove any of them and a core system disappear
 
 - **A local accent.** The director gives every caller an accent that fits where you are. For a player in India, that's an Indian English accent, sometimes with a regional flavour. The live voice models take no language or accent code, so the accent is set through the caller's instructions, and those instructions forbid caricature.
 
-Coordinates are only sent to those two public lookup services, and only if you tick the box. Audio is never stored.
+Location is **off by default**: you opt in with **Personalise this call** (call room) or **Personalise my day** (Freestyle). Coordinates are only sent to those two public lookup services, and only then. Audio is never stored.
 
 ---
 
@@ -217,7 +218,7 @@ call ends → judge   ───────────────────�
 - **Provider abstraction.** The call room depends only on the `LiveCallProvider` interface (`src/lib/live/types.ts`). `GeminiLiveCallProvider` and `MockLiveCallProvider` are interchangeable.
 - **Explicit call state machine:** `idle → permission-requested → connecting → ringing → live → ending → scoring → results`, with `error` reachable from any state (`src/features/call/call-machine.ts`).
 - **Fallbacks at every layer.** No key or a failed token → simulation. Analyst failure → the HUD holds its last state. Judge failure → rules judge. Director failure → the district's hand-written plan. Riddle failure → built-in riddles.
-- **Model fallback chains.** Each text role tries its main model first. If that model is overloaded (503/429), too slow, or returns output that fails validation, the next model in the chain answers (`CHAINS` in `src/lib/gemini/models.ts`). For example, the judge falls back from `gemini-3.8-flash` to `gemini-3.5-flash-lite`.
+- **Model fallback chains.** Where the player is waiting (the judge, chat replies), the chain is raced rather than queued (`hedgeMs`/`budgetMs` in `generateJson`). Elsewhere, each text role tries its main model first. If that model is overloaded (503/429), too slow, or returns output that fails validation, the next model in the chain answers (`CHAINS` in `src/lib/gemini/models.ts`). For example, the judge falls back from `gemini-3.8-flash` to `gemini-3.5-flash-lite`.
 - **Casting seed.** Each call's director prompt gets a random gender (matched to the voice pool) and a random first-name initial, plus the player's recent callers. The same district never sends the same person twice.
 - **Rate limiting.** In-memory, per IP, on every AI route.
 

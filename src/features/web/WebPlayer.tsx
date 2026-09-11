@@ -164,6 +164,7 @@ export function WebPlayer() {
 
       {site && decision && (
         <Verdict
+          channel="Web"
           grade={gradeDecision(site.scam, decision)}
           scam={site.scam}
           behaviour={describeBehaviour({ scam: site.scam, decision, checked })}

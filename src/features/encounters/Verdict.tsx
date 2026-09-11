@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { CtaLink } from "@/components/ui/CtaLink";
 import { costsLife, LIVES, useFreestyle } from "@/features/freestyle/freestyle-store";
-import { lessonFrom } from "@/features/profile/defense";
+import { lessonFrom, placeLabel } from "@/features/profile/defense";
 import { LessonNote } from "@/features/profile/Profile";
 import { cn } from "@/lib/cn";
 import type { TacticId } from "@/lib/live/types";
@@ -13,6 +13,8 @@ import type { EncounterTell } from "@/lib/validation/schemas";
 import type { Grade } from "./grade";
 
 type Props = {
+  /** "Email" / "Web": with the targets, places the encounter in the city. */
+  channel: string;
   grade: Grade;
   scam: boolean;
   /** The judge's read of what the player did — see `describeBehaviour`. */
@@ -31,7 +33,7 @@ type Props = {
  * The verdict for an email, website or message: what you did, what it was,
  * at most three specific clues, and what the city learned from it.
  */
-export function Verdict({ grade, scam, behaviour, explanation, tells, targets, freestyle, onNext, nextLabel, source }: Props) {
+export function Verdict({ channel, grade, scam, behaviour, explanation, tells, targets, freestyle, onNext, nextLabel, source }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   const lesson = lessonFrom({
@@ -45,7 +47,8 @@ export function Verdict({ grade, scam, behaviour, explanation, tells, targets, f
   return (
     <section role="status" aria-labelledby="verdict-title" className="grid gap-10 border-t border-line pt-10 lg:grid-cols-12 lg:gap-8">
       <div className="flex flex-col gap-6 lg:col-span-5">
-        <p className="meta text-smoke">
+        <p className="meta text-ash">{placeLabel(channel, scam ? targets : [])}</p>
+        <p className="meta -mt-4 text-smoke">
           {scam ? "It was a scam" : "It was genuine"}
           {source === "ai" && " · written for you by the AI"}
         </p>

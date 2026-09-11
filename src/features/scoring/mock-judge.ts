@@ -19,17 +19,24 @@ export function judgeCall(call: CompletedCall): CallScore {
   const events = timeline(call);
   const notes: string[] = [];
   let score: number;
+  // Messages are judged here too when the AI judge is unavailable: speak their language.
+  const chat = call.scenarioId === "messages";
+  const who = chat ? "contact" : "caller";
 
   if (call.legitimate) {
     if (call.outcome === "rejected-legit") {
       score = 30;
-      notes.push("This caller was genuine. They asked for nothing sensitive and offered you a way to check.");
-      notes.push("Hanging up was safe, but you left a real fraud alert unanswered. Verify, don't dismiss.");
+      notes.push(`This ${who} was genuine. They asked for nothing sensitive${chat ? "." : " and offered you a way to check."}`);
+      notes.push(
+        chat
+          ? "Blocking them was safe, but they were real. Verify another way — don't dismiss."
+          : "Hanging up was safe, but you left a real fraud alert unanswered. Verify, don't dismiss.",
+      );
     } else {
       score = 60 + (call.decisionQuality ?? 0);
-      notes.push("You recognised a legitimate call without giving anything away.");
+      notes.push(`You recognised a legitimate ${chat ? "contact" : "call"} without giving anything away.`);
       if ((call.decisionQuality ?? 0) >= 25) notes.push("Calling back on the number you already trust is exactly right.");
-      else notes.push("Next time, confirm through the number on your card before acting on the call.");
+      else notes.push(`Next time, confirm through a channel you already trust before acting on the ${chat ? "message" : "call"}.`);
     }
   } else {
     score = 35 + caught.length * 10;
@@ -42,10 +49,15 @@ export function judgeCall(call: CompletedCall): CallScore {
     if (call.outcome === "scammed") score -= 15;
 
     if (first) notes.push(`Your suspicion surfaced at ${fmt(first.at)} — when you challenged the ${tacticLabel(first.tactic).toLowerCase()}.`);
-    else notes.push("You never challenged the caller directly. Every claim went unverified.");
+    else notes.push(`You never challenged the ${who} directly. Every claim went unverified.`);
     if (call.revealed.length) notes.push(`You gave away: ${call.revealed.join(", ").toLowerCase()}. That alone would have been enough.`);
-    if (missed.length) notes.push(`The caller also used ${missed.map((t) => tacticLabel(t).toLowerCase()).join(" and ")} without being called out.`);
-    if (call.outcome === "exposed") notes.push("Ending the call and using a number you already trust is the strongest move available.");
+    if (missed.length) notes.push(`The ${who} also used ${missed.map((t) => tacticLabel(t).toLowerCase()).join(" and ")} without being called out.`);
+    if (call.outcome === "exposed")
+      notes.push(
+        chat
+          ? "Blocking them and checking through a channel you already trust is the strongest move available."
+          : "Ending the call and using a number you already trust is the strongest move available.",
+      );
   }
 
   const final = clamp(score);

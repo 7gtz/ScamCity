@@ -14,9 +14,28 @@ const TACTIC_DISTRICT: Record<TacticId, DistrictId> = {
   "social-pressure": "romance",
 };
 
-const top = (counts: Counts) =>
-  (Object.entries(counts) as [TacticId, number][]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1])[0]?.[0];
+/** The district whose con is built on an encounter's lead tactic. */
+export const districtFor = (targets: readonly TacticId[]) => {
+  const lead = targets[0];
+  return lead ? DISTRICTS.find((d) => d.id === TACTIC_DISTRICT[lead]) : undefined;
+};
+
+/**
+ * Where an encounter sits in the city: `District 02 · The Delivery · Channel · Web`.
+ * Only shown once the player has decided — the district names the tactic.
+ */
+export const placeLabel = (channel: string, targets: readonly TacticId[]) => {
+  const d = districtFor(targets);
+  return d ? `District ${d.number} · ${d.title} · Channel · ${channel}` : `Channel · ${channel}`;
+};
+
 const total = (counts: Counts) => Object.values(counts).reduce((a, n) => a + (n ?? 0), 0);
+
+/** The latest report's own findings. They outrank history, so the page never contradicts itself. */
+export interface SessionFindings {
+  missed: TacticId[];
+  caught: TacticId[];
+}
 
 export interface DefenseProfile {
   archetype: string;
@@ -32,24 +51,39 @@ export interface DefenseProfile {
 /**
  * How this player gets manipulated, read from every channel they've played.
  * `falseAlarms` / `trusted` are genuine encounters turned away / handled well.
+ *
+ * Each tactic gets one verdict from its balance (caught minus missed), so a
+ * tactic can never be both a strength and a weakness. `session` — the report
+ * on screen — outranks history.
  */
 export function defenseProfile({
   weak,
   strong,
   falseAlarms = 0,
   trusted = 0,
+  session,
 }: {
   weak: Counts;
   strong: Counts;
   falseAlarms?: number;
   trusted?: number;
+  session?: SessionFindings;
 }): DefenseProfile | null {
   const w = total(weak);
   const s = total(strong);
-  if (w + s + falseAlarms + trusted === 0) return null;
+  if (w + s + falseAlarms + trusted === 0 && !session?.missed.length && !session?.caught.length) return null;
 
-  const weakest = top(weak);
-  const strongest = top(strong);
+  const balance = (t: TacticId) =>
+    (strong[t] ?? 0) -
+    (weak[t] ?? 0) +
+    (session?.caught.includes(t) ? 1000 : 0) -
+    (session?.missed.includes(t) ? 1000 : 0);
+  const tactics = [
+    ...new Set([...Object.keys(weak), ...Object.keys(strong), ...(session?.missed ?? []), ...(session?.caught ?? [])]),
+  ] as TacticId[];
+  const ranked = tactics.map((t) => [t, balance(t)] as const).sort((a, b) => b[1] - a[1]);
+  const strongest = ranked.find(([, b]) => b > 0)?.[0];
+  const weakest = ranked.findLast(([, b]) => b < 0)?.[0];
   const base = {
     strong: strongest,
     weak: weakest,

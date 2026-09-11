@@ -8,7 +8,7 @@ import type { CompletedCall } from "@/lib/live/types";
 
 export const dynamic = "force-dynamic";
 
-const SYSTEM = `You are the judge in SCAM CITY, a scam-awareness training game. You review the transcript of a finished phone call and score how well the PLAYER handled it. You evaluate decision-making, not just win or lose.
+const SYSTEM = `You are the judge in SCAM CITY, a scam-awareness training game. You review the transcript of a finished phone call or text-message conversation and score how well the PLAYER handled it. You evaluate decision-making, not just win or lose. Use the language of the channel: for a text conversation, say "messages", "conversation" and "contact" — never "call" or "caller".
 
 Rubric for a SCAM call (pass mark 65):
 - Verifying questions asked (employee ID, callback on a trusted number): strong positive.
@@ -36,7 +36,9 @@ export async function POST(req: Request) {
   if (!parsed.success) return Response.json({ error: "Invalid request." }, { status: 400 });
   const call = parsed.data as CompletedCall;
 
-  const prompt = `Caller type: ${call.legitimate ? "GENUINE" : "SCAMMER"}
+  const chat = call.scenarioId === "messages";
+  const prompt = `Channel: ${chat ? "a text-message conversation (CALLER lines are the contact's messages)" : "a phone call"}
+Caller type: ${call.legitimate ? "GENUINE" : "SCAMMER"}
 ${call.brief ? `The caller: ${call.brief.caller}. Pretext: ${call.brief.hook} Objective: ${call.brief.objective}` : ""}
 Outcome: ${call.outcome}
 Call length: ${Math.round(call.durationMs / 1000)} seconds
@@ -53,8 +55,10 @@ ${formatTranscript(call.transcript)}`;
       system: SYSTEM,
       prompt,
       temperature: 0.2,
-      // Short first attempt: under load the flagship stalls, and the fallback is fast.
-      timeoutMs: 8000,
+      // The player is waiting: race the chain rather than queue it. Under load
+      // the flagship stalls; a lite model then answers within the budget.
+      hedgeMs: 2000,
+      budgetMs: 8500,
     });
     return Response.json(composeScore(call, verdict));
   } catch (err) {

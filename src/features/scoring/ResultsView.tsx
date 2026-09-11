@@ -26,27 +26,29 @@ export function ResultsView({ sessionId }: { sessionId: string }) {
   const score = useResultsStore((s) => s.scores[sessionId]);
   const hydrated = useSyncExternalStore(subscribe, hasHydrated, () => false);
   const freestyle = useFreestyle((s) => s.status);
+  const chat = score?.channel === "sms";
+  // The tab title comes from the URL (?channel=messages) in the route's generateMetadata.
+  const title = chat ? "Conversation report" : "Call report";
 
   if (!score) {
     if (!hydrated) return <Paper>{null}</Paper>;
     return (
       <Paper className="gutter-x flex flex-col justify-center gap-8">
-        <h1 className="display-l">No record of this call.</h1>
+        <h1 className="display-l">No record of this report.</h1>
         <p className="lead max-w-[48ch] text-ash">
-          Scorecards live in this browser session only. Take another call to get a new report.
+          Reports live in this browser session only. Play another encounter to get a new one.
         </p>
         <CtaLink href="/modes">Choose a mode</CtaLink>
       </Paper>
     );
   }
 
-  const chat = score.channel === "sms";
   const next = score.passed && !chat ? nextScenarioId(score.scenarioId) : undefined;
 
   return (
     <Paper>
       <div className="gutter-x mx-auto max-w-[1600px] pt-[calc(var(--nav-h)+4rem)] pb-32">
-        <h1 className="sr-only">{chat ? "Conversation report" : "Call report"}</h1>
+        <h1 className="meta mb-8 text-smoke">{title}</h1>
         <ScoreReport score={score}>
           {freestyle !== "idle" && <CtaLink href="/freestyle">Back to Freestyle</CtaLink>}
           {freestyle === "idle" && next && <CtaLink href={`/play/${next}`}>Next call</CtaLink>}
@@ -59,7 +61,8 @@ export function ResultsView({ sessionId }: { sessionId: string }) {
             <Link href="/modes">All modes</Link>
           </Button>
         </ScoreReport>
-        <DefenseCard className="mt-24 md:mt-32" />
+        {/* Built from this report's findings first, so the two can never disagree. */}
+        <DefenseCard session={{ missed: score.missed, caught: score.caught.map((c) => c.tactic) }} className="mt-24 md:mt-32" />
       </div>
     </Paper>
   );

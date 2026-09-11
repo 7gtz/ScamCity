@@ -97,7 +97,13 @@ function Riddle({
   const progress = useProgressStore((s) => s.riddle);
   const reduced = useReducedMotion();
   const verdictRef = useRef<HTMLHeadingElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const id = useId();
+
+  // On a phone the answer panel sits under the message: bring each new step into view.
+  useEffect(() => {
+    if (step !== "scam") panelRef.current?.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" });
+  }, [step, reduced]);
 
   const correct = isScam === riddle.scam && (!riddle.scam || category === riddle.category);
   const categoryLabel = (c?: RiddleCategory | null) => RIDDLE_CATEGORIES.find((x) => x.id === c)?.label;
@@ -140,12 +146,12 @@ function Riddle({
         <PhoneScreen riddle={riddle} labelId={`${id}-meta`} verdict={step === "verdict"} correct={correct} reduced={Boolean(reduced)} />
       </div>
 
-      <div className="flex flex-col gap-8 lg:col-span-5 lg:col-start-8 lg:pt-8">
+      <div ref={panelRef} className="flex scroll-mt-24 flex-col gap-8 lg:col-span-5 lg:col-start-8 lg:pt-8">
         <AnimatePresence mode="wait">
           {step === "scam" && (
             <motion.div key="scam" className="flex flex-col gap-6" {...reveal}>
               <div className="flex flex-col gap-2">
-                <p className="meta text-smoke">Is this a scam?</p>
+                <p className="meta text-smoke">Step 1 · Is this a scam?</p>
                 <p className="max-w-[40ch] text-ash">Inspect it first — who sent it, when, and what it asks you to do.</p>
               </div>
               <div role="group" aria-label="Your answer" className="grid grid-cols-2 gap-3">
@@ -170,7 +176,10 @@ function Riddle({
                   Change
                 </button>
               </p>
-              <p className="meta text-smoke">What kind?</p>
+              <div className="flex flex-col gap-2">
+                <p className="meta text-bone">Step 2 of 2 · Identify the tactic</p>
+                <p className="max-w-[40ch] text-ash">What kind of scam is it?</p>
+              </div>
               <div role="group" aria-label="Scam type" className="grid grid-cols-2 gap-3">
                 {RIDDLE_CATEGORIES.map((c) => (
                   <AnswerTile key={c.id} label={c.label} small onClick={() => finish(true, c.id)} />
@@ -236,8 +245,9 @@ function AnswerTile({ label, hint, small, onClick }: { label: string; hint?: str
     >
       <span
         className={cn(
-          "font-display leading-none tracking-[-0.015em] uppercase",
-          small ? "text-xl" : "text-[clamp(1.75rem,3vw,2.5rem)]",
+          "max-w-full font-display leading-none tracking-[-0.015em] break-words uppercase",
+          // "IMPERSONATION" must fit a half-width tile on a 390px phone.
+          small ? "text-[1.0625rem] sm:text-xl" : "text-[clamp(1.75rem,3vw,2.5rem)]",
         )}
       >
         {label}

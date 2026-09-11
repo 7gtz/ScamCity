@@ -56,6 +56,20 @@ export function ModeRing() {
     animate(angle, -next * STEP, { duration: 0.9, ease });
   };
 
+  // Arrow keys turn the ring from anywhere on the page, not only once it has focus.
+  useEffect(() => {
+    const onWindowKey = (e: KeyboardEvent) => {
+      if (e.target !== document.body || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const next = turn + (e.key === "ArrowRight" ? 1 : -1);
+      setTurn(next);
+      animate(angle, -next * STEP, { duration: 0.9, ease });
+    };
+    window.addEventListener("keydown", onWindowKey);
+    return () => window.removeEventListener("keydown", onWindowKey);
+  }, [turn, angle]);
+
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowRight") goTo(turn + 1);
     else if (e.key === "ArrowLeft") goTo(turn - 1);
@@ -218,7 +232,7 @@ function Plate({
         {mode.number}
       </span>
       <span className="meta flex items-center justify-between text-smoke">
-        <span>{mode.channel}</span>
+        <span>{mode.id === "freestyle" ? "Every district · every channel" : `Channel · ${mode.channel}`}</span>
         {mode.id === "freestyle" && <span className="live-dot" aria-hidden />}
       </span>
       <span className="relative flex flex-col gap-3">

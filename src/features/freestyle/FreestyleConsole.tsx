@@ -38,7 +38,8 @@ export function FreestyleConsole() {
   const demoLink = useSyncExternalStore(noSubscribe, readDemo, () => false);
   const [chosen, setChosen] = useState<Pace | null>(null);
   const pace = chosen ?? (demoLink ? "demo" : "normal");
-  const [precise, setPrecise] = useState(true);
+  // Off until the player chooses it: personalising with real location is an explicit decision.
+  const [precise, setPrecise] = useState(false);
   const [waking, setWaking] = useState(false);
   const [permission, setPermission] = useNotificationPermission();
   const goal = goalFor(pace);
@@ -125,8 +126,11 @@ export function FreestyleConsole() {
               className="mt-0.5 size-5 shrink-0 accent-[var(--color-bone)]"
             />
             <span>
-              Use my real location and weather. Every encounter is written for where you are.
-              <span className="block text-smoke">Coordinates go to open-meteo and BigDataCloud only.</span>
+              <span className="text-bone">Personalise my day</span> with my real location and weather. Every encounter is
+              then written for where you are.
+              <span className="block text-smoke">
+                Off by default: local time and timezone are used instead. Coordinates go to open-meteo and BigDataCloud only.
+              </span>
             </span>
           </label>
 

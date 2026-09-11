@@ -8,13 +8,14 @@ import { Portrait } from "@/components/motion/Portrait";
 import { RingTimer } from "@/components/sections/RingTimer";
 import { Button } from "@/components/ui/Button";
 import { Meter } from "@/components/ui/Meter";
+import { TacticChip } from "@/components/ui/TacticChip";
 import { BONUS, DISTRICTS, type District } from "@/content/districts";
-import { tacticLabel } from "@/content/tactics";
 import { Lives } from "@/features/freestyle/DayHud";
 import { useFreestyle } from "@/features/freestyle/freestyle-store";
 import { goalFor } from "@/features/freestyle/schedule";
 import { startRing, stopRing, unlockRingtone } from "@/features/freestyle/ringtone";
 import { useProgressStore } from "@/features/progress/progress-store";
+import { JudgingProgress } from "@/features/scoring/JudgingProgress";
 import { fmt } from "@/features/scoring/mock-judge";
 import { useAiStatus } from "@/lib/ai-status";
 import { cn } from "@/lib/cn";
@@ -45,12 +46,13 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
     [caller, districtPersona],
   );
   const muted = useCallStore((s) => s.muted);
-  const [precise, setPrecise] = useState(true);
+  // Off until the player chooses it: personalising with real location is an explicit decision.
+  const [precise, setPrecise] = useState(false);
   const district = DISTRICTS.find((d) => d.id === districtPersona.district) ?? DISTRICTS[0]!;
   const bonus = scenarioId === BONUS.scenarioId;
   const idle = status === "idle";
   const onCall = ON_CALL.includes(status);
-  const level = bonus ? "Bonus call · The legitimate call" : `District ${district.number} · ${district.title}`;
+  const level = `${bonus ? "Bonus call · The legitimate call" : `District ${district.number} · ${district.title}`} · Channel · Call`;
 
   // Freestyle answers for you: the player already pressed Answer on the incoming card.
   const autoAnswered = useRef(false);
@@ -400,8 +402,9 @@ function Incoming({
             className="mt-0.5 size-5 shrink-0 accent-[var(--color-bone)]"
           />
           <span>
-            Let the caller use my real location and weather. It will turn them against you.
-            <span className="block text-smoke">Coordinates go to open-meteo and BigDataCloud to look up the city and weather.</span>
+            <span className="text-bone">Personalise this call</span> with my real location and weather. The caller will use
+            them against you.
+            <span className="block text-smoke">Off by default. Coordinates go to open-meteo and BigDataCloud only.</span>
           </span>
         </label>
       ) : (
@@ -616,10 +619,7 @@ function Conversation({
       </AnimatePresence>
 
       {settled && (
-        <div className="mt-6 shrink-0">
-          <p className="meta text-bone">{status === "ending" ? "Call ended" : "The judge is reading the transcript"}</p>
-          <span className="mt-3 block h-px w-full origin-left animate-[rule-draw_1.8s_var(--ease-out)_forwards] bg-bone" />
-        </div>
+        <div className="mt-6 shrink-0">{status === "ending" ? <p className="meta text-bone">Call ended</p> : <JudgingProgress />}</div>
       )}
     </div>
   );
@@ -684,21 +684,9 @@ function Controls({
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <Meter value={agent?.suspicionEstimate ?? 0} />
         <ul aria-label="Red flags you have learned" className="flex flex-wrap gap-2">
-          {learned.map((t) => {
-            const hit = detected.some((d) => d.tactic === t);
-            return (
-              <li
-                key={t}
-                className={cn(
-                  "meta border px-2 py-1 transition-colors duration-[320ms] ease-out",
-                  hit ? "border-signal text-signal" : "border-line text-smoke",
-                )}
-              >
-                {tacticLabel(t)}
-                <span className="sr-only">{hit ? ", detected" : ", not yet detected"}</span>
-              </li>
-            );
-          })}
+          {learned.map((t) => (
+            <TacticChip key={t} tactic={t} hit={detected.some((d) => d.tactic === t)} inPlay={Boolean(agent?.tacticsUsed.includes(t))} />
+          ))}
         </ul>
       </div>
 

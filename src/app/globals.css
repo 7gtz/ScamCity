@@ -170,9 +170,9 @@ html.has-custom-cursor textarea {
 
 @utility meta {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  line-height: 1.3;
-  letter-spacing: 0.14em;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
   font-weight: 450;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
@@ -317,6 +317,13 @@ html.has-custom-cursor textarea {
 
 .buzz {
   animation: buzz 3s linear infinite;
+}
+
+/* Phones: the Freestyle status pill floats over the bottom of the page; keep room for it. */
+@media (max-width: 767px) {
+  html[data-fs-pill] main {
+    padding-bottom: 4.5rem;
+  }
 }
 
 /* An incoming notification's time running out. */

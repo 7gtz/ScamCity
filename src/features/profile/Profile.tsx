@@ -4,7 +4,7 @@ import { useId } from "react";
 import { tacticLabel } from "@/content/tactics";
 import { useProgressStore } from "@/features/progress/progress-store";
 import { cn } from "@/lib/cn";
-import { defenseProfile, type Lesson } from "./defense";
+import { defenseProfile, type Lesson, type SessionFindings } from "./defense";
 
 const RULE = { danger: "border-signal", uncertain: "border-amber", safe: "border-safe" } as const;
 const TEXT = { danger: "text-signal", uncertain: "text-amber", safe: "text-safe" } as const;
@@ -27,21 +27,24 @@ export function LessonNote({ lesson, className }: { lesson: Lesson; className?: 
 export function DefenseCard({
   falseAlarms,
   trusted,
+  session,
   className,
 }: {
   falseAlarms?: number;
   trusted?: number;
+  /** The report on the same page: its findings outrank history. */
+  session?: SessionFindings;
   className?: string;
 }) {
   const weak = useProgressStore((s) => s.weak);
   const strong = useProgressStore((s) => s.strong);
   const id = useId();
-  const p = defenseProfile({ weak, strong, falseAlarms, trusted });
+  const p = defenseProfile({ weak, strong, falseAlarms, trusted, session });
   if (!p) return null;
 
   return (
     <section aria-labelledby={id} className={cn("flex flex-col gap-6 border-t border-line pt-8", className)}>
-      <p className="meta text-smoke">Your defense profile</p>
+      <p className="meta text-smoke">Your defense profile · across everything you&rsquo;ve played</p>
       <div className="flex flex-col gap-3">
         <h2 id={id} className="display-m uppercase">
           {p.archetype}

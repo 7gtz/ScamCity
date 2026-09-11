@@ -214,6 +214,11 @@ export const ChatTurnSchema = z.object({
   playerDetected: z.array(Tactic).max(12),
   revealed: z.array(z.string().max(160)).max(12),
   suspicion: z.number().min(0).max(1),
+  guardNote: z
+    .string()
+    .max(200)
+    .optional()
+    .describe('At most 6 words: what the player just did that changed how guarded they are, e.g. "Asked to verify their identity". Empty if nothing changed.'),
   end: z.enum(["none", "hung-up", "scammed", "exposed", "verified-legit", "rejected-legit"]),
 });
 export type ChatTurn = z.infer<typeof ChatTurnSchema>;

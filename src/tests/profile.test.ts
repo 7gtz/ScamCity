@@ -17,6 +17,18 @@ describe("defense profile", () => {
     expect(p?.nextThreat?.id).toBe("delivery");
   });
 
+  it("never names one tactic as both a strength and a weakness", () => {
+    const p = defenseProfile({ weak: { urgency: 2 }, strong: { urgency: 2, fear: 1 } });
+    expect(p?.strong).not.toBe(p?.weak);
+  });
+
+  it("lets the report on screen outrank history, so the page can't contradict itself", () => {
+    // History says the player usually catches urgency; this report says they just missed it.
+    const p = defenseProfile({ weak: { urgency: 1 }, strong: { urgency: 4 } , session: { missed: ["urgency"], caught: ["authority"] } });
+    expect(p?.weak).toBe("urgency");
+    expect(p?.strong).toBe("authority");
+  });
+
   it("gives every district its own lever", () => {
     expect(new Set(DISTRICTS.map((d) => d.lever)).size).toBe(DISTRICTS.length);
   });

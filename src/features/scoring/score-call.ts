@@ -11,8 +11,8 @@ export async function scoreCall(call: CompletedCall): Promise<CallScore> {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(call),
-      // Room for the judge's fallback chain (3 attempts × 9 s) before the rules judge takes over.
-      signal: AbortSignal.timeout(30_000),
+      // The server races its judges within 8.5 s; past that, the rules judge answers at once.
+      signal: AbortSignal.timeout(10_500),
     });
     if (res.ok) return (await res.json()) as CallScore;
   } catch {
