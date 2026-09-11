@@ -7,3 +7,6 @@ next-env.d.ts
 .env*.local
 .env
 .vercel
+.env*
+# The template has no secrets and must stay tracked.
+!.env.example
