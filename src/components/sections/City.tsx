@@ -150,11 +150,16 @@ function Plate({ district, inert, className }: { district: District; inert: bool
       inert={inert}
       aria-hidden={inert || undefined}
       className={cn(
-        "absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_at_28%_18%,var(--color-raised)_0%,var(--color-surface)_58%,var(--color-ink)_100%)]",
+        "absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_at_28%_18%,color-mix(in_srgb,var(--color-amber)_16%,var(--color-raised))_0%,var(--color-surface)_55%,var(--color-ember)_100%)]",
         className,
       )}
     >
       <div data-plate-inner className="absolute inset-0">
+        {/* Halftone streetlight glow, like a newsprint photo of the district at night. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(circle,var(--color-amber)_1px,transparent_1.7px)] [background-size:9px_9px] [mask-image:radial-gradient(ellipse_at_82%_88%,black_0%,transparent_62%)]"
+        />
         <span
           aria-hidden
           className="absolute -right-[0.04em] -bottom-[0.2em] font-display text-[clamp(14rem,30vw,32rem)] leading-none font-light text-bone/[0.06] italic"

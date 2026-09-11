@@ -138,7 +138,8 @@ function Riddle({
   return (
     <article aria-labelledby={`${id}-meta`} className="grid gap-12 lg:grid-cols-12 lg:gap-8">
       {/* Evidence */}
-      <div className="flex flex-col gap-6 border-t border-line pt-6 lg:col-span-6">
+      {/* The message itself is a printed card: the evidence on the table. */}
+      <div data-tone="paper" className="tone-paper flex flex-col gap-6 self-start bg-ink p-6 text-bone md:p-8 lg:col-span-6">
         {riddle.source === "ai" && (
           <p className="meta flex items-center gap-2 text-ash">
             <span aria-hidden className="size-1.5 rounded-full bg-bone" />

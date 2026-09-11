@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { NAV_LINKS, type SectionId } from "@/content/sections";
 import { cn } from "@/lib/cn";
 import { scrollToTarget } from "@/lib/motion/lenis";
+import { lightToneClass, useToneUnder } from "@/lib/tone";
 import { IndexMenu } from "./IndexMenu";
 
 /** Quiet fixed navigation (MASTER §5). Links recede on scroll down. */
@@ -13,6 +14,8 @@ export function Nav() {
   const pathname = usePathname();
   const [condensed, setCondensed] = useState(false);
   const [backdrop, setBackdrop] = useState(false);
+  // Stays legible over paper and amber sections: re-themes itself from what's beneath it.
+  const tone = useToneUnder(() => ({ x: window.innerWidth / 2, y: 28 }));
 
   useEffect(() => {
     let last = window.scrollY;
@@ -35,8 +38,10 @@ export function Nav() {
 
   return (
     <header
+      data-chrome
       className={cn(
         "gutter-x fixed inset-x-0 top-0 z-[80] transition-colors duration-[320ms] ease-out",
+        lightToneClass(tone),
         backdrop ? "bg-ink/80 backdrop-blur-[2px]" : "bg-transparent",
       )}
     >

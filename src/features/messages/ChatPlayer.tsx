@@ -163,7 +163,10 @@ export function ChatPlayer() {
     <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
       {/* Phone */}
       <div className="lg:col-span-6 lg:col-start-2">
-        <div className="mx-auto flex h-[min(720px,calc(100dvh-12rem))] min-h-[520px] max-w-[440px] flex-col overflow-hidden rounded-[28px] border border-line bg-paper text-paper-ink">
+        <div
+          data-tone="paper"
+          className="mx-auto flex h-[min(720px,calc(100dvh-12rem))] min-h-[520px] max-w-[440px] flex-col overflow-hidden rounded-[28px] border border-line bg-paper text-paper-ink"
+        >
           <header className="flex items-center gap-3 border-b border-paper-line px-4 py-3">
             <ChevronLeft aria-hidden className="size-5 text-paper-muted" strokeWidth={1.5} />
             <span aria-hidden className="flex size-9 items-center justify-center rounded-full bg-paper-2 font-semibold">

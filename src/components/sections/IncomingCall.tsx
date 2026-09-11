@@ -11,7 +11,7 @@ export function IncomingCall() {
   const persona = getScenario(DEFAULT_SCENARIO)!.persona;
 
   return (
-    <Section id="incoming" className="grid min-h-dvh grid-cols-1 lg:grid-cols-12">
+    <Section id="incoming" tone="ember" className="grid min-h-dvh grid-cols-1 lg:grid-cols-12">
       <Portrait
         src={persona.portrait}
         alt={`${persona.name}, the caller`}

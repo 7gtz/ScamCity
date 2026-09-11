@@ -2,15 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SECTION_TOTAL } from "@/content/sections";
+import { cn } from "@/lib/cn";
 import { ScrollTrigger } from "@/lib/motion/gsap";
+import { lightToneClass, useToneUnder } from "@/lib/tone";
 
 /**
- * Scroll-progress hairline + section counter (MASTER §5).
+ * Scroll-progress hairline + section counter (MASTER §5). Landing page only.
  * Decorative: the index dialog is the accessible equivalent.
  */
 export function ScrollProgress() {
   const fill = useRef<HTMLSpanElement>(null);
   const [current, setCurrent] = useState("01");
+  const tone = useToneUnder(() => ({ x: window.innerWidth - 24, y: window.innerHeight / 2 }));
 
   useEffect(() => {
     const trigger = ScrollTrigger.create({
@@ -39,16 +42,19 @@ export function ScrollProgress() {
   }, []);
 
   return (
-    <div aria-hidden className="pointer-events-none fixed top-1/2 right-4 z-[70] hidden -translate-y-1/2 items-center gap-3 md:flex">
-      <span className="meta tabular text-smoke [writing-mode:vertical-rl]">
+    <div
+      aria-hidden
+      data-chrome
+      className={cn(
+        "pointer-events-none fixed top-1/2 right-4 z-[70] hidden -translate-y-1/2 items-center gap-3 md:flex",
+        lightToneClass(tone),
+      )}
+    >
+      <span className="meta tabular text-smoke transition-colors duration-[320ms] [writing-mode:vertical-rl]">
         {current} / {SECTION_TOTAL}
       </span>
-      <span className="relative block h-40 w-px bg-line">
-        <span
-          ref={fill}
-          className="absolute inset-0 origin-top bg-bone"
-          style={{ transform: "scaleY(0)" }}
-        />
+      <span className="relative block h-40 w-px bg-line transition-colors duration-[320ms]">
+        <span ref={fill} className="absolute inset-0 origin-top bg-bone" style={{ transform: "scaleY(0)" }} />
       </span>
     </div>
   );

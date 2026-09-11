@@ -16,6 +16,7 @@ const clamp = (v: number) => Math.max(-MAGNET_MAX, Math.min(MAGNET_MAX, v));
 /**
  * Custom cursor (MASTER §5). Fine pointers only, never under reduced motion.
  * Opt in with data-cursor="magnetic" | "enter" | "talk" | "view".
+ * Inverts over light tones ([data-tone="paper" | "amber"]).
  */
 export function Cursor() {
   const ref = useRef<HTMLDivElement>(null);
@@ -27,11 +28,10 @@ export function Cursor() {
   const mode = hover.path === pathname ? hover.mode : "default";
   const [visible, setVisible] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const [light, setLight] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia(
-      "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
-    );
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)");
     const update = () => setEnabled(mq.matches);
     update();
     mq.addEventListener("change", update);
@@ -47,6 +47,9 @@ export function Cursor() {
     const xTo = gsap.quickTo(el, "x", { duration: 0.35, ease: "power3.out" });
     const yTo = gsap.quickTo(el, "y", { duration: 0.35, ease: "power3.out" });
     let magnet: HTMLElement | null = null;
+    let lastX = -1;
+    let lastY = -1;
+    let raf = 0;
 
     const release = () => {
       if (!magnet) return;
@@ -54,18 +57,25 @@ export function Cursor() {
       magnet = null;
     };
 
-    const onMove = (e: PointerEvent) => {
-      xTo(e.clientX);
-      yTo(e.clientY);
-
-      const node = e.target instanceof Element ? e.target : null;
-      const overField = !!node?.closest("input, textarea, select");
-      setVisible(!overField);
-
+    /** Everything the cursor shows depends only on what sits under it. */
+    const read = (node: Element | null) => {
+      const overField = Boolean(node?.closest("input, textarea, select"));
+      setVisible(lastX >= 0 && !overField);
+      const tone = node?.closest<HTMLElement>("[data-tone]")?.dataset.tone;
+      setLight(tone === "paper" || tone === "amber");
       const target = node?.closest<HTMLElement>("[data-cursor]") ?? null;
       const next = (target?.dataset.cursor as CursorMode | undefined) ?? "default";
       const path = window.location.pathname;
       setHover((h) => (h.mode === next && h.path === path ? h : { mode: next, path }));
+      return { target, next };
+    };
+
+    const onMove = (e: PointerEvent) => {
+      lastX = e.clientX;
+      lastY = e.clientY;
+      xTo(e.clientX);
+      yTo(e.clientY);
+      const { target, next } = read(e.target instanceof Element ? e.target : null);
 
       // The call room gets labels but never attraction.
       const magnetic = target && next !== "talk" ? target : null;
@@ -85,6 +95,28 @@ export function Cursor() {
       });
     };
 
+    // What's under a still pointer changes when the page scrolls, or when the
+    // element that was under it unmounts after a click — re-read it then, so no
+    // stale "ENTER" label floats over empty space.
+    const recheck = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (lastX < 0) return;
+        const { target } = read(document.elementFromPoint(lastX, lastY));
+        if (magnet && target !== magnet) release();
+      });
+    };
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+    const onClick = () => {
+      for (const ms of [60, 450]) {
+        const t = setTimeout(() => {
+          timers.delete(t);
+          recheck();
+        }, ms);
+        timers.add(t);
+      }
+    };
+
     const onLeave = () => {
       setVisible(false);
       release();
@@ -93,13 +125,19 @@ export function Cursor() {
     const onUp = () => setPressed(false);
 
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("scroll", recheck, { passive: true });
+    window.addEventListener("click", onClick);
     document.addEventListener("pointerleave", onLeave);
     window.addEventListener("pointerdown", onDown);
     window.addEventListener("pointerup", onUp);
 
     return () => {
       root.classList.remove("has-custom-cursor");
+      cancelAnimationFrame(raf);
+      timers.forEach(clearTimeout);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("scroll", recheck);
+      window.removeEventListener("click", onClick);
       document.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);
@@ -115,7 +153,7 @@ export function Cursor() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed top-0 left-0 z-[95] transition-opacity duration-[180ms] ease-out"
+      className={cn("pointer-events-none fixed top-0 left-0 z-[95] transition-opacity duration-[180ms] ease-out", light && "tone-paper")}
       style={{ opacity: visible ? 1 : 0 }}
     >
       <span

@@ -49,10 +49,27 @@ Measured pairs: `ink` on `signal` **5.57** (text on signal buttons is always `in
 - Signal never appears as a background wash, gradient, or glow.
 - There is no green. Correct, cleared, and legitimate are shown in `bone` with a label (`CLEARED`, `VERIFIED`, `LEGITIMATE`). Success is quiet; danger is loud.
 
-### Texture
+### Tones (visual overhaul, 2026-09-11: "less black")
 
-- Film grain: an SVG `feTurbulence` noise overlay, fixed, `opacity: 0.035`, `pointer-events: none`, `mix-blend-mode: overlay`. It is static; animated grain is off by default.
-- No gradients, except a single vignette on portraits (`radial-gradient` from transparent to `--ink` at the edges) so imagery sinks into the ground.
+The page alternates tones instead of sitting on one black ground. A tone is a CSS scope that **remaps the colour tokens** for its subtree (`.tone-ember`, `.tone-paper`, `.tone-amber` in `globals.css`), so every component inside re-themes itself: text, buttons, meters, focus rings, the red.
+
+| Tone | Ground | Used for | Text pairs (measured) |
+|---|---|---|---|
+| dark | `#0B0A09` | Cinematic moments: Opening, City, Threat, Live, Progression, Final | as above |
+| ember | `#1A120D` | Warm dark: Incoming Call, mode pages, call-room portrait column | bone 15.4 · ash 6.9 · smoke 5.0 · signal 5.2 |
+| paper | `#F4F1EA` | Printed evidence: Opponent transcript, Judge, results page, riddle cards, Impact | ink 16.2 · ash 8.3 · smoke 5.1 · signal `#B42F1B` 5.5 |
+| amber | `#F2DDBF` | Streetlight: Riddle section, Freestyle plate | ink 13.8 · ash 7.1 · smoke 5.9 · signal 4.7 |
+
+- Fixed chrome (nav, scroll hairline, cursor) reads the tone beneath it and re-themes itself (`lib/tone.ts`, `[data-tone]`, `[data-chrome]`).
+- `--color-amber` `#E8A657` (9.4:1 on ink) is the city's second light: sodium streetlights, halftone dots, live captions, italic accents. **Never an alert**: signal red stays the only alarm colour.
+
+### Light and texture
+
+- **CityRain** (WebGL, `components/gl`): rain on glass over out-of-focus city lights, behind the Opening, the Final CTA and Freestyle. Driven by the player's real local time (night or day) and, if location was already granted, their real weather (how wet the glass is). Captioned "Live · city · time · weather".
+- **Halftone portraits** (WebGL): generative, name-seeded silhouettes replace the missing photos. In a live call they pulse with the caller's real voice.
+- **Halftone dot screens** (CSS) on the district plates, like newsprint.
+- Film grain: static SVG noise, fixed, at 5% opacity.
+- Signal red still never appears as a wash, gradient or glow.
 
 ---
 

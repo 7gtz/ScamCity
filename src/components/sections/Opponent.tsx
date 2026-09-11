@@ -39,7 +39,7 @@ export function Opponent() {
   );
 
   return (
-    <Section id="opponent" className="gutter-x py-[var(--section)]">
+    <Section id="opponent" tone="paper" className="gutter-x py-[var(--section)]">
       <div className="flex flex-col gap-10">
         <SectionMeta id="opponent" />
         <SplitReveal

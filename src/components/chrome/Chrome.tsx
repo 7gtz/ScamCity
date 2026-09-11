@@ -22,7 +22,8 @@ export function Chrome({ children }: { children: React.ReactNode }) {
     <>
       {!immersive && <SmoothScroll />}
       {!immersive && <Nav />}
-      {!immersive && <ScrollProgress />}
+      {/* Counts landing sections — meaningless (and wrong) anywhere else. */}
+      {pathname === "/" && <ScrollProgress />}
       <main id="main">{children}</main>
       <StoreHydrator />
       <FreestyleEngine />

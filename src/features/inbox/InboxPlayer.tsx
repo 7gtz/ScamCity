@@ -82,7 +82,7 @@ export function InboxPlayer() {
 
   return (
     <div className="flex flex-col gap-12">
-      <div className="relative overflow-hidden rounded-[8px] border border-line bg-paper text-paper-ink">
+      <div data-tone="paper" className="relative overflow-hidden rounded-[8px] border border-line bg-paper text-paper-ink">
         {/* App bar */}
         <div className="flex h-14 items-center gap-4 border-b border-paper-line px-4">
           <span className="font-sans text-lg font-semibold tracking-tight">Mail</span>

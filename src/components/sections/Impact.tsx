@@ -7,7 +7,7 @@ const AUDIENCES = ["Schools", "Community centers", "Elder-care programs", "Finan
 /** 10 — Warmer ground; the skill outlives the game (brief §20). */
 export function Impact() {
   return (
-    <Section id="impact" className="bg-surface py-[var(--section)]">
+    <Section id="impact" tone="paper" className="bg-surface py-[var(--section)]">
       <div className="gutter-x grid gap-16 lg:grid-cols-12 lg:gap-8">
         <div className="flex flex-col gap-10 lg:col-span-6">
           <SectionMeta id="impact" />

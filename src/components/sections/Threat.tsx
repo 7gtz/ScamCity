@@ -40,22 +40,43 @@ export function Threat() {
       const mm = gsap.matchMedia();
 
       mm.add({ pin: MQ.desktop, flow: "(max-width: 1023px) and (prefers-reduced-motion: no-preference)" }, (ctx) => {
-        const reveal = (targets: NodeListOf<Element>, trigger: Element | null) =>
-          gsap.fromTo(
-            targets,
-            { yPercent: 150, y: 0 },
-            { yPercent: 0, y: 0, duration: 1.1, stagger: 0.09, scrollTrigger: { trigger, start: "top 75%", once: true } },
-          );
-
-        reveal(layer(1), el.querySelector('[data-layer="1"]'));
-
         if (!ctx.conditions?.pin) {
-          reveal(layer(2), el.querySelector('[data-layer="2"]'));
-          reveal(layer(3), el.querySelector('[data-layer="3"]'));
+          for (const n of [1, 2, 3]) {
+            gsap.fromTo(
+              layer(n),
+              { yPercent: 150, y: 0 },
+              {
+                yPercent: 0,
+                y: 0,
+                duration: 1.1,
+                stagger: 0.09,
+                scrollTrigger: { trigger: el.querySelector(`[data-layer="${n}"]`), start: "top 75%", once: true },
+              },
+            );
+          }
           return;
         }
 
         el.dataset.pinned = "true";
+
+        // The entry is scrubbed too (not a one-shot tween), over a range that ends
+        // before the pin starts, so every line's position is a pure function of
+        // scroll. The entry owns `y` (px) and the pin timeline owns `yPercent`:
+        // GSAP composes the two into one transform, so neither can overwrite the
+        // other. Sharing `yPercent` let a lagging entry scrub pull the first
+        // statement back on top of the second after a reload mid-section.
+        gsap.set(layer(1), { yPercent: 0 });
+        gsap.fromTo(
+          layer(1),
+          { y: (_: number, t: HTMLElement) => t.offsetHeight * 1.5 },
+          {
+            y: 0,
+            ease: "none",
+            stagger: 0.08,
+            scrollTrigger: { trigger: el, start: "top 85%", end: "top 20%", scrub: 0.6, invalidateOnRefresh: true },
+          },
+        );
+
         const need = el.querySelectorAll("[data-need]");
         const words = gsap.utils.toArray<Element>("[data-word]", el);
         const closing = layer(3);
@@ -98,7 +119,9 @@ export function Threat() {
     { scope: stage },
   );
 
-  const stacked = "group-data-[pinned=true]/stage:[grid-area:stack]";
+  // Stacked statements share one grid cell sized by the tallest (the closing
+  // five lines); self-center keeps the short ones optically centred in it.
+  const stacked = "group-data-[pinned=true]/stage:[grid-area:stack] group-data-[pinned=true]/stage:self-center";
 
   return (
     <Section id="threat">
@@ -125,7 +148,7 @@ export function Threat() {
           </p>
           <p
             className={cn(
-              "display-l font-light normal-case italic",
+              "display-l font-light normal-case italic text-amber",
               "group-data-[pinned=true]/stage:grid group-data-[pinned=true]/stage:[grid-template-areas:'word']",
             )}
           >

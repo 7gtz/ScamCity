@@ -68,24 +68,22 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-12">
         <section
           aria-label={`${persona.name}, ${persona.role}, ${persona.organization}`}
-          className={cn("relative bg-ink lg:col-span-5", onCall ? "h-[22dvh] shrink-0 sm:h-[30dvh] lg:h-auto" : "hidden lg:block")}
+          className={cn("relative bg-ember lg:col-span-5", onCall ? "h-[22dvh] shrink-0 sm:h-[30dvh] lg:h-auto" : "hidden lg:block")}
         >
-          {onCall && (
-            <>
-              <Portrait
-                src={persona.portrait}
-                alt={`${persona.name}, the caller`}
-                name={persona.name}
-                subject="Caller"
-                trigger="load"
-                kenBurns={false}
-                priority
-                sizes="(min-width: 1024px) 42vw, 100vw"
-                className="absolute inset-0"
-              />
-              <SpeakerLine />
-            </>
-          )}
+          {/* Before answering: an unknown silhouette. On the call: the caller, pulsing with their real voice. */}
+          <Portrait
+            src={persona.portrait}
+            alt={onCall ? `${persona.name}, the caller` : "Unknown caller"}
+            name={onCall ? persona.name : "Unknown number"}
+            subject={onCall ? "Caller" : "Incoming"}
+            trigger="load"
+            kenBurns={false}
+            priority
+            reactive={status === "live"}
+            sizes="(min-width: 1024px) 42vw, 100vw"
+            className={cn("absolute inset-0 transition-opacity duration-[900ms] ease-out", !onCall && "opacity-60")}
+          />
+          {onCall && <SpeakerLine />}
         </section>
 
         <section className={cn("gutter-x flex min-h-0 flex-col py-5 lg:col-span-7 lg:py-10", !onCall && "overflow-y-auto")}>

@@ -6,14 +6,20 @@ export const metadata: Metadata = { title: "Play — SCAM CITY" };
 
 export default function ModesPage() {
   return (
-    <div className="gutter-x mx-auto flex max-w-[1600px] flex-col gap-10 overflow-x-clip pt-[calc(var(--nav-h)+4rem)] pb-24 md:gap-14">
-      <header className="flex flex-col gap-6">
+    <div className="gutter-x mx-auto flex max-w-[1600px] flex-col gap-8 overflow-x-clip pt-[calc(var(--nav-h)+2.5rem)] pb-24 md:gap-10">
+      {/* Compact header: the ring is the page, and it must sit above the fold. */}
+      <header className="flex flex-col gap-4">
         <p className="meta text-smoke">Choose how they reach you</p>
         <SplitReveal
           as="h1"
           trigger="load"
-          className="display-l"
-          lines={["Every channel", <em key="e" className="font-light normal-case">is a door.</em>]}
+          className="display-m uppercase"
+          lines={[
+            "Every channel",
+            <em key="e" className="font-light normal-case text-amber">
+              is a door.
+            </em>,
+          ]}
         />
       </header>
       <ModeRing />

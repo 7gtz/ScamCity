@@ -66,7 +66,7 @@ export function WebPlayer() {
 
   return (
     <div className="flex flex-col gap-12">
-      <div className="overflow-hidden rounded-[8px] border border-line bg-paper-2 text-paper-ink">
+      <div data-tone="paper" className="overflow-hidden rounded-[8px] border border-line bg-paper-2 text-paper-ink">
         {/* Tab strip */}
         <div className="flex h-10 items-end gap-2 px-3 pt-2">
           <span className="flex h-8 max-w-[240px] items-center gap-2 rounded-t-[8px] bg-paper px-3 text-xs">

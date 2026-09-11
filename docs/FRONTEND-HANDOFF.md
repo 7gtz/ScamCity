@@ -171,6 +171,23 @@ Maximum two pinned sections (City, Threat); more makes mobile scrolling fight th
 
 ---
 
+## 5b. Tones, light and WebGL (from the visual overhaul)
+
+| Piece | Why | What / contract |
+|---|---|---|
+| Tone scopes (`globals.css`: `.tone-ember`, `.tone-paper`, `.tone-amber`) | Less black, with no per-component variants | Remap the colour tokens for a subtree. `<Section tone="paper">` adds the class, `bg-ink text-bone` and `data-tone`. Pages and cards wrap themselves the same way (`data-tone="paper" className="tone-paper bg-ink text-bone"`). |
+| `lib/tone.ts` | Keeps fixed chrome legible over light sections | `toneAt(x, y)` reads the `[data-tone]` under a point, skipping `[data-chrome]`. `useToneUnder()` re-reads it on scroll, resize and route change. Nav and ScrollProgress apply `tone-paper` / `tone-amber` to themselves; the cursor inverts from the element under it. **Any new light surface must carry `data-tone`**, or the nav and cursor go bone-on-paper (invisible). |
+| `components/gl/ShaderCanvas.tsx` | One tiny WebGL1 runtime, no library | Full-screen triangle. It renders only while on screen and while the tab is visible, caps DPR, draws one still frame under reduced motion, and without WebGL leaves the canvas transparent so the parent's CSS background shows. It frees the GL context on unmount. |
+| `components/gl/shaders.ts` | The GLSL | `CITY_RAIN` and `HALFTONE_PORTRAIT`, both commented. |
+| `components/gl/CityRain.tsx` | Real-world ambience | Local time sets night or day. Weather sets the rain, but only if geolocation was already granted — **it never prompts**. `caption` renders "Live · city · time · weather". |
+| `components/gl/HalftonePortrait.tsx` | Caller imagery without photos | Seeded by name. `reactive` reads `readLevel()` every frame (the live call's audio). `Portrait` uses it whenever there's no `src`. |
+
+**WebGL budget:** browsers cap live contexts (about 16). The landing page creates at most four (hero, two portraits, final), and off-screen ones pause. Don't put a `ShaderCanvas` inside a list.
+
+**Pinned scroll scenes:** in `Threat.tsx`, every animated line's position must be a pure function of scroll position (scrubbed entry + scrubbed pin). A one-shot tween on the same elements fights the scrub when the page is reloaded mid-section, and two statements end up on screen at once.
+
+---
+
 ## 6. Features — `src/features/`
 
 ### 6.1 Calls — `features/call/`
@@ -266,6 +283,8 @@ Both are read from `window.location` inside effects (no `useSearchParams`, which
 | `data-section="NN"` | ScrollProgress counter |
 | `data-reveal-line`, `data-reveal`, `data-wipe` | Motion start states (§7.1) |
 | `data-cursor` | Custom cursor |
+| `data-tone` | Tone detection for the nav, scroll hairline and cursor (§5b) |
+| `data-chrome` | Marks fixed chrome, so tone detection looks *through* it |
 | `data-pinned` | Threat's pinned grid layout |
 | `data-plate`, `data-plate-inner` | City's GSAP timeline |
 | `data-seq`, `data-draw`, `data-tick`, `data-curve` | ScoreReport sequence |
@@ -289,7 +308,7 @@ These already caught real bugs; your code must pass them too:
 
 ## 8. Styling system
 
-- **Tokens:** `src/styles/tokens.css` (Tailwind 4 `@theme`). Game UI uses `ink, surface, raised, line, dim, smoke, ash, bone, signal`. Simulated third-party apps (mail, browser, chat) use the **paper** tokens: `paper, paper-2, paper-line, paper-ink, paper-muted, paper-link`. Radius and shadow scales are reset (only `rounded-full` exists), and the breakpoints are custom (`sm` = 480px).
+- **Tokens:** `src/styles/tokens.css` (Tailwind 4 `@theme`). Game UI uses `ink, surface, raised, line, dim, smoke, ash, bone, signal`. Simulated third-party apps (mail, browser, chat) use the **paper** tokens: `paper, paper-2, paper-line, paper-ink, paper-muted, paper-link`. Radius and shadow scales are reset (only `rounded-full` exists), and the breakpoints are custom (`sm` = 480px). `amber` (streetlight accent) and `ember` (warm dark) were added in the overhaul, and tone scopes remap all of these per subtree (§5b).
 - **Utilities:** `globals.css` defines `display-xl`, `display-l`, `display-m`, `quote`, `lead`, `ui-label`, `meta`, `tabular`, `gutter-x`, `section-y`, plus the keyframes `ken-burns`, `live-pulse` and `rule-draw`, and a global reduced-motion override.
 - **Motion tokens:** `lib/motion/tokens.ts` (Motion library) and `lib/motion/gsap.ts` (the `EASE` custom curve, `MQ` media queries). One easing curve everywhere: `cubic-bezier(0.16, 1, 0.3, 1)`.
 - **Design rules:** `design-system/scam-city/MASTER.md`, with page overrides in `pages/` (call room, results, riddle). Signal red is punctuation: at most one red element per viewport on marketing pages. There is no green; genuine and correct are shown in bone.

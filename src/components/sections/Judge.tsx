@@ -43,7 +43,7 @@ const EXAMPLE: CallScore = {
 /** 07 — Not win or lose: an evaluation of decisions (brief §15). */
 export function Judge() {
   return (
-    <Section id="judge" className="gutter-x py-[var(--section)]">
+    <Section id="judge" tone="paper" className="gutter-x py-[var(--section)]">
       <div className="mb-20 flex flex-col gap-10 md:mb-28">
         <SectionMeta id="judge" />
         <SplitReveal

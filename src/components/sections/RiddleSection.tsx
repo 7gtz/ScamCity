@@ -7,7 +7,7 @@ import { Section, SectionMeta } from "./Section";
 /** 08 + 08b — Pattern recognition first; then the case for verification over paranoia (brief §16–17). */
 export function RiddleSection() {
   return (
-    <Section id="riddle" className="gutter-x py-[var(--section)]">
+    <Section id="riddle" tone="amber" className="gutter-x py-[var(--section)]">
       <div className="mb-20 flex flex-col gap-10 md:mb-28">
         <SectionMeta id="riddle" />
         <SplitReveal

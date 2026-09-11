@@ -1,3 +1,4 @@
+import { CityRain } from "@/components/gl/CityRain";
 import { Reveal } from "@/components/motion/Reveal";
 import { SplitReveal } from "@/components/motion/SplitReveal";
 import { CtaLink } from "@/components/ui/CtaLink";
@@ -6,7 +7,10 @@ import { Section } from "./Section";
 /** 11 — Back to near-black. Very little UI (brief §21). */
 export function FinalCta() {
   return (
-    <Section id="enter" className="gutter-x flex min-h-dvh flex-col justify-between pt-[var(--section)] pb-10">
+    <Section id="enter" className="gutter-x isolate flex min-h-dvh flex-col justify-between overflow-hidden pt-[var(--section)] pb-10">
+      {/* The page ends where it began: the same wet window, dimmer. */}
+      <CityRain className="absolute inset-0 -z-10 opacity-45" />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,var(--color-ink)_20%,transparent_85%)]" />
       <div className="flex flex-1 flex-col items-center justify-center gap-14 text-center">
         <p className="meta text-smoke">Scam City</p>
         <h2 id="enter-title" className="flex flex-col items-center gap-[0.4em]">

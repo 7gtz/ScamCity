@@ -1,3 +1,5 @@
+import type { Tone } from "@/lib/tone";
+
 /** Every way to play (the 3D menu and Freestyle draw from this list). */
 export interface Mode {
   id: "calls" | "inbox" | "messages" | "web" | "riddles" | "freestyle";
@@ -8,6 +10,8 @@ export interface Mode {
   href: string;
   /** How it reaches the player in real life. */
   channel: string;
+  /** Plate tone on the 3D ring. */
+  tone: Tone;
 }
 
 export const MODES: Mode[] = [
@@ -19,6 +23,7 @@ export const MODES: Mode[] = [
     line: "Wake up and carry on with your day. Calls, emails, texts and websites arrive when you least expect them.",
     href: "/freestyle",
     channel: "All channels",
+    tone: "amber",
   },
   {
     id: "calls",
@@ -28,6 +33,7 @@ export const MODES: Mode[] = [
     line: "Talk out loud to an AI caller that adapts, pivots and knows where you are.",
     href: "/play",
     channel: "Phone",
+    tone: "dark",
   },
   {
     id: "inbox",
@@ -37,6 +43,7 @@ export const MODES: Mode[] = [
     line: "Fresh emails in a real inbox. Hover the links, read the headers, report or trust.",
     href: "/inbox",
     channel: "Email",
+    tone: "paper",
   },
   {
     id: "messages",
@@ -46,6 +53,7 @@ export const MODES: Mode[] = [
     line: "A stranger, a recruiter, 'Mum on a new number'. Text back — the AI texts back.",
     href: "/messages",
     channel: "SMS & chat",
+    tone: "ember",
   },
   {
     id: "web",
@@ -55,6 +63,7 @@ export const MODES: Mode[] = [
     line: "Lookalike logins, too-good shops, investment dashboards. Read the address bar before you type.",
     href: "/web",
     channel: "Browser",
+    tone: "paper",
   },
   {
     id: "riddles",
@@ -64,5 +73,6 @@ export const MODES: Mode[] = [
     line: "One message, one decision. Scam or genuine, and what kind.",
     href: "/riddle",
     channel: "Any",
+    tone: "ember",
   },
 ];

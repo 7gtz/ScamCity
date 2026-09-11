@@ -14,6 +14,10 @@
   --color-ash: #a39d93;
   --color-bone: #efeae2;
   --color-signal: #f0503a;
+  /* Sodium streetlight: the city's warm secondary light. Ambience and illustration, never alerts. */
+  --color-amber: #e8a657;
+  /* Warm near-black for "ember" surfaces (less dead than ink). */
+  --color-ember: #1a120d;
 
   /* "Paper": simulated everyday apps (mail, browser, chat) framed inside the
      game. Light and neutral so they read as real third-party interfaces. */

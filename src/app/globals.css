@@ -58,6 +58,45 @@
   }
 }
 
+/*
+ * ---------- Tone scopes ----------
+ * Tailwind utilities read colour tokens as CSS variables, so remapping the
+ * variables on a subtree re-themes every component inside it — buttons,
+ * meters, focus rings, the red — with no per-component variants.
+ * Tones: dark (default) · ember (warm dark) · paper (printed evidence) · amber (streetlight).
+ * Contrast for every remapped pair is recorded in MASTER.md §1.
+ */
+.tone-ember {
+  --color-ink: #1a120d;
+  --color-surface: #22180f;
+  --color-raised: #2c2016;
+  --color-line: #3b2c21;
+}
+.tone-paper {
+  --color-ink: #f4f1ea;
+  --color-surface: #ece8df;
+  --color-raised: #e4dfd4;
+  --color-line: #cfc9be;
+  --color-dim: #8e887e;
+  --color-smoke: #6a655c;
+  --color-ash: #4a463f;
+  --color-bone: #17150f;
+  --color-signal: #b42f1b;
+  color-scheme: light;
+}
+.tone-amber {
+  --color-ink: #f2ddbf;
+  --color-surface: #ebd2af;
+  --color-raised: #e3c69f;
+  --color-line: #d2b48a;
+  --color-dim: #7a7368;
+  --color-smoke: #57524a;
+  --color-ash: #4a463f;
+  --color-bone: #17150f;
+  --color-signal: #b42f1b;
+  color-scheme: light;
+}
+
 /* Custom cursor replaces the native one only when it is active (see Cursor.tsx). */
 html.has-custom-cursor,
 html.has-custom-cursor * {

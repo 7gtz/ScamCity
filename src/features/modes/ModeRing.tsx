@@ -24,6 +24,7 @@ export function ModeRing() {
   const router = useRouter();
   const stage = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(1200);
+  const [viewportH, setViewportH] = useState(900);
   const [turn, setTurn] = useState(0); // unbounded, so the ring always takes the short way round
   const active = MODES[mod(turn)]!;
 
@@ -36,12 +37,17 @@ export function ModeRing() {
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => entry && setWidth(entry.contentRect.width));
+    const ro = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      setWidth(entry.contentRect.width);
+      setViewportH(window.innerHeight);
+    });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  const panelW = Math.round(Math.min(360, Math.max(210, width * 0.42)));
+  // Sized by width, and capped by the viewport height so the front plate is never cut off.
+  const panelW = Math.round(Math.min(360, Math.max(210, width * 0.42), Math.max(200, (viewportH - 400) / 1.3)));
   const panelH = Math.round(panelW * 1.3);
   const radius = Math.round(panelW / 2 / Math.tan(Math.PI / N) + Math.min(60, width * 0.04));
 
@@ -69,7 +75,7 @@ export function ModeRing() {
         aria-label="Choose a mode. Use the left and right arrow keys to turn."
         tabIndex={0}
         onKeyDown={onKey}
-        className="relative w-full cursor-grab touch-pan-y select-none outline-offset-8 active:cursor-grabbing"
+        className="relative w-full cursor-grab touch-pan-y select-none outline-offset-4 focus-visible:outline-dim active:cursor-grabbing"
         style={{ height: panelH + 60, perspective: 1600 }}
         onPanStart={() => {
           dragFrom.current = angle.get();
@@ -184,6 +190,7 @@ function Plate({
     <Link
       href={mode.href}
       draggable={false}
+      data-tone={mode.tone}
       tabIndex={front ? 0 : -1}
       aria-hidden={!front || undefined}
       onClick={(e) => {
@@ -196,6 +203,8 @@ function Plate({
       className={cn(
         "absolute top-0 flex flex-col justify-between overflow-hidden border p-5 [backface-visibility:hidden] md:p-8",
         "bg-[radial-gradient(ellipse_at_30%_15%,var(--color-raised)_0%,var(--color-surface)_60%,var(--color-ink)_100%)]",
+        // Each channel has its own light: paper for everyday apps, amber for Freestyle.
+        mode.tone !== "dark" && `tone-${mode.tone} text-bone`,
         "transition-[opacity,border-color] duration-[900ms] ease-out",
         front ? "border-dim" : "border-line",
         dist === 0 ? "opacity-100" : dist === 1 ? "opacity-60" : "opacity-25",
