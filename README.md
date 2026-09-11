@@ -177,6 +177,8 @@ call ends → judge   ───────────────────�
 - **Provider abstraction.** The call room depends only on the `LiveCallProvider` interface (`src/lib/live/types.ts`). `GeminiLiveCallProvider` and `MockLiveCallProvider` are interchangeable.
 - **Explicit call state machine:** `idle → permission-requested → connecting → ringing → live → ending → scoring → results`, with `error` reachable from any state (`src/features/call/call-machine.ts`).
 - **Fallbacks at every layer.** No key or a failed token → simulation. Analyst failure → the HUD holds its last state. Judge failure → rules judge. Director failure → the district's hand-written plan. Riddle failure → built-in riddles.
+- **Model fallback chains.** Each text role tries its main model first. If that model is overloaded (503/429), too slow, or returns output that fails validation, the next model in the chain answers (`CHAINS` in `src/lib/gemini/models.ts`). For example, the judge falls back from `gemini-3.8-flash` to `gemini-3.5-flash-lite`.
+- **Casting seed.** Each call's director prompt gets a random gender (matched to the voice pool) and a random first-name initial, plus the player's recent callers. The same district never sends the same person twice.
 - **Rate limiting.** In-memory, per IP, on every AI route.
 
 ---

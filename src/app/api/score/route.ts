@@ -1,6 +1,6 @@
 import { TACTICS } from "@/content/tactics";
 import { composeScore } from "@/features/scoring/compose";
-import { MODELS } from "@/lib/gemini/models";
+import { CHAINS } from "@/lib/gemini/models";
 import { formatTranscript, generateJson, hasGemini } from "@/lib/gemini/server";
 import { rateLimit, tooMany } from "@/lib/rate-limit";
 import { CompletedCallSchema, JudgeSchema } from "@/lib/validation/schemas";
@@ -47,11 +47,12 @@ ${formatTranscript(call.transcript)}`;
 
   try {
     const verdict = await generateJson(JudgeSchema, {
-      model: MODELS.judge,
+      model: CHAINS.judge,
       system: SYSTEM,
       prompt,
       temperature: 0.2,
-      timeoutMs: 15_000,
+      // Short first attempt: under load the flagship stalls, and the fallback is fast.
+      timeoutMs: 8000,
     });
     return Response.json(composeScore(call, verdict));
   } catch (err) {

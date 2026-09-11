@@ -57,10 +57,14 @@ export function ScoreReport({ score, trigger = "load", children, className }: Pr
     { scope: ref },
   );
 
-  const legitRejected = score.legitimate && score.outcome === "rejected-legit";
+  // A genuine call is handled well only if the judge passed it — hanging up
+  // without verifying is not "verified", whatever the outcome code says.
+  const legitRejected = score.legitimate && !score.passed;
   const missed: { key: string; label: string; at?: number }[] = [
     ...score.missed.map((t) => ({ key: t, label: tacticLabel(t) })),
-    ...(legitRejected ? [{ key: "legit", label: "Rejected a legitimate caller" }] : []),
+    ...(legitRejected
+      ? [{ key: "legit", label: score.outcome === "rejected-legit" ? "Rejected a legitimate caller" : "Verify a genuine caller" }]
+      : []),
   ];
   const caught: { key: string; label: string; at?: number }[] = score.legitimate
     ? legitRejected

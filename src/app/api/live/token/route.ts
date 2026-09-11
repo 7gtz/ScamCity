@@ -63,8 +63,10 @@ export async function POST(req: Request) {
         uses: 1,
         expireTime: new Date(now + 15 * 60_000).toISOString(),
         newSessionExpireTime: new Date(now + 60_000).toISOString(),
+        // Constraints alone lock the whole config into the token. (An empty
+        // lockAdditionalFields makes the SDK send a field mask built from these
+        // keys, which the Live API rejects: "field_mask is invalid".)
         liveConnectConstraints: { model: MODELS.live, config },
-        lockAdditionalFields: [],
         httpOptions: { apiVersion: "v1alpha" },
       },
     });

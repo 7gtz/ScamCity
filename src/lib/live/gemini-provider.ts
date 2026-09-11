@@ -134,8 +134,10 @@ export class GeminiLiveCallProvider extends LiveCallEmitter implements LiveCallP
   /** Typed reply — for loud rooms. Counts as a player turn and cuts the caller off. */
   sendText(text: string) {
     if (!this.session || this.closed) return;
+    // Only mark the caller as cut off if their audio was actually still playing.
+    const cutOff = this.player.playing;
     this.player.flush();
-    this.closeTurn("scammer", true);
+    this.closeTurn("scammer", cutOff);
     this.closeTurn("player");
     this.upsert({ id: `p${this.seq++}`, speaker: "player", text, at: this.elapsed() });
     this.session.sendClientContent({ turns: text, turnComplete: true });

@@ -2,6 +2,13 @@ import type { CallScore, CompletedCall, TacticId } from "@/lib/live/types";
 import type { JudgeOutput } from "@/lib/validation/schemas";
 import { PASS_THRESHOLD } from "./mock-judge";
 
+/** Timeline labels are one or two whole words — never cut mid-word ("threatened to ha"). */
+function shortLabel(label: string) {
+  const words = label.toLowerCase().trim().split(/\s+/).slice(0, 2);
+  const two = words.join(" ");
+  return two.length <= 18 ? two : (words[0] ?? "").slice(0, 18);
+}
+
 /**
  * Turns the judge model's structured verdict into the CallScore the UI renders.
  * Times are clamped to the call, duplicates dropped, and the pass mark applied
@@ -18,7 +25,7 @@ export function composeScore(call: CompletedCall, out: JudgeOutput): CallScore {
   const missed = [...new Set(out.missed)].filter((t) => !seen.has(t));
 
   const events = out.events
-    .map((e) => ({ at: ms(e.atSeconds), label: e.label.toLowerCase().trim().slice(0, 16) }))
+    .map((e) => ({ at: ms(e.atSeconds), label: shortLabel(e.label) }))
     .filter((e) => e.label)
     .sort((a, b) => a.at - b.at);
   if (!events.some((e) => e.at >= call.durationMs - 1500)) events.push({ at: call.durationMs, label: "ended" });
@@ -37,7 +44,7 @@ export function composeScore(call: CompletedCall, out: JudgeOutput): CallScore {
     events: events.slice(-6),
     suspicion: call.suspicion,
     durationMs: call.durationMs,
-    notes: out.notes.slice(0, 4),
+    notes: out.notes.slice(0, 4).map((n) => (n.length > 320 ? `${n.slice(0, 317).trimEnd()}…` : n)),
     judge: "gemini",
     brief: call.brief,
   };

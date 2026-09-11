@@ -1,5 +1,5 @@
 import { TACTICS } from "@/content/tactics";
-import { MODELS } from "@/lib/gemini/models";
+import { CHAINS } from "@/lib/gemini/models";
 import { generateJson, hasGemini } from "@/lib/gemini/server";
 import { rateLimit, tooMany } from "@/lib/rate-limit";
 import { GeneratedRiddleSchema, RiddleRequestSchema } from "@/lib/validation/schemas";
@@ -33,11 +33,11 @@ ${avoid.map((a) => `- ${a}`).join("\n") || "- (none)"}`;
 
   try {
     const riddle = await generateJson(GeneratedRiddleSchema, {
-      model: MODELS.riddle,
+      model: CHAINS.riddle,
       system: SYSTEM,
       prompt,
       temperature: 0.9,
-      timeoutMs: 12_000,
+      timeoutMs: 6500,
     });
     // The underline needs an exact match; drop a tell the model paraphrased.
     const tell = riddle.body.includes(riddle.tell) ? riddle.tell : "";

@@ -17,7 +17,7 @@ export function IncomingCall() {
         alt={`${persona.name}, the caller`}
         name={persona.name}
         subject="Caller"
-        className="h-[72dvh] lg:col-span-7 lg:h-auto lg:min-h-dvh"
+        className="h-[58dvh] md:h-[66dvh] lg:col-span-7 lg:h-auto lg:min-h-dvh"
         sizes="(min-width: 1024px) 58vw, 100vw"
       />
 

@@ -51,13 +51,15 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
   }, [toggleMute]);
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface lg:h-dvh">
+    // Always exactly one screen tall: the transcript scrolls inside, so the
+    // reply box and controls stay in view on every device.
+    <div className="flex h-dvh flex-col overflow-hidden bg-surface">
       <Hud level={level} status={status} />
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-12">
         <section
           aria-label={`${persona.name}, ${persona.role}, ${persona.organization}`}
-          className={cn("relative bg-ink lg:col-span-5", onCall ? "h-[38dvh] lg:h-auto" : "hidden lg:block")}
+          className={cn("relative bg-ink lg:col-span-5", onCall ? "h-[22dvh] shrink-0 sm:h-[30dvh] lg:h-auto" : "hidden lg:block")}
         >
           {onCall && (
             <>
@@ -77,7 +79,7 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
           )}
         </section>
 
-        <section className="gutter-x flex min-h-0 flex-col py-6 lg:col-span-7 lg:py-10">
+        <section className={cn("gutter-x flex min-h-0 flex-col py-5 lg:col-span-7 lg:py-10", !onCall && "overflow-y-auto")}>
           {status === "idle" && (
             <Idle level={level} precise={precise} onPrecise={setPrecise} onAnswer={() => answer({ precise })} />
           )}
@@ -193,7 +195,7 @@ function Idle({
             type="checkbox"
             checked={precise}
             onChange={(e) => onPrecise(e.target.checked)}
-            className="mt-1 size-4 accent-[var(--color-bone)]"
+            className="mt-0.5 size-5 shrink-0 accent-[var(--color-bone)]"
           />
           <span>
             Let the caller use my real location and weather. It will turn them against you.
@@ -328,7 +330,7 @@ function Conversation({
             In play · <span className="text-ash normal-case tracking-[0.04em]">{describeContext(context)}</span>
           </p>
         )}
-        {planner === "director" && <p className="meta mt-2 text-smoke">A new call, written for you</p>}
+        {planner === "director" && <p className="meta mt-2 hidden text-smoke sm:block">A new call, written for you</p>}
       </div>
 
       <ol
@@ -337,7 +339,7 @@ function Conversation({
         aria-label="Call transcript"
         aria-live="polite"
         className={cn(
-          "mt-6 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pr-2 transition-opacity duration-[320ms] ease-out lg:mt-10",
+          "mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-2 transition-opacity duration-[320ms] ease-out lg:mt-10 lg:gap-5",
           "[mask-image:linear-gradient(to_bottom,transparent,black_2.5rem)]",
           settled && "opacity-40",
         )}
@@ -353,7 +355,7 @@ function Conversation({
               initial={reduced ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: duration.ui, ease }}
-              className={cn("max-w-[34ch]", player && "self-end text-right")}
+              className={cn("max-w-[36ch] lg:max-w-[44ch]", player && "self-end text-right")}
             >
               <span className="meta mb-1.5 block text-smoke">{player ? "You" : persona.name.split(" ")[0]}</span>
               <span
@@ -362,10 +364,12 @@ function Conversation({
                   // Explicit classes: tailwind-merge treats `quote` as a font size and
                   // would drop it next to a text-[…] size.
                   player
-                    ? "text-lg leading-snug"
+                    ? "text-base leading-snug sm:text-lg"
                     : current
-                      ? "quote"
-                      : "font-display text-[clamp(1.125rem,1.6vw,1.375rem)] leading-snug italic",
+                      ? m.text.length > 140
+                        ? "font-display text-[clamp(1.25rem,1.9vw,1.875rem)] leading-[1.25] italic"
+                        : "quote"
+                      : "font-display text-[clamp(1.0625rem,1.6vw,1.375rem)] leading-snug italic",
                   current ? "text-bone" : "text-ash",
                 )}
               >
@@ -434,7 +438,7 @@ function TalkBar({ onSend }: { onSend: (text: string) => void }) {
   };
 
   return (
-    <form onSubmit={submit} className="mt-6 flex shrink-0 flex-col gap-3 border-t border-line pt-4">
+    <form onSubmit={submit} className="mt-3 flex shrink-0 flex-col gap-2 border-t border-line pt-3 lg:mt-6 lg:gap-3 lg:pt-4">
       <p className="meta text-smoke">
         {muted ? "Muted · type your reply" : "Speak naturally · interrupt any time · or type"}
       </p>
@@ -475,7 +479,7 @@ function Controls({
   const canEnd = status === "live" || status === "ringing";
 
   return (
-    <footer className="gutter-x sticky bottom-0 z-10 flex shrink-0 flex-col gap-4 border-t border-line bg-surface pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:flex-row md:items-center md:justify-between">
+    <footer className="gutter-x flex shrink-0 flex-col gap-3 border-t border-line bg-surface pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:flex-row md:items-center md:justify-between md:gap-4 md:pt-4 md:pb-4">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <Meter value={agent?.suspicionEstimate ?? 0} />
         <ul aria-label="Red flags you have learned" className="flex flex-wrap gap-2">

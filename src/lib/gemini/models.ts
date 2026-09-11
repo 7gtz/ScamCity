@@ -15,6 +15,20 @@ export const MODELS = {
   riddle: process.env.GEMINI_RIDDLE_MODEL ?? "gemini-3.5-flash-lite",
 };
 
+const chain = (...ids: string[]) => [...new Set(ids)];
+
+/**
+ * Fallback chains for the text roles. Preview-era models get overloaded at
+ * peak times; a lighter model answering beats a demo that stalls.
+ */
+export const CHAINS = {
+  director: chain(MODELS.director, "gemini-3.1-flash-lite"),
+  analyst: chain(MODELS.analyst, "gemini-3.1-flash-lite"),
+  // 3.7 Flash shares the 3.8's peak-time load, so the fallback is the fast lite model.
+  judge: chain(MODELS.judge, MODELS.analyst),
+  riddle: chain(MODELS.riddle, "gemini-3.1-flash-lite"),
+};
+
 /** Prebuilt Live voices, drawn at random so the same district never sounds the same twice. */
 const VOICE_POOLS = {
   male: ["Charon", "Fenrir", "Orus", "Puck"],

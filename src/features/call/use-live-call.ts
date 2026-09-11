@@ -59,7 +59,8 @@ export function useLiveCall(scenarioId: string) {
       p.on("error", (e) => s().fail(e.code, e.message));
       p.on("persona", (e) => {
         s().setCaller(e.caller, e.brief, e.planner);
-        useProgressStore.getState().rememberHook(e.brief.hook);
+        // Remember who called and why, so the director casts someone new next time.
+        useProgressStore.getState().rememberHook(`${e.caller.name}: ${e.brief.hook}`);
       });
       p.on("ended", (e) => void complete(e.call));
     },

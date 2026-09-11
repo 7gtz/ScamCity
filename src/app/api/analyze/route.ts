@@ -1,6 +1,6 @@
 import { getScenario } from "@/content/scenarios";
 import { TACTICS } from "@/content/tactics";
-import { MODELS } from "@/lib/gemini/models";
+import { CHAINS } from "@/lib/gemini/models";
 import { formatTranscript, generateJson, hasGemini } from "@/lib/gemini/server";
 import { rateLimit, tooMany } from "@/lib/rate-limit";
 import { AnalysisSchema, AnalyzeRequestSchema } from "@/lib/validation/schemas";
@@ -42,11 +42,11 @@ ${formatTranscript(parsed.data.transcript)}`;
 
   try {
     const analysis = await generateJson(AnalysisSchema, {
-      model: MODELS.analyst,
+      model: CHAINS.analyst,
       system: SYSTEM,
       prompt,
       temperature: 0.1,
-      timeoutMs: 6000,
+      timeoutMs: 3500,
     });
     return Response.json(analysis);
   } catch (err) {

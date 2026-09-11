@@ -23,23 +23,45 @@ export function toResponseSchema(schema: z.ZodType) {
 /**
  * Structured generation: the model is constrained to the schema, and the
  * result is validated by the same schema before anything trusts it.
+ * `model` may be a fallback chain: when one model is overloaded (503/429),
+ * slow, or returns something that fails validation, the next one answers.
  */
 export async function generateJson<T extends z.ZodType>(
   schema: T,
-  opts: { model: string; system: string; prompt: string; temperature?: number; timeoutMs?: number },
+  opts: {
+    model: string | readonly string[];
+    system: string;
+    prompt: string;
+    temperature?: number;
+    /** Per attempt, not total. */
+    timeoutMs?: number;
+  },
 ): Promise<z.infer<T>> {
-  const res = await gemini().models.generateContent({
-    model: opts.model,
-    contents: opts.prompt,
-    config: {
-      systemInstruction: opts.system,
-      responseMimeType: "application/json",
-      responseJsonSchema: toResponseSchema(schema),
-      temperature: opts.temperature ?? 0.3,
-      abortSignal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
-    },
-  });
-  return schema.parse(JSON.parse(res.text ?? ""));
+  const chain = typeof opts.model === "string" ? [opts.model] : opts.model;
+  const responseJsonSchema = toResponseSchema(schema);
+  let lastError: unknown;
+
+  for (const model of chain) {
+    try {
+      const res = await gemini().models.generateContent({
+        model,
+        contents: opts.prompt,
+        config: {
+          systemInstruction: opts.system,
+          responseMimeType: "application/json",
+          responseJsonSchema,
+          temperature: opts.temperature ?? 0.3,
+          abortSignal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
+        },
+      });
+      return schema.parse(JSON.parse(res.text ?? ""));
+    } catch (err) {
+      lastError = err;
+      const reason = err instanceof Error ? err.message.slice(0, 160) : String(err);
+      console.warn(`[gemini] ${model} failed — ${chain.at(-1) === model ? "no fallback left" : "falling back"}: ${reason}`);
+    }
+  }
+  throw lastError;
 }
 
 /** `[01:42] CALLER: …` lines, the format every model prompt uses. */
