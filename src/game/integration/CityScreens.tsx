@@ -36,13 +36,14 @@ export function CityPanelScreen({ panel, children, overlay }: { panel: PanelDefi
   const ready = useGameReady();
   const state = useGameState((value) => value);
   const open = !panel.requires || evaluateCondition(panel.requires, state);
+  const palette = panel.tone === "paper" ? "bg-paper text-paper-ink" : panel.tone === "amber" ? "bg-amber text-ink" : panel.tone === "ember" ? "bg-ember text-bone" : "bg-ink text-bone";
   useEffect(() => { if (ready && open) enterPanel(panel.id); }, [ready, open, panel.id]);
   if (!ready) return <p role="status">Restoring investigation…</p>;
   if (!open) return <section className="px-6 py-24"><h1>Location locked</h1><Link href="/city">Return to map</Link></section>;
-  return <section aria-labelledby="panel-title" data-tone={panel.tone} className="min-h-dvh px-6 py-24 text-bone">
-    <Link href="/city" className="font-mono text-sm text-amber underline">City map</Link>
+  return <section aria-labelledby="panel-title" data-tone={panel.tone} className={`min-h-dvh px-6 py-24 ${palette}`}>
+    <Link href="/city" className="font-mono text-sm underline">City map</Link>
     <h1 id="panel-title" className="my-8 font-display text-5xl">{panel.title}</h1>
-    {children ?? <p className="text-smoke">The investigation at this location is not available yet.</p>}
+    {children ?? <p className="opacity-70">The investigation at this location is not available yet.</p>}
     {overlay}
   </section>;
 }
