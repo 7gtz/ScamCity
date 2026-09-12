@@ -187,10 +187,24 @@ export function CityMapScreen() {
 
   return (
     <div className="min-h-dvh bg-ink text-bone">
+      {/* Top navigation bar for city transit map */}
+      <header className="mx-auto max-w-5xl px-6 pt-6 flex items-center justify-between">
+        <Link
+          href="/modes"
+          className="inline-flex items-center gap-2 border border-line bg-raised/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-smoke transition-colors hover:border-amber hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
+        >
+          <span aria-hidden="true">←</span>
+          <span>All Modes</span>
+        </Link>
+        <span className="font-mono text-xs uppercase tracking-widest text-amber">
+          SCAM CITY / Detective Track
+        </span>
+      </header>
+
       {/* Victim call banner */}
       <aside
         aria-label="Victim live call simulation"
-        className="mx-auto max-w-5xl px-6 pt-10"
+        className="mx-auto max-w-5xl px-6 pt-6"
       >
         <div className="flex flex-col items-start justify-between gap-4 border border-line bg-raised/80 p-5 sm:flex-row sm:items-center">
           <div>
@@ -368,6 +382,36 @@ export function CityPanelScreen({
     setShowCallModal(false);
   }, []);
 
+  // Escape key handler to dismiss active modals
+  useEffect(() => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (inspectItem) {
+          setInspectItem(null);
+        } else if (showCaseBoard) {
+          setShowCaseBoard(false);
+        } else if (showInventory) {
+          setShowInventory(false);
+        } else if (showCallModal) {
+          setShowCallModal(false);
+        } else if (currentHint) {
+          setCurrentHint(null);
+        } else if (activeDialogueNodeId) {
+          setActiveDialogueNodeId(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    inspectItem,
+    showCaseBoard,
+    showInventory,
+    showCallModal,
+    currentHint,
+    activeDialogueNodeId,
+  ]);
+
   const bankScenario = SCENARIOS["bank-security"];
   const callerPersona = bankScenario?.persona ?? {
     id: "martin-hayes",
@@ -419,7 +463,7 @@ export function CityPanelScreen({
       onInventory={() => setShowInventory(true)}
     >
       <Panel panel={panel} handlers={handlers}>
-        {/* Top HUD: Timer & Hint bar */}
+        {/* Top HUD: Timer & Action pills */}
         <div className="relative z-20 flex flex-wrap items-center justify-between gap-3 px-6 pt-16 pb-2 pointer-events-auto">
           {/* 10-minute countdown indicator */}
           <div
@@ -448,7 +492,7 @@ export function CityPanelScreen({
               <button
                 type="button"
                 onClick={() => setShowCallModal(true)}
-                className="border border-line bg-ink/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-smoke transition-colors hover:border-amber hover:text-amber"
+                className="border border-line bg-ink/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-smoke transition-colors hover:border-amber hover:text-amber focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
               >
                 {state.flags["victim.live-call-completed"]
                   ? "Replay Call"
@@ -458,25 +502,9 @@ export function CityPanelScreen({
 
             <button
               type="button"
-              onClick={() => setShowCaseBoard(true)}
-              className="border border-line bg-ink/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-smoke transition-colors hover:border-amber hover:text-amber"
-            >
-              Case Board
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowInventory(true)}
-              className="border border-line bg-ink/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-smoke transition-colors hover:border-amber hover:text-amber"
-            >
-              Evidence ({state.evidence.length})
-            </button>
-
-            <button
-              type="button"
               onClick={handleRequestHint}
               disabled={isHintLoading}
-              className="border border-line bg-ink/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-smoke transition-colors hover:border-amber hover:text-amber disabled:opacity-50"
+              className="border border-line bg-ink/80 px-3 py-1.5 font-mono text-xs uppercase tracking-wider text-smoke transition-colors hover:border-amber hover:text-amber disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber"
             >
               {isHintLoading ? "Analyzing..." : "Ask for Hint"}
             </button>
@@ -527,9 +555,9 @@ export function CityPanelScreen({
           role="dialog"
           aria-modal="true"
           aria-label="Case Debrief"
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/95 p-4 backdrop-blur-md pointer-events-auto"
+          className="fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto bg-ink/95 p-4 py-12 backdrop-blur-md pointer-events-auto"
         >
-          <div className="relative w-full max-w-3xl border border-line bg-raised p-6 shadow-2xl my-8">
+          <div className="relative w-full max-w-3xl border border-line bg-raised p-6 shadow-2xl my-auto sm:my-8">
             <Debrief
               grade={caseGrade}
               onRecover={() => setShowCaseBoard(true)}
@@ -559,7 +587,10 @@ export function CityPanelScreen({
           role="dialog"
           aria-modal="true"
           aria-label={`Inspecting Evidence: ${inspectItem.title}`}
-          className="fixed inset-0 z-40 flex items-center justify-center bg-ink/80 p-4 backdrop-blur-sm pointer-events-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setInspectItem(null);
+          }}
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/80 p-4 backdrop-blur-sm pointer-events-auto"
         >
           <div className="relative w-full max-w-xl border border-line bg-raised p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
@@ -569,7 +600,7 @@ export function CityPanelScreen({
               <button
                 type="button"
                 onClick={() => setInspectItem(null)}
-                className="text-smoke hover:text-bone text-sm font-mono"
+                className="text-smoke hover:text-bone text-sm font-mono border border-line px-2 py-0.5 hover:border-amber hover:text-amber"
               >
                 ✕ Close
               </button>
@@ -595,17 +626,20 @@ export function CityPanelScreen({
           role="dialog"
           aria-modal="true"
           aria-label="Case Deduction Board"
-          className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-ink/90 p-4 backdrop-blur-md pointer-events-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowCaseBoard(false);
+          }}
+          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-ink/90 p-4 py-12 backdrop-blur-md pointer-events-auto"
         >
-          <div className="relative w-full max-w-4xl border border-line bg-raised p-6 shadow-2xl my-8">
-            <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
+          <div className="relative w-full max-w-4xl border border-line bg-raised p-6 shadow-2xl my-auto sm:my-8">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-raised pb-3 mb-4">
               <span className="font-mono text-xs uppercase tracking-widest text-amber">
                 Case Board & Deductions
               </span>
               <button
                 type="button"
                 onClick={() => setShowCaseBoard(false)}
-                className="text-smoke hover:text-bone text-sm font-mono border border-line px-2 py-0.5"
+                className="text-smoke hover:text-bone text-sm font-mono border border-line px-3 py-1 hover:border-amber hover:text-amber"
               >
                 ✕ Close
               </button>
@@ -621,17 +655,20 @@ export function CityPanelScreen({
           role="dialog"
           aria-modal="true"
           aria-label="Case Evidence Inventory"
-          className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-ink/90 p-4 backdrop-blur-md pointer-events-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowInventory(false);
+          }}
+          className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-ink/90 p-4 py-12 backdrop-blur-md pointer-events-auto"
         >
-          <div className="relative w-full max-w-3xl border border-line bg-raised p-6 shadow-2xl my-8">
-            <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
+          <div className="relative w-full max-w-3xl border border-line bg-raised p-6 shadow-2xl my-auto sm:my-8">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-raised pb-3 mb-4">
               <span className="font-mono text-xs uppercase tracking-widest text-amber">
                 Held Evidence ({state.evidence.length})
               </span>
               <button
                 type="button"
                 onClick={() => setShowInventory(false)}
-                className="text-smoke hover:text-bone text-sm font-mono border border-line px-2 py-0.5"
+                className="text-smoke hover:text-bone text-sm font-mono border border-line px-3 py-1 hover:border-amber hover:text-amber"
               >
                 ✕ Close
               </button>
@@ -660,7 +697,7 @@ export function CityPanelScreen({
           role="dialog"
           aria-modal="true"
           aria-label="Victim Scam Call Simulation"
-          className="fixed inset-0 z-50 flex flex-col bg-ink pointer-events-auto"
+          className="fixed inset-0 z-[90] flex flex-col bg-ink pointer-events-auto"
         >
           <header className="flex items-center justify-between border-b border-line bg-ink/90 px-6 py-3">
             <p className="font-mono text-xs uppercase tracking-widest text-amber">

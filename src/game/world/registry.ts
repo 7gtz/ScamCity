@@ -38,37 +38,37 @@ export const panels: readonly PanelDefinition[] = [
     hotspots: [
       {
         id: "flat-mara",
-        rect: { x: 25, y: 30, w: 25, h: 45 },
+        rect: { x: 30, y: 22, w: 22, h: 38 },
         label: "Mara Okoye — speak with the victim",
         action: { kind: "talk", npc: "mara-okoye" },
       },
       {
         id: "flat-kitchen-table",
-        rect: { x: 10, y: 50, w: 35, h: 40 },
+        rect: { x: 8, y: 64, w: 38, h: 26 },
         label: "Kitchen table — papers and a bank statement",
         action: { kind: "inspect", evidence: "bank-statement" },
       },
       {
         id: "flat-landline",
-        rect: { x: 50, y: 55, w: 15, h: 20 },
+        rect: { x: 50, y: 68, w: 14, h: 18 },
         label: "Landline — check the call log",
         action: { kind: "inspect", evidence: "call-log" },
       },
       {
         id: "flat-mail-slot",
-        rect: { x: 5, y: 10, w: 25, h: 35 },
+        rect: { x: 4, y: 8, w: 24, h: 32 },
         label: "Mail slot — delivery card on the mat",
         action: { kind: "inspect", evidence: "delivery-notice" },
       },
       {
         id: "flat-sideboard",
-        rect: { x: 55, y: 30, w: 25, h: 25 },
+        rect: { x: 58, y: 32, w: 24, h: 25 },
         label: "Sideboard — phone with OTP messages",
         action: { kind: "inspect", evidence: "otp-message" },
       },
       {
         id: "flat-front-door",
-        rect: { x: 80, y: 15, w: 15, h: 65 },
+        rect: { x: 84, y: 10, w: 14, h: 70 },
         label: "Front door — head to the bank",
         action: { kind: "travel", to: "bank-branch" },
       },
