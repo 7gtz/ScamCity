@@ -1,0 +1,119 @@
+name: Agent task
+description: A unit of work for one agent in the 24-hour Detective Track build
+title: "[<agent>] "
+labels: ["agent-task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One issue per agent deliverable. Every PR must link to one of these.
+
+        Ownership comes from `ops/workplan.json` - this issue records it, it does
+        not override it. If they disagree, the workplan wins.
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Target agent
+      description: Who does this work? Ids come from ops/workplan.json.
+      options:
+        - game-contracts (chore/game-contracts)
+        - codex-foundation (feat/foundation-state)
+        - antigravity-world-ui (feat/world-ui)
+        - claude-simulation-recovery (feat/simulation-recovery)
+        - antigravity-dialogue-case (feat/detective-ui)
+        - antigravity-case-content (feat/ten-minute-content)
+        - release-captain (main)
+    validations:
+      required: true
+
+  - type: input
+    id: branch
+    attributes:
+      label: Branch
+      description: Must match the branch in ops/workplan.json for this agent.
+      placeholder: feat/world-ui
+    validations:
+      required: true
+
+  - type: textarea
+    id: allowed-paths
+    attributes:
+      label: Allowed paths
+      description: Copy from ops/workplan.json. The ownership check enforces these on every PR.
+      placeholder: |
+        src/game/world/**
+        src/game/ui/**
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Explicitly out of scope
+      description: Paths this issue must NOT touch, including shared contracts and other agents' directories.
+      placeholder: |
+        src/game/world/types.ts   (shared contract - import, never edit)
+        src/game/state/**         (owned by codex-foundation)
+        Any refactor of existing product code
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: dependencies
+    attributes:
+      label: Dependency issue or PR
+      description: What must merge to main before this can start? Write "none" if it can start immediately.
+      placeholder: "#12 (chore/game-contracts)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Specific and checkable. "Done" must not be a matter of opinion.
+      placeholder: |
+        - [ ] Panel renders at /city/office with procedural T0 art only
+        - [ ] Every hotspot is reachable by keyboard and by pointer
+        - [ ] pnpm typecheck, pnpm test, pnpm build all pass
+        - [ ] All 88 pre-existing tests still green
+    validations:
+      required: true
+
+  - type: dropdown
+    id: cut-priority
+    attributes:
+      label: Hour-15 cut priority
+      description: If the build is behind at hour 15, what happens to this work? Lower numbers are cut first.
+      options:
+        - "0 - never cut (everything depends on it)"
+        - "1 - cut first"
+        - "2 - cut early"
+        - "3 - cut if needed"
+        - "4 - cut only in a real emergency"
+        - "5 - never cut"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Integration notes
+      description: Interfaces you will import, events you will emit, anything another agent needs to know.
+
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Ground rules
+      options:
+        - label: I have read `docs/DETECTIVE-TRACK-24H.md` and `docs/AGENT-OPERATIONS.md`
+          required: true
+        - label: I will not edit another agent's paths, and will not push to `main`
+          required: true
+        - label: I will not refactor existing product code; changes are additive only
+          required: true
+        - label: I will not commit any `.env` file, API key, token or credential
+          required: true

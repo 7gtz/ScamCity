@@ -1,0 +1,111 @@
+name: Docs auto-merge
+
+# Narrowly scoped convenience: let documentation and ops-script PRs merge
+# themselves once checks pass, so the release captain is not a bottleneck for
+# prose during a 24-hour sprint.
+#
+# It never merges immediately. It asks GitHub to enable *auto-merge*, which
+# still waits for every required status check and every required review.
+#
+# REQUIRES A REPOSITORY SETTING that this workflow cannot turn on itself:
+#   Settings > General > Pull Requests > "Allow auto-merge"
+# If that is off, this job explains what to do and exits successfully. It is
+# not a required check, so it can never block a PR.
+#
+# Deliberately excluded, even when labelled: anything that changes the rules
+# themselves - workflows, CODEOWNERS, the ownership policy, branch-protection
+# documentation, or anything secret-shaped.
+
+on:
+  pull_request:
+    types: [labeled, opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge for docs-only PRs
+    if: contains(github.event.pull_request.labels.*.name, 'automerge-docs')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check the PR is in scope
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          # Safe paths this automation is willing to merge.
+          allow='^(docs/|ops/|\.github/)'
+
+          # Never auto-merge a change to the rules themselves.
+          deny='^(\.github/workflows/|\.github/CODEOWNERS|ops/workplan\.json|ops/scripts/check-ownership\.mjs|docs/REPO-SETUP\.md|\.env)'
+
+          merge_base="$(git merge-base "$BASE_SHA" HEAD)"
+          files="$(git diff --name-only "$merge_base" HEAD)"
+
+          echo "Changed files:"
+          echo "$files" | sed 's/^/  /'
+
+          eligible=true
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if ! echo "$f" | grep -Eq "$allow"; then
+              echo "::notice::$f is outside docs/, ops/ and .github/ - not eligible"
+              eligible=false
+            fi
+            if echo "$f" | grep -Eq "$deny"; then
+              echo "::notice::$f changes the automation rules - not eligible"
+              eligible=false
+            fi
+          done <<< "$files"
+
+          echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
+
+      - name: Enable auto-merge
+        if: steps.scope.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -uo pipefail
+          if gh pr merge "$PR" --auto --squash; then
+            echo "::notice::Auto-merge enabled. The PR will merge once all required checks pass."
+            exit 0
+          fi
+
+          # Almost always: "Allow auto-merge" is off for the repository.
+          echo "::warning::Could not enable auto-merge. This is usually the repository setting, not the PR."
+
+          note="$RUNNER_TEMP/automerge-note.md"
+          {
+            printf '%s\n' '**Auto-merge could not be enabled.**'
+            printf '%s\n' ''
+            printf '%s\n' 'This is normally one repository setting:'
+            printf '%s\n' ''
+            printf '%s\n' '- **Settings > General > Pull Requests > Allow auto-merge** must be ticked.'
+            printf '%s\n' ''
+            printf '%s\n' 'Auto-merge also requires at least one *required* status check on `main`, so there is something to wait for. See `docs/REPO-SETUP.md`.'
+            printf '%s\n' ''
+            printf '%s\n' 'Nothing is blocked - merge this PR manually once checks are green.'
+          } > "$note"
+
+          gh pr comment "$PR" --body-file "$note" || echo "::warning::Could not post the explanatory comment either."
+
+          # Never fail the PR over a convenience feature.
+          exit 0
+
+      - name: Not eligible
+        if: steps.scope.outputs.eligible != 'true'
+        run: |
+          echo "::notice::This PR touches paths outside the auto-merge scope, or changes the automation rules. A human merges it."

@@ -2,7 +2,7 @@
 
 Complete bill of materials for the detective track: every panel, character, document, prop, map element, icon and overlay the game needs, with specs, file paths and priorities.
 
-**Companion docs:** [`DETECTIVE-BUILD-PLAN.md`](DETECTIVE-BUILD-PLAN.md) · [`../design-system/scam-city/MASTER.md`](../design-system/scam-city/MASTER.md) (§1 colour, §8 imagery — authoritative) · [`FRONTEND-HANDOFF.md`](FRONTEND-HANDOFF.md)
+**Companion docs:** [`DETECTIVE-TRACK-24H.md`](DETECTIVE-TRACK-24H.md) · [`../design-system/scam-city/MASTER.md`](../design-system/scam-city/MASTER.md) (§1 colour, §8 imagery — authoritative) · [`FRONTEND-HANDOFF.md`](FRONTEND-HANDOFF.md)
 
 ---
 
