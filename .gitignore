@@ -10,3 +10,8 @@ next-env.d.ts
 .env*
 # The template has no secrets and must stay tracked.
 !.env.example
+
+# Agent working copies. ops/prompts/*.md tell agents to clone as scamcity-<agent>
+# OUTSIDE this directory; this is the safety net for when one lands inside it.
+# An embedded clone otherwise gets committed as a gitlink and breaks clones and CI.
+/scamcity-*/
