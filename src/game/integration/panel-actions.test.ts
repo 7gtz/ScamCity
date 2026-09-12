@@ -5,6 +5,7 @@ import { activateHotspot, collectEvidence, createCallCompletion, resolveCase } f
 import { getGameState, on, resetGame, setFlag } from "./game";
 import { panels, getPanel } from "./panel-registry";
 import { clearSave } from "@/game/state/save";
+import { tenMinuteWindowCase, NPC_DIALOGUE_ENTRY } from "@/content/cases/ten-minute-window";
 
 beforeEach(() => { vi.useFakeTimers(); resetGame(); });
 afterEach(() => { clearSave(); vi.useRealTimers(); });
@@ -62,4 +63,53 @@ it("resolves once only after an authored outcome condition passes", () => {
 it("provides exactly five distinct static destinations and rejects unknown ids", () => {
   expect(new Set(panels.map((panel) => panel.id)).size).toBe(5);
   expect(getPanel("unknown")).toBeUndefined();
+});
+
+it("ensures all hotspots across all panels reference valid evidence, NPCs, and destinations", () => {
+  const validEvidenceIds = new Set(tenMinuteWindowCase.evidence.map((e) => e.id));
+  const validNpcIds = new Set(Object.keys(NPC_DIALOGUE_ENTRY));
+  const validLocationIds = new Set(panels.map((p) => p.id));
+
+  for (const panel of panels) {
+    for (const hotspot of panel.hotspots) {
+      if (hotspot.action.kind === "inspect") {
+        expect(
+          validEvidenceIds.has(hotspot.action.evidence),
+          `Panel ${panel.id} hotspot ${hotspot.id} inspects unknown evidence: ${hotspot.action.evidence}`,
+        ).toBe(true);
+      } else if (hotspot.action.kind === "talk") {
+        expect(
+          validNpcIds.has(hotspot.action.npc),
+          `Panel ${panel.id} hotspot ${hotspot.id} talks to unknown NPC: ${hotspot.action.npc}`,
+        ).toBe(true);
+      } else if (hotspot.action.kind === "travel") {
+        expect(
+          validLocationIds.has(hotspot.action.to),
+          `Panel ${panel.id} hotspot ${hotspot.id} travels to unknown location: ${hotspot.action.to}`,
+        ).toBe(true);
+      }
+    }
+  }
+
+  // Ensure Mara Okoye is reachable in victim-flat
+  const victimFlat = getPanel("victim-flat");
+  expect(victimFlat).toBeDefined();
+  const maraTalk = victimFlat?.hotspots.find(
+    (h) => h.action.kind === "talk" && h.action.npc === "mara-okoye",
+  );
+  expect(maraTalk).toBeDefined();
+
+  // Ensure delivery-notice is referenced by a hotspot
+  const deliveryNoticeHotspot = victimFlat?.hotspots.find(
+    (h) => h.action.kind === "inspect" && h.action.evidence === "delivery-notice",
+  );
+  expect(deliveryNoticeHotspot).toBeDefined();
+
+  // Ensure office desk allows talking with detective
+  const office = getPanel("office");
+  expect(office).toBeDefined();
+  const officeDesk = office?.hotspots.find(
+    (h) => h.id === "office-desk" && h.action.kind === "talk" && h.action.npc === "detective",
+  );
+  expect(officeDesk).toBeDefined();
 });

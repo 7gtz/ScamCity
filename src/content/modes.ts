@@ -2,7 +2,7 @@ import type { Tone } from "@/lib/tone";
 
 /** Every way to play (the 3D menu and Freestyle draw from this list). */
 export interface Mode {
-  id: "calls" | "inbox" | "messages" | "web" | "riddles" | "freestyle";
+  id: "calls" | "inbox" | "messages" | "web" | "riddles" | "freestyle" | "city";
   number: string;
   title: string;
   kicker: string;
@@ -73,6 +73,16 @@ export const MODES: Mode[] = [
     line: "One message, one decision. Scam or genuine, and what kind.",
     href: "/riddle",
     channel: "Any",
+    tone: "ember",
+  },
+  {
+    id: "city",
+    number: "06",
+    title: "Detective",
+    kicker: "Investigation",
+    line: "Investigate a live fraud case in the city. Examine evidence, interview suspects, and beat the clock.",
+    href: "/city",
+    channel: "Investigation",
     tone: "ember",
   },
 ];

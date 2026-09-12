@@ -48,7 +48,7 @@ const ON_CALL: CallStatus[] = ["ringing", "live", "ending", "scoring"];
  * with its own caller ID and pretext, before a word is said.
  */
 export function CallRoom({ scenarioId, persona: districtPersona, onComplete }: Props) {
-  const { answer, choose, sendText, hangUp, toggleMute, toggleSpeakerMode } = useLiveCall(scenarioId);
+  const { answer, choose, sendText, hangUp, toggleMute, toggleSpeakerMode } = useLiveCall(scenarioId, onComplete);
   const speakerMode = useCallStore((s) => s.speakerMode);
   // The speakers/headphones choice is remembered between calls.
   useEffect(() => {
@@ -107,17 +107,9 @@ export function CallRoom({ scenarioId, persona: districtPersona, onComplete }: P
     return () => window.removeEventListener("keydown", onKey);
   }, [toggleMute]);
 
-  // Detective Track: hand the scored call to a host that wants it. Reads the
-  // score the existing flow already saved; fires once, and only if asked.
-  const reported = useRef(false);
-  useEffect(() => {
-    if (!onComplete || reported.current || status !== "results") return;
-    const scores = Object.values(useResultsStore.getState().scores);
-    const score = scores.filter((s) => s.scenarioId === scenarioId).at(-1);
-    if (!score) return;
-    reported.current = true;
-    onComplete(score);
-  }, [status, scenarioId, onComplete]);
+  // Detective Track: onComplete is now invoked directly by useLiveCall
+  // with the exact CallScore produced by this session, avoiding the unsound
+  // useResultsStore scan across past runs.
 
   return (
     // Always exactly one screen tall: the transcript scrolls inside, so the
