@@ -17,17 +17,28 @@ import { startRing, stopRing, unlockRingtone } from "@/features/freestyle/ringto
 import { useProgressStore } from "@/features/progress/progress-store";
 import { JudgingProgress } from "@/features/scoring/JudgingProgress";
 import { fmt } from "@/features/scoring/mock-judge";
+import { useResultsStore } from "@/features/scoring/results-store";
 import { useAiStatus } from "@/lib/ai-status";
 import { cn } from "@/lib/cn";
 import { mockForced } from "@/lib/live/provider";
 import { describeContext } from "@/lib/live/real-world";
-import type { CallStatus, ScammerPersona } from "@/lib/live/types";
+import type { CallScore, CallStatus, ScammerPersona } from "@/lib/live/types";
 import { duration, ease } from "@/lib/motion/tokens";
 import { useCallStore } from "./call-store";
 import { useLiveCall } from "./use-live-call";
 import { Waveform } from "./Waveform";
 
-type Props = { scenarioId: string; persona: ScammerPersona };
+type Props = {
+  scenarioId: string;
+  persona: ScammerPersona;
+  /**
+   * Fired once, when this call has been scored. Optional and additive: the
+   * existing Freestyle and district routes pass nothing and are unchanged.
+   * The Detective Track's victim perspective passes a handler to read the
+   * result without navigating away.
+   */
+  onComplete?: (score: CallScore) => void;
+};
 
 const ON_CALL: CallStatus[] = ["ringing", "live", "ending", "scoring"];
 
@@ -36,7 +47,7 @@ const ON_CALL: CallStatus[] = ["ringing", "live", "ending", "scoring"];
  * on purpose: an operating environment. Each district rings in its own light,
  * with its own caller ID and pretext, before a word is said.
  */
-export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
+export function CallRoom({ scenarioId, persona: districtPersona, onComplete }: Props) {
   const { answer, choose, sendText, hangUp, toggleMute, toggleSpeakerMode } = useLiveCall(scenarioId);
   const speakerMode = useCallStore((s) => s.speakerMode);
   // The speakers/headphones choice is remembered between calls.
@@ -95,6 +106,18 @@ export function CallRoom({ scenarioId, persona: districtPersona }: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [toggleMute]);
+
+  // Detective Track: hand the scored call to a host that wants it. Reads the
+  // score the existing flow already saved; fires once, and only if asked.
+  const reported = useRef(false);
+  useEffect(() => {
+    if (!onComplete || reported.current || status !== "results") return;
+    const scores = Object.values(useResultsStore.getState().scores);
+    const score = scores.filter((s) => s.scenarioId === scenarioId).at(-1);
+    if (!score) return;
+    reported.current = true;
+    onComplete(score);
+  }, [status, scenarioId, onComplete]);
 
   return (
     // Always exactly one screen tall: the transcript scrolls inside, so the

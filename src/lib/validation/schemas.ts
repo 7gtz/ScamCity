@@ -270,3 +270,23 @@ export const CallPlanSchema = z.object({
     .describe('How the caller sounds, fitted to the player\'s location, e.g. "a natural Indian English accent with a light Bengali lilt".'),
 });
 export type CallPlan = z.infer<typeof CallPlanSchema>;
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Detective Track — simulation & recovery (agent: claude-simulation-recovery)
+ * Append-only section. Nothing above this line is modified.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * The only thing the model is allowed to return for a detective hint: one
+ * rewritten sentence. There is no field here for a conclusion, a suspect, an
+ * evidence id or a score, so a hint model has no shape in which to decide
+ * anything — AI varies phrasing only (`docs/DETECTIVE-TRACK-24H.md` §11).
+ */
+export const DetectiveHintSchema = z.object({
+  text: z
+    .string()
+    .min(12)
+    .max(240)
+    .describe("The same hint, rephrased in the detective's voice. One sentence, two at most. No new facts."),
+});
+export type DetectiveHint = z.infer<typeof DetectiveHintSchema>;
