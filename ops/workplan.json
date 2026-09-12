@@ -23,7 +23,7 @@
   "docsConfigBranches": {
     "description": "Documentation and repository-configuration branches. These may not touch product code at all.",
     "branchPatterns": ["docs/*", "chore/*", "ops/*"],
-    "allowedPaths": ["docs/**", "ops/**", ".github/**"],
+    "allowedPaths": ["docs/**", "ops/**", ".github/**", ".gitignore"],
     "note": "chore/game-contracts is exempt from this rule and is governed by the contractsOnly entry below."
   },
 
