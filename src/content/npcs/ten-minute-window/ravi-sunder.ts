@@ -11,6 +11,6 @@ export const raviSunderNpc: NpcDefinition = {
   role: "Proprietor, Apex Fix & Tech",
   location: "repair-shop",
   initialTrust: -10,
-  summary: "Independent electronics repair technician. Protective of his livelihood and cautious around law enforcement, but willing to share diagnostic logs and carrier tickets when treated fairly.",
+  summary: "Veteran electronics and smartphone repair technician. Fiercely protective of his shop's hard-earned market reputation and instinctively cautious around police scrutiny, but helpful and technically astute when treated with professional respect.",
   expressions: ["neutral", "concerned", "guarded", "open"],
 };

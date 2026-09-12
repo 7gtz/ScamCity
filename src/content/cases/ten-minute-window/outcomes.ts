@@ -22,7 +22,7 @@ export const TEN_MINUTE_OUTCOMES: Record<CaseOutcome, OutcomeDefinition> = {
       ],
     },
     debrief:
-      "Full recovery achieved. By combining Mara's call log with the urgent OTP and interim statement, you proved that the fraudulent £4,850 transfer was actively pending within Northstar Bank's 10-minute clearing window. Presenting verified evidence at the branch enabled Teller Vance and the fraud desk to intervene immediately before settlement. Mara's funds were safely recovered, and the spoofed caller's footprint has been forwarded to the cyber fraud task force.",
+      "Full recovery achieved. By combining Meera's call log with the urgent OTP and interim statement, you proved that the fraudulent £4,850 transfer was actively pending within Northstar Bank's 10-minute clearing window. Presenting verified evidence at the branch enabled Teller Varun Vance and the fraud desk to intervene immediately before settlement. Meera's funds were safely recovered, and the spoofed caller's footprint has been forwarded to the cyber fraud task force.",
   },
 
   "partial-recovery": {
@@ -34,7 +34,7 @@ export const TEN_MINUTE_OUTCOMES: Record<CaseOutcome, OutcomeDefinition> = {
       ],
     },
     debrief:
-      "Partial recovery through lawful statutory procedure. Although the initial ten-minute instant hold window lapsed while assembling evidence, you accurately diagnosed the scam mechanism: spoofed Northstar Bank security extracting an OTP under false urgency. Lodging a formal crime report with Sgt. Brennan and notifying Northstar's fraud unit triggered an inter-bank recovery order, freezing a portion of the receiving account under banking indemnity rules.",
+      "Partial recovery through lawful statutory procedure. Although the initial ten-minute instant hold window lapsed while assembling evidence, you accurately diagnosed the scam mechanism: spoofed Northstar Bank security extracting an OTP under false urgency. Lodging a formal crime report with Sgt. Balan Brennan and notifying Northstar's fraud unit triggered an inter-bank recovery order, freezing a portion of the receiving account under banking indemnity rules.",
   },
 
   "wrong-suspect": {
@@ -50,7 +50,7 @@ export const TEN_MINUTE_OUTCOMES: Record<CaseOutcome, OutcomeDefinition> = {
       all: [{ flag: "case.alienated-bank-staff" }],
     },
     debrief:
-      "Misdirected hostility compromised the response. In an overzealous reaction to the scam, legitimate Northstar Bank security personnel and branch staff were treated as co-conspirators. Rejecting standard identification procedures and alienating Teller Vance prevented the branch from applying an emergency hold. Refusing to cooperate with verified official channels cost Mara the opportunity to halt the transfer.",
+      "Misdirected hostility compromised the response. In an overzealous reaction to the scam, legitimate Northstar Bank security personnel and branch staff were treated as co-conspirators. Rejecting standard identification procedures and alienating Teller Varun Vance prevented the branch from applying an emergency hold. Refusing to cooperate with verified official channels cost Meera the opportunity to halt the transfer.",
   },
 
   "case-unsolved": {
@@ -65,6 +65,6 @@ export const TEN_MINUTE_OUTCOMES: Record<CaseOutcome, OutcomeDefinition> = {
       },
     },
     debrief:
-      "The ten-minute clearing window closed before the attack vector could be established. Although the immediate transfer settled, the case does not dead-end: Sgt. Brennan has logged an administrative incident report, and Mara has been connected with statutory victim support and credit protection services. The inquiry transitions into long-term financial arbitration.",
+      "The ten-minute clearing window closed before the attack vector could be established. Although the immediate transfer settled, the case does not dead-end: Sgt. Balan Brennan has logged an administrative incident report, and Meera has been connected with statutory victim support and credit protection services. The inquiry transitions into long-term financial arbitration.",
   },
 };

@@ -7,10 +7,10 @@ import type { NpcDefinition } from "./detective";
  */
 export const sgtBrennanNpc: NpcDefinition = {
   id: "sgt-brennan",
-  name: "Sgt. Brennan",
-  role: "Duty Desk Sergeant",
+  name: "Sgt. Balan Brennan",
+  role: "Duty Desk Officer",
   location: "police-station",
   initialTrust: 10,
-  summary: "Veteran municipal station duty sergeant. Steady, procedural, and focused on lawful documentation, statutory fraud reporting, and inter-agency preservation requests.",
+  summary: "Veteran station duty officer with decades of service handling economic offenses and local cyber fraud reports. Calm under administrative pressure, meticulous with chain of custody, and committed to lawful victim restitution.",
   expressions: ["neutral", "concerned", "guarded", "open"],
 };

@@ -5,10 +5,10 @@ import type { DialogueNode } from "@/game/dialogue/types";
  *
  * Spans all five locations:
  * - `office` (Hub, intake, case board review)
- * - `victim-flat` (Mara Okoye interview, examining handset & documents)
- * - `bank-branch` (Teller Vance, statement retrieval, emergency transfer freeze)
+ * - `victim-flat` (Meera Okoye interview, examining handset & documents)
+ * - `bank-branch` (Teller Varun Vance, statement retrieval, emergency transfer freeze)
  * - `repair-shop` (Ravi Sunder, false lead exploration and clearance)
- * - `police-station` (Sgt. Brennan, carrier audit log, statutory crime report)
+ * - `police-station` (Sgt. Balan Brennan, carrier audit log, statutory crime report)
  *
  * Graph properties:
  * - Every node is reachable.
@@ -23,9 +23,9 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
   // =========================================================================
   "office-start": {
     id: "office-start",
-    speaker: "Detective Miller",
+    speaker: "Detective Dev Malhotra",
     lines: [
-      "The emergency fraud intake report rests on my desk: Mara Okoye, senior architect at Harrow & Finch, reported an unauthorized £4,850 transfer from her Northstar Bank account fifteen minutes ago.",
+      "The emergency fraud intake file rests on my desk: Meera Okoye, senior architect at Harrow & Finch, reported an unauthorized £4,850 transfer from her Northstar Bank account fifteen minutes ago.",
       "The caller claimed to be Northstar Security and warned that the transfer would finalize in ten minutes unless cancelled with a one-time code.",
       "In digital banking fraud, that first window is everything. I need to review the initial notes and proceed immediately.",
     ],
@@ -45,7 +45,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "office-notes": {
     id: "office-notes",
-    speaker: "Detective Miller",
+    speaker: "Detective Dev Malhotra",
     lines: [
       "Intake Summary: Victim received an inbound call from 020 0190 0142. The caller quoted employee badge 'NS-4471' and warned of a fraudulent charge to 'Apex Horizon Trading'.",
       "During the call, an SMS authentication passcode was transmitted to her phone, which she read aloud under pressure.",
@@ -62,14 +62,14 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "office-travel": {
     id: "office-travel",
-    speaker: "Detective Miller",
+    speaker: "Detective Dev Malhotra",
     lines: [
       "Where should I direct the investigation next?",
     ],
     choices: [
       {
         id: "c-trav-victim",
-        text: "Travel to Mara Okoye's flat to interview the victim.",
+        text: "Travel to Meera Okoye's flat to interview the victim.",
         next: "victim-entry",
       },
       {
@@ -96,19 +96,19 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
   },
 
   // =========================================================================
-  // LOCATION 2: VICTIM'S FLAT (Mara Okoye)
+  // LOCATION 2: VICTIM'S FLAT (Meera Okoye)
   // =========================================================================
   "victim-entry": {
     id: "victim-entry",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
-      "Detective Miller? Please, come in. I apologize for the state of the table—I was working through building schematics when everything came crashing down.",
-      "I still cannot believe this happened. I manage multimillion-pound architectural projects every day, and yet I let someone talk me into this on the phone.",
+      "Detective Malhotra? Please, come inside. I was just making some ginger chai to calm my nerves. I apologize for the scattered drafting sheets—I was finalizing structural elevations when this nightmare began.",
+      "I still cannot comprehend how I fell for this. I manage complex multimillion-pound civic architectural contracts every day, and yet someone managed to talk me into surrendering my security code in seven minutes.",
     ],
     choices: [
       {
         id: "c-vic-reassure-start",
-        text: "Take a breath, Ms. Okoye. These operations are deliberately engineered to bypass caution. Can you walk me through the call?",
+        text: "Take a breath, Ms. Okoye. These operations are engineered by professional syndicates to trigger acute panic. Can you walk me through the call?",
         effects: [{ trust: "mara-okoye", by: 15 }],
         next: "victim-interview-start",
       },
@@ -122,9 +122,9 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-interview-start": {
     id: "victim-interview-start",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
-      "It started at 13:35. My phone rang, and the caller display showed Northstar Security. The man on the line spoke in a calm, authoritative voice.",
+      "It started at 13:35. My phone rang, and the caller display showed Northstar Security. The man on the line spoke with calm, clipped authority.",
       "He claimed their fraud detection algorithm had flagged a suspicious pending payment of £4,850.00 to an outfit called Apex Horizon Trading.",
     ],
     choices: [
@@ -143,7 +143,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-caller-details": {
     id: "victim-caller-details",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "Yes—he introduced himself as Martin Hayes, Senior Fraud Officer, badge NS-4471.",
       "When I asked if I could call him back, he insisted that the branch transfer queue was running fourteen minutes behind, and that the batch clearing window would close before I reached anyone.",
@@ -165,7 +165,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-check-phone": {
     id: "victim-check-phone",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "Here is my handset, Detective. The call lasted about seven minutes. The messages from that time are still in my notification feed.",
     ],
@@ -184,7 +184,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-check-sms": {
     id: "victim-check-sms",
-    speaker: "Detective Miller",
+    speaker: "Detective Dev Malhotra",
     lines: [
       "Opening the SMS inbox... here is the message from NORTHSTAR-SEC, timestamped 13:41:08.",
       "'719-204 is your Northstar one-time passcode to AUTHORISE transfer of £4,850.00 to Apex Horizon Trading. WARNING: Northstar Bank will NEVER ask for this code.'",
@@ -204,7 +204,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-explain-otp": {
     id: "victim-explain-otp",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "When the text arrived, he said: 'Read me the cancellation code on your screen so our server can block the payment'.",
       "I was terrified of losing nearly five thousand pounds, so I read the six digits to him. As soon as I finished, he said the transaction was being halted and disconnected.",
@@ -225,7 +225,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-dignity-reassurance": {
     id: "victim-dignity-reassurance",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "Thank you, Detective. That means a great deal. Is there anything else in the apartment that might help explain how they targeted me?",
     ],
@@ -250,7 +250,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-check-mail": {
     id: "victim-check-mail",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "There was a redelivery slip dropped through the mail slot around eleven this morning. I haven't opened the package yet.",
     ],
@@ -266,7 +266,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-mail-cleared": {
     id: "victim-mail-cleared",
-    speaker: "Detective Miller",
+    speaker: "Detective Dev Malhotra",
     lines: [
       "Tracking SP-9920-X: sender is Harrow & Finch Architectural Supplies, containing draughting film. This is a legitimate business delivery, not a smishing parcel trap.",
     ],
@@ -282,7 +282,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-check-repair": {
     id: "victim-check-repair",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "Earlier this week, I dropped my phone on the pavement outside our architectural firm. The screen cracked, so I left it with Ravi Sunder at Apex Fix & Tech.",
       "Here is the receipt he gave me when I picked it up.",
@@ -299,7 +299,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-repair-suspicion": {
     id: "victim-repair-suspicion",
-    speaker: "Detective Miller",
+    speaker: "Detective Dev Malhotra",
     lines: [
       "Apex Fix & Tech... and the fraudulent recipient was named Apex Horizon Trading. A suspicious name resemblance.",
       "However, the receipt states the SIM remained in your possession and the service was purely glass screen replacement.",
@@ -316,7 +316,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-bank-status": {
     id: "victim-bank-status",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "I tried calling the number Martin Hayes quoted, but it played a recorded message and disconnected.",
       "I haven't been able to get through to the branch yet because my phone was tied up with police dispatch.",
@@ -332,7 +332,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-discuss-call-log": {
     id: "victim-discuss-call-log",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "You're right... the number on the back of my Northstar debit card is 0800 018 4471. I should have checked that instead of trusting the display.",
     ],
@@ -347,7 +347,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "victim-next-steps": {
     id: "victim-next-steps",
-    speaker: "Mara Okoye",
+    speaker: "Meera Okoye",
     lines: [
       "What should our priority be right now, Detective?",
     ],
@@ -376,18 +376,18 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
   },
 
   // =========================================================================
-  // LOCATION 3: BANK BRANCH (Teller Vance)
+  // LOCATION 3: BANK BRANCH (Teller Varun Vance)
   // =========================================================================
   "bank-entry": {
     id: "bank-entry",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
-      "Welcome to Northstar Bank Central Branch. How may I assist you today?",
+      "Namaste, welcome to Northstar Bank Central Branch. How may I assist you today?",
     ],
     choices: [
       {
         id: "c-bnk-inquire-pro",
-        text: "Good afternoon. I am Detective Miller, investigating an urgent unauthorized payment from Mara Okoye's current account.",
+        text: "Good afternoon. I am Detective Dev Malhotra, investigating an urgent unauthorized payment from Meera Okoye's current account.",
         effects: [{ trust: "teller-vance", by: 10 }],
         next: "bank-inquiry",
       },
@@ -401,10 +401,10 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-alienate-open": {
     id: "bank-alienate-open",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
-      "Excuse me?! Sir, you have no authority to disrupt lawful branch business or intimidate bank employees without a judicial warrant.",
-      "If you continue to act aggressively, I will press the branch alarm and notify police dispatch.",
+      "Excuse me?! Sir, you have no authority to disrupt lawful branch operations or harass counter personnel without a judicial warrant.",
+      "If you continue this aggressive behavior, I will immediately summon security and lodge an obstruction report.",
     ],
     choices: [
       {
@@ -427,9 +427,9 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-alienated": {
     id: "bank-alienated",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
-      "Security has been alerted and customer service is suspended at this window. Official banking communication will proceed through Northstar Legal only.",
+      "Branch security has been notified and counter service is suspended at this wicket. Official communication will proceed through Northstar Legal only.",
     ],
     choices: [
       {
@@ -442,9 +442,9 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-inquiry": {
     id: "bank-inquiry",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
-      "Ms. Mara Okoye's account is on file with us. Under bank confidentiality regulations, I can print an interim account statement for authorized review.",
+      "Ms. Meera Okoye's account is on file with us. Under bank confidentiality regulations, I can print an interim account statement for authorized review.",
       "What specific transaction are you tracing?",
     ],
     choices: [
@@ -467,7 +467,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-discuss-pending": {
     id: "bank-discuss-pending",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
       "Printing the interim statement... here it is.",
       "At 13:42, an outward FastPay transfer of £4,850.00 to Apex Horizon Trading was initiated. Because of the amount and new recipient, it entered our automated ten-minute fraud clearing window.",
@@ -484,7 +484,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-freeze-request": {
     id: "bank-freeze-request",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
       "Under Northstar security protocol, an online payment verified with a dual-factor one-time passcode cannot be cancelled on verbal request alone.",
       "To halt the clearing batch, we require documented evidence proving that the authorization was compromised under fraudulent duress before the ten-minute window expires.",
@@ -507,7 +507,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-freeze-unsubstantiated": {
     id: "bank-freeze-unsubstantiated",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
       "I understand the urgency, Detective, but without documentation linking the OTP transmission to a spoofed caller, internal audit prohibits overriding a customer-authorized transfer.",
       "If you do not file the required documentation before the timer elapses, the clearing house will release the funds automatically.",
@@ -529,7 +529,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-window-timing": {
     id: "bank-window-timing",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
       "The clock has reached 13:52. The ten-minute clearing window has lapsed, and the batch has been transmitted to Apex Horizon Trading's receiving bank.",
       "We can no longer perform an instant branch stop. Recovery will now require a formal police crime reference number and inter-bank indemnity filings.",
@@ -550,7 +550,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-freeze-success": {
     id: "bank-freeze-success",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
       "Examining the file... caller ID 020 0190 0142, staff identifier NS-4471... wait, NS-4471 was an old operational code retired two years ago!",
       "And the SMS timestamp matches the spoofed call duration precisely. This clearly establishes dual-factor harvesting under fraudulent impersonation.",
@@ -571,9 +571,9 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "bank-freeze-confirmed": {
     id: "bank-freeze-confirmed",
-    speaker: "Teller Vance",
+    speaker: "Teller Varun Vance",
     lines: [
-      "Confirmed. The £4,850.00 payment to Apex Horizon Trading has been locked in escrow at our gateway. The funds are safe and will be credited back to Mara Okoye's current account.",
+      "Confirmed. The £4,850.00 payment to Apex Horizon Trading has been locked in escrow at our gateway. The funds are safe and will be credited back to Meera Okoye's current account.",
       "I have flagged the receiving beneficiary details for our national cyber intelligence unit.",
     ],
     choices: [
@@ -597,18 +597,18 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-entry",
     speaker: "Ravi Sunder",
     lines: [
-      "Welcome to Apex Fix & Tech. Just give me one second to finish testing this charging port... alright, what can I do for you?",
+      "Namaste, bhai. Welcome to Apex Fix & Tech. Just give me one minute to finish soldering this charging ribbon... Haan, tell me, what can I do for you?",
     ],
     choices: [
       {
         id: "c-rep-inquire-polite",
-        text: "Good day, Mr. Sunder. I am Detective Miller. I'd like to ask a few routine questions regarding a screen repair you completed for Mara Okoye.",
+        text: "Good day, Mr. Sunder. I am Detective Dev Malhotra. I'd like to ask a few routine questions regarding a screen repair you completed for Meera Okoye.",
         effects: [{ trust: "ravi-sunder", by: 10 }],
         next: "repair-inquiry",
       },
       {
         id: "c-rep-accuse-rashly",
-        text: "Step away from the bench! Your shop is running a SIM-cloning ring, and we have the work order proving it!",
+        text: "Step away from the workbench! Your shop is running a SIM-cloning syndicate, and we have the work order proving it!",
         next: "repair-accuse-open",
       },
     ],
@@ -618,8 +618,8 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-accuse-open",
     speaker: "Ravi Sunder",
     lines: [
-      "What?! SIM cloning?! Are you insane?! I've been repairing electronics on this high street for eleven years! Every part I buy has a VAT invoice!",
-      "Don't you come into my business throwing criminal accusations around without a shred of proof!",
+      "What?! SIM cloning?! Arre, are you out of your mind?! I have been running this electronics shop on this high street for eleven years with an unblemished record! Every single part I buy has a valid GST and VAT invoice!",
+      "Do not step into my shop throwing baseless criminal accusations around without a shred of proof!",
     ],
     choices: [
       {
@@ -633,7 +633,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
       },
       {
         id: "c-rep-walk-back",
-        text: "Let me step back. Let's look at the work order calmly together.",
+        text: "Let me step back. Let's examine the work order calmly together.",
         effects: [{ trust: "ravi-sunder", by: -15 }],
         next: "repair-inquiry",
       },
@@ -644,7 +644,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-accused-wrong",
     speaker: "Ravi Sunder",
     lines: [
-      "Get out of my shop right now! I'm calling my trade association lawyer! If you set foot in here again without a warrant, I'm filing a formal harassment grievance!",
+      "Get out of my shop right this instant! I am calling my trade association legal counsel! If you step foot in here again without a warrant, I am filing an official harassment complaint!",
     ],
     choices: [
       {
@@ -659,8 +659,8 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-inquiry",
     speaker: "Ravi Sunder",
     lines: [
-      "Mara Okoye? Yes, I remember her—very pleasant lady, architect. She brought in a phone with shattered front glass earlier this week.",
-      "What is this about? Did something go wrong with the display?",
+      "Meera Okoye? Yes, of course I remember her—very polite lady, architect. She brought in a smartphone with shattered front glass earlier this week.",
+      "What happened, sir? Is there any issue with the display assembly?",
     ],
     choices: [
       {
@@ -681,8 +681,8 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-show-receipt",
     speaker: "Ravi Sunder",
     lines: [
-      "Work Order #4018, that's my handwriting. See this note? 'Customer kept SIM tray and card in personal purse during service'.",
-      "We replace front glass using a heat plate and suction. We don't ask for passcodes, and we test the digitizer using the hardware emergency dialer. I never had access to her accounts or her SIM.",
+      "Work Order #4018, that's my signature and handwriting. Look at the intake slip: 'Customer retained SIM tray and card in her personal purse during service'.",
+      "We replace front glass using a heating separator and suction jigs. We never ask for customer device PINs, and we test digitizer response using the hardware emergency dialer code. I never had access to her accounts or her SIM card.",
     ],
     choices: [
       {
@@ -702,7 +702,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-discuss-service",
     speaker: "Ravi Sunder",
     lines: [
-      "Never. I have a strict customer privacy protocol. In my shop, customers keep their SIM cards and SD cards. If a job requires a motherboard re-flow, we do that under CCTV.",
+      "Never, sir. I have a strict privacy protocol here. Customers always remove their SIM and memory cards before handover. If any job requires motherboard work, that is done strictly under my shop's CCTV.",
     ],
     choices: [
       {
@@ -717,8 +717,8 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-apex-name",
     speaker: "Ravi Sunder",
     lines: [
-      "Apex? Detective, this road is Apex Commercial Row! There is Apex Dry Cleaners across the street and Apex Gym two doors down.",
-      "Fraudsters register shell company names using common commercial hub words to blend into banking statements. I have no idea who 'Apex Horizon Trading' is.",
+      "Apex? Detective saab, this entire commercial block is Apex Commercial Row! There is Apex Dry Cleaners opposite, Apex Sweets, and Apex Gym two doors down.",
+      "Cyber criminals register disposable shell entities using local commercial plaza names so victims don't immediately question transaction notices. I have absolutely nothing to do with any 'Horizon Trading'.",
     ],
     choices: [
       {
@@ -733,14 +733,14 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-telecom-help",
     speaker: "Ravi Sunder",
     lines: [
-      "Look, I've seen this before in trade forums. Scammers don't need the physical phone to steal SMS codes.",
-      "They use personal info harvested from old data breaches to call the mobile carrier, pretend to be the customer, and request an emergency SIM swap or port-out. The carrier routes incoming texts to their burner SIM.",
-      "If you want to know how her code was intercepted, don't look at my workbench—check the telecom carrier logs.",
+      "Look, I follow telecom security bulletins. Scammers don't need physical phone custody to steal OTPs anymore.",
+      "They take leaked KYC data from old web database breaches, call up the cellular network helpdesk, impersonate the subscriber, and execute an unauthorized SIM swap or port-out. The telecom carrier reroutes incoming SMS to the fraudster's burner SIM.",
+      "If you want to trace how her OTP was intercepted, don't look at my workbench—check the telecom carrier gateway audit log.",
     ],
     choices: [
       {
         id: "c-rep-clear-shop",
-        text: "Thank you, Mr. Sunder. That makes total technical sense and clears your workshop completely.",
+        text: "Thank you, Mr. Sunder. That technical explanation is spotless and clears your shop completely.",
         effects: [
           { setFlag: "lead.repair-cleared-in-dialogue", to: true },
           { trust: "ravi-sunder", by: 25 },
@@ -754,7 +754,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "repair-cleared",
     speaker: "Ravi Sunder",
     lines: [
-      "I appreciate that, Detective. Head down to the station—the duty sergeant has access to the National Carrier Liaison Portal and can pull the port-out audit in minutes.",
+      "Shukriya, Detective. I appreciate your fairness. Go straight to the precinct—Sgt. Brennan has access to the National Carrier Liaison Portal and can pull the network port-out audit in minutes.",
     ],
     choices: [
       {
@@ -776,13 +776,13 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
   },
 
   // =========================================================================
-  // LOCATION 5: POLICE STATION (Sgt. Brennan)
+  // LOCATION 5: POLICE STATION (Sgt. Balan Brennan)
   // =========================================================================
   "police-entry": {
     id: "police-entry",
-    speaker: "Sgt. Brennan",
+    speaker: "Sgt. Balan Brennan",
     lines: [
-      "Afternoon, Miller. Just cataloguing the shift desk ledger. What case brings you into the precinct?",
+      "Vanakkam, Dev. Just cataloguing the shift desk ledger. What brings you into the precinct this afternoon?",
     ],
     choices: [
       {
@@ -793,7 +793,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
       },
       {
         id: "c-pol-file-report-direct",
-        text: "We need to lodge a formal crime report for victim Mara Okoye.",
+        text: "We need to lodge a formal crime report for victim Meera Okoye.",
         next: "police-lodge-report",
       },
     ],
@@ -801,7 +801,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "police-inquiry": {
     id: "police-inquiry",
-    speaker: "Sgt. Brennan",
+    speaker: "Sgt. Balan Brennan",
     lines: [
       "Submitting subscriber query MSISDN-44-7700900412 through the National Telecom Carrier Gateway terminal...",
       "Here is the network telemetry report. Look at the timestamp from 13:20:14 today.",
@@ -821,10 +821,10 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "police-discuss-sim-swap": {
     id: "police-discuss-sim-swap",
-    speaker: "Sgt. Brennan",
+    speaker: "Sgt. Balan Brennan",
     lines: [
       "An automated port-out request was submitted through the carrier's self-service web gateway at 13:20, authenticated using leaked biographical data.",
-      "At 13:22, an SMS divert was activated to a disposable burner SIM. That was fifteen minutes before Martin Hayes phoned Mara.",
+      "At 13:22, an SMS divert was activated to a disposable burner SIM. That was fifteen minutes before Martin Hayes phoned Meera.",
       "This proves the compromise was purely network-layer: they intercepted the SMS traffic upstream.",
     ],
     choices: [
@@ -843,7 +843,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "police-lodge-report": {
     id: "police-lodge-report",
-    speaker: "Sgt. Brennan",
+    speaker: "Sgt. Balan Brennan",
     lines: [
       "I am entering Crime Reference CR-88201 into the National Financial Crime Register.",
       "This formal filing documents identity spoofing, unauthorized carrier divert, and dual-factor extraction under psychological duress.",
@@ -863,7 +863,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "police-recovery-explain": {
     id: "police-recovery-explain",
-    speaker: "Sgt. Brennan",
+    speaker: "Sgt. Balan Brennan",
     lines: [
       "Under the Contingent Reimbursement Code, filing CR-88201 establishes that the victim acted with reasonable care and was targeted by sophisticated social engineering.",
       "Even if the immediate ten-minute clearing window at the branch elapsed, this statutory filing forces Northstar and the receiving bank to freeze the beneficiary account and begin restitution proceedings.",
@@ -884,10 +884,10 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
 
   "police-conclude": {
     id: "police-conclude",
-    speaker: "Sgt. Brennan",
+    speaker: "Sgt. Balan Brennan",
     lines: [
       "All evidentiary items are bagged, logged, and submitted into the lawful register.",
-      "Solid investigative work, Miller. No vigilantism, no wild goose chases—just verified facts and proper procedure.",
+      "Solid investigative work, Dev. No vigilantism, no wild goose chases—just verified facts and proper procedure.",
     ],
     choices: [
       {

@@ -7,10 +7,10 @@ import type { NpcDefinition } from "./detective";
  */
 export const tellerVanceNpc: NpcDefinition = {
   id: "teller-vance",
-  name: "Teller Vance",
-  role: "Senior Branch Specialist",
+  name: "Teller Varun Vance",
+  role: "Senior Branch Operations Specialist",
   location: "bank-branch",
   initialTrust: 0,
-  summary: "Frontline Northstar Bank customer representative. Adheres strictly to internal security protocols and fraud escalation thresholds; responsive to verified documentation.",
+  summary: "Frontline Northstar Bank customer service specialist. Thoroughly versed in internal security protocols and fraud escalation thresholds; cautious and procedural, but acts decisively when presented with verified documentation.",
   expressions: ["neutral", "concerned", "guarded", "open"],
 };

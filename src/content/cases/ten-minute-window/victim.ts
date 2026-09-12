@@ -31,7 +31,7 @@ export const VICTIM_CALL_DIALOGUE: Record<string, DialogueNode> = {
     id: "victim-call-open",
     speaker: "Martin Hayes (Northstar Security)",
     lines: [
-      "Good afternoon, is this Ms. Mara Okoye?",
+      "Good afternoon, is this Ms. Meera Okoye?",
       "This is Martin Hayes from Northstar Bank Account Security. We are tracking an urgent, unauthorized payment attempt of £4,850.00 to Apex Horizon Trading.",
       "The transfer is currently queued in our pending hold, but it will settle in less than ten minutes unless we apply an administrative stop right now.",
     ],

@@ -16,10 +16,10 @@ export interface NpcDefinition {
  */
 export const detectiveNpc: NpcDefinition = {
   id: "detective",
-  name: "Detective Miller",
-  role: "Lead Investigator",
+  name: "Detective Dev Malhotra",
+  role: "Lead Financial Crime Investigator",
   location: "office",
   initialTrust: 0,
-  summary: "Grounded, observant municipal fraud investigator. Relies on verified paper trails and lawful procedure rather than cinematic hunches.",
+  summary: "Grounded, observant fraud investigator. Methodical and sharp, relying on verified paper trails, digital forensics, and lawful banking procedure rather than cinematic hunches.",
   expressions: ["neutral", "concerned", "guarded", "open"],
 };

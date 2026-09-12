@@ -15,10 +15,10 @@ export const bankStatementEvidence: EvidenceItem = {
   title: "Northstar Bank — Interim Account Statement",
   kind: "ledger",
   lines: [
-    { text: "Account Holder", value: "Mara Okoye" },
+    { text: "Account Holder", value: "Meera Okoye" },
     { text: "Account Number", value: "******8821" },
     { text: "Branch", value: "Northstar Central (Sort Code: 00-44-71)" },
-    { text: "13:10 Coffee Works", value: "-£3.80" },
+    { text: "13:10 Chai & Filter Coffee Works", value: "-£3.80" },
     { text: "13:42 PENDING: Apex Horizon Trading", value: "-£4,850.00", flag: true },
     { text: "Settlement Status", value: "Pending Clearing — 10-Minute Hold Window Active", flag: true },
     { text: "Authorized Protocol", value: "Online Banking FastPay / Dual-Factor Verified" },
@@ -30,7 +30,7 @@ export const callLogEvidence: EvidenceItem = {
   title: "Handset Telephony Call Log",
   kind: "log",
   lines: [
-    { text: "Subscriber Handset", value: "07700 900412 (Mara Okoye)" },
+    { text: "Subscriber Handset", value: "07700 900412 (Meera Okoye)" },
     { text: "12:45 Outgoing to Studio", value: "020 0190 0550 (4 min)" },
     { text: "13:35 Inbound: Spoofed Bank Security", value: "020 0190 0142 (7 min)", flag: true },
     { text: "Caller Persona", value: "Claimed 'Martin Hayes', Northstar Fraud Team (ID: NS-4471)", flag: true },
@@ -72,7 +72,7 @@ export const repairReceiptEvidence: EvidenceItem = {
   falseLead: true,
   lines: [
     { text: "Service Workshop", value: "Apex Fix & Tech (Proprietor: Ravi Sunder)" },
-    { text: "Customer Name", value: "Mara Okoye" },
+    { text: "Customer Name", value: "Meera Okoye" },
     { text: "Service Date", value: "Earlier this week (Collected 16:30)" },
     { text: "Work Performed", value: "Front OLED display glass replacement" },
     { text: "Technician Annotation", value: "Physical glass adhesive only. SIM tray remained empty; customer retained SIM.", flag: true },
