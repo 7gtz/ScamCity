@@ -17,22 +17,23 @@
 
 # --- Default owner ----------------------------------------------------------
 
-*                                   @7gtz
+*                                   @7gtz @AdityasagarR123
 
 # --- Automation and policy (release captain only) ---------------------------
 # These files define the rules. They should always need the captain's review.
 
-/.github/                           @7gtz
-/ops/workplan.json                  @7gtz
-/ops/scripts/check-ownership.mjs    @7gtz
-/docs/REPO-SETUP.md                 @7gtz
+/.github/                           @7gtz @AdityasagarR123
+/ops/workplan.json                  @7gtz @AdityasagarR123
+/ops/scripts/check-ownership.mjs    @7gtz @AdityasagarR123
+/docs/REPO-SETUP.md                 @7gtz @AdityasagarR123
 
-# --- Per-agent ownership (UNCOMMENT AFTER CONFIRMING HANDLES) ---------------
+# --- Per-agent ownership ----------------------------------------------------
+# All handles below are confirmed collaborators with write access.
 #
-# The candidate handles supplied by the lead were `harshitbahl90` and
-# `Abuzaid-01`; both have been confirmed as repository collaborators with
-# write access.
-#
+# Every path carries at least TWO owners. GitHub forbids approving your own PR,
+# so a path with a single owner cannot satisfy "Require review from Code Owners"
+# when that owner is the author - which would have deadlocked chore/game-contracts.
+
 /src/game/state/                  @7gtz @harshitbahl90
 /src/app/city/                    @7gtz @harshitbahl90
 /src/game/integration/            @7gtz @harshitbahl90
@@ -41,20 +42,20 @@
 /src/game/ui/                     @7gtz @Abuzaid-01
 /src/game/dialogue/               @7gtz @Abuzaid-01
 /src/game/case/                   @7gtz @Abuzaid-01
-/src/content/cases/               @7gtz @Abuzaid-01
-/src/content/npcs/                @7gtz @Abuzaid-01
-/src/game/pressure/               @7gtz
-/src/game/ai/                     @7gtz
-/src/game/recovery/               @7gtz
-/src/game/debrief/                @7gtz
-#
-# --- Shared contracts: always the captain, whoever else is added ------------
-#
-/src/lib/validation/schemas.ts    @7gtz
-/src/lib/live/types.ts            @7gtz
-/src/game/world/types.ts          @7gtz
-/src/game/state/types.ts          @7gtz
-/src/game/state/events.ts         @7gtz
-/src/game/dialogue/types.ts       @7gtz
-/src/game/case/types.ts           @7gtz
-/src/game/ai/adapter.ts           @7gtz
+/src/content/cases/               @7gtz @AdityasagarR123
+/src/content/npcs/                @7gtz @AdityasagarR123
+/src/game/pressure/               @7gtz @AdityasagarR123
+/src/game/ai/                     @7gtz @AdityasagarR123
+/src/game/recovery/               @7gtz @AdityasagarR123
+/src/game/debrief/                @7gtz @AdityasagarR123
+
+# --- Shared contracts: the captain, plus one so review is never blocked -----
+
+/src/lib/validation/schemas.ts    @7gtz @AdityasagarR123
+/src/lib/live/types.ts            @7gtz @AdityasagarR123
+/src/game/world/types.ts          @7gtz @AdityasagarR123
+/src/game/state/types.ts          @7gtz @AdityasagarR123
+/src/game/state/events.ts         @7gtz @AdityasagarR123
+/src/game/dialogue/types.ts       @7gtz @AdityasagarR123
+/src/game/case/types.ts           @7gtz @AdityasagarR123
+/src/game/ai/adapter.ts           @7gtz @AdityasagarR123
