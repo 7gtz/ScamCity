@@ -185,6 +185,56 @@
       "promptFile": "ops/prompts/antigravity-case-content.md",
       "hour15CutPriority": 2,
       "hour15CutNote": "Cut the victim perspective content first; the detective case reads flags that default to 'the victim complied'."
+    },
+    {
+      "id": "integration",
+      "displayName": "Integration",
+      "tool": "any",
+      "branch": "feat/integration",
+      "summary": "Joins the five merged silos into a playable game: real registry, rendered world and dialogue UI, the authored case fed in, debrief, pressure, the victim's live call, and an entry point.",
+      "note": "Created after the five build agents merged. Their branches are closed, so the overlapping paths below have a single live owner: this one.",
+      "allowedPaths": [
+        "src/app/city/**",
+        "src/game/integration/**",
+        "src/game/world/registry.ts",
+        "src/content/cases/ten-minute-window/**",
+        "src/content/modes.ts",
+        "src/features/call/CallRoom.tsx",
+        "src/features/call/use-live-call.ts"
+      ],
+      "forbiddenPaths": [
+        "src/game/world/types.ts",
+        "src/game/state/types.ts",
+        "src/game/state/events.ts",
+        "src/game/dialogue/types.ts",
+        "src/game/case/types.ts",
+        "src/game/ai/adapter.ts"
+      ],
+      "forbiddenPathsNote": "Shared contracts. Import them; never edit them.",
+      "additiveOnlyPaths": [
+        "src/features/call/CallRoom.tsx",
+        "src/features/call/use-live-call.ts",
+        "src/game/world/registry.ts",
+        "src/content/cases/ten-minute-window/**"
+      ],
+      "additiveOnlyNote": "CallRoom and use-live-call: new optional props and the onComplete callback only. registry.ts and the case content: id corrections and the npc-to-node map only, never a rewrite of another agent's authored work.",
+      "dependsOn": { "branches": [], "issues": [] },
+      "dependsOnNote": "All five build branches are merged. Nothing blocks this.",
+      "tests": {
+        "ownershipCheck": true,
+        "required": ["pnpm typecheck", "pnpm test", "pnpm build"],
+        "additional": [
+          "A test fails if any hotspot references an unknown evidence or npc id.",
+          "Map to panel to dialogue to evidence to case board to debrief completes end to end.",
+          "The case completes with GEMINI_API_KEY unset and the network offline.",
+          "Reload mid-case restores location, flags, evidence and board.",
+          "A keyboard-only playthrough completes.",
+          "A failure path routes into recovery and does not dead-end."
+        ]
+      },
+      "promptFile": "ops/prompts/integration.md",
+      "hour15CutPriority": 5,
+      "hour15CutNote": "Never cut. Without this there is no playable game, only five unreachable libraries."
     }
   ],
 
