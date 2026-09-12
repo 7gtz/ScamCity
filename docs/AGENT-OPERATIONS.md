@@ -103,22 +103,54 @@ To check at any time without asking anyone:
 
 ## 4. Your working loop
 
-**Set up once, per agent, per laptop:**
+**Set up once, per agent.** Pick whichever of these matches your machine. Both end
+in the same place; neither depends on anyone else's directory layout.
+
+### A. Fresh clone — use this by default
+
+One agent on your own laptop. Portable, and guaranteed to start from `origin/main`
+as it is right now rather than from whatever a local clone happens to hold.
+
+```bash
+git clone https://github.com/7gtz/ScamCity.git scamcity-<your-agent-id>
+cd scamcity-<your-agent-id>
+git checkout -b <your-branch> origin/main
+npx -y pnpm@10 install
+```
+
+Your branch name is in the table in §1, and in `ops/workplan.json`.
+
+If your branch already exists on the remote — someone created it for you, or you
+are resuming — track it instead of creating it:
+
+```bash
+git checkout -b <your-branch> origin/<your-branch>
+```
+
+### B. Worktree — when one person runs several agents on one machine
+
+Worth it only when you are driving more than one branch from the same laptop: it
+shares the git object store and keeps the branches in sibling directories.
 
 ```powershell
-# From the main clone
+# From an existing clone. -RepoRoot and -WorktreeRoot both default sensibly,
+# so this works wherever your clone lives.
 .\ops\scripts\New-AgentWorktree.ps1 -List              # see the agents
 .\ops\scripts\New-AgentWorktree.ps1 -Agent codex-foundation
 ```
 
-That creates an isolated git worktree with your branch already checked out, and
-prints your allowed paths, your dependencies and the next command. It refuses to
-overwrite anything and never deletes a worktree or resets a branch.
+It fetches `origin/main` first, creates the worktree and branch, and prints your
+allowed paths, dependencies and the next command. It refuses to overwrite an
+existing directory or reuse a branch checked out elsewhere, and it never deletes
+a worktree or resets a branch.
 
 ```powershell
 cd <the path it printed>
 npx -y pnpm@10 install
 ```
+
+**Either way, a new working directory has no `node_modules`.** The `install` step
+is not optional, and it is the one people skip.
 
 **Then, repeatedly:**
 
@@ -132,6 +164,15 @@ npx -y pnpm@10 install
    This checks pnpm is version 10, runs the ownership check, then `typecheck`,
    `test` and `build`. It is the same gate CI runs, so green here means green
    there.
+
+   Not on Windows, or no PowerShell? Run the same four checks directly:
+
+   ```bash
+   node ops/scripts/check-ownership.mjs
+   npx -y pnpm@10 typecheck
+   npx -y pnpm@10 test
+   npx -y pnpm@10 build
+   ```
 
 3. Rebase onto `main`:
 
