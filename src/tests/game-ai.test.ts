@@ -1,13 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AiAdapter } from "@/game/ai/adapter";
 import { withFallback } from "@/game/ai/with-fallback";
-import { AUTHORED_HINTS, hintFor, isUsablePhrasing, phraseHint, type Hint } from "@/game/ai/hints";
+import { AUTHORED_HINTS, hintFor, isUsablePhrasing, phraseHint } from "@/game/ai/hints";
 import { DetectiveHintSchema } from "@/lib/validation/schemas";
 
-/** CI has no GEMINI_API_KEY, which is the no-key path. Set one to reach `run`. */
-const withKey = async <T>(fn: () => Promise<T>): Promise<T> => {
+/**
+ * Both key states are set explicitly, never inherited. CI has no
+ * GEMINI_API_KEY, but a developer's shell often does, and a suite whose result
+ * depends on that is worse than no suite at all.
+ */
+const withEnv = async <T>(key: string | undefined, fn: () => Promise<T>): Promise<T> => {
   const had = process.env.GEMINI_API_KEY;
-  process.env.GEMINI_API_KEY = "test-key-not-a-real-credential";
+  if (key === undefined) delete process.env.GEMINI_API_KEY;
+  else process.env.GEMINI_API_KEY = key;
   try {
     return await fn();
   } finally {
@@ -15,6 +20,11 @@ const withKey = async <T>(fn: () => Promise<T>): Promise<T> => {
     else process.env.GEMINI_API_KEY = had;
   }
 };
+
+/** A key is present: `run` is reached. */
+const withKey = <T>(fn: () => Promise<T>) => withEnv("test-key-not-a-real-credential", fn);
+/** No key: the authored path, which is exactly CI and the offline player. */
+const noKey = <T>(fn: () => Promise<T>) => withEnv(undefined, fn);
 
 const adapter = (over: Partial<AiAdapter<string, string>> = {}): AiAdapter<string, string> => ({
   deadlineMs: 50,
@@ -26,8 +36,9 @@ const adapter = (over: Partial<AiAdapter<string, string>> = {}): AiAdapter<strin
 describe("withFallback — the three guarantees", () => {
   it("uses the authored fallback when there is no key, without calling run", async () => {
     const run = vi.fn(async () => "live");
-    const out = await withFallback(adapter({ run }), "x");
-    expect(out).toBe("authored:x");
+    await noKey(async () => {
+      expect(await withFallback(adapter({ run }), "x")).toBe("authored:x");
+    });
     expect(run).not.toHaveBeenCalled();
   });
 
@@ -62,12 +73,12 @@ describe("withFallback — the three guarantees", () => {
   });
 
   it("treats timeout, outage and missing key identically", async () => {
-    const noKey = await withFallback(adapter(), "x");
+    const missingKey = await noKey(() => withFallback(adapter(), "x"));
     const outage = await withKey(() => withFallback(adapter({ run: async () => { throw new Error("x"); } }), "x"));
     const timeout = await withKey(() =>
       withFallback(adapter({ deadlineMs: 20, run: () => new Promise((r) => setTimeout(() => r("late"), 500)) }), "x"),
     );
-    expect(new Set([noKey, outage, timeout]).size).toBe(1);
+    expect(new Set([missingKey, outage, timeout]).size).toBe(1);
   });
 
   it("a late rejection after the deadline does not become an unhandled rejection", async () => {
@@ -91,7 +102,7 @@ describe("hints — AI varies phrasing only", () => {
   });
 
   it("returns the authored hint with no key and no rewrite", async () => {
-    const hint = await phraseHint("no-evidence");
+    const hint = await noKey(() => phraseHint("no-evidence"));
     expect(hint.text).toBe(AUTHORED_HINTS["no-evidence"]);
     expect(hint.situation).toBe("no-evidence");
   });
