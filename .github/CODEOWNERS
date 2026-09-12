@@ -29,36 +29,32 @@
 
 # --- Per-agent ownership (UNCOMMENT AFTER CONFIRMING HANDLES) ---------------
 #
-# Replace AGENT-A / AGENT-B with the confirmed GitHub usernames, then uncomment.
 # The candidate handles supplied by the lead were `harshitbahl90` and
-# `Abuzaid-01`; they are NOT asserted here because their write access to this
-# repository has not been verified.
+# `Abuzaid-01`; both have been confirmed as repository collaborators with
+# write access.
 #
-# /src/game/state/                  @7gtz @AGENT-A
-# /src/app/city/                    @7gtz @AGENT-A
-# /src/game/integration/            @7gtz @AGENT-A
-#
-# /src/game/world/                  @7gtz @AGENT-B
-# /src/game/ui/                     @7gtz @AGENT-B
-#
-# /src/game/dialogue/               @7gtz @AGENT-B
-# /src/game/case/                   @7gtz @AGENT-B
-#
-# /src/content/cases/               @7gtz @AGENT-B
-# /src/content/npcs/                @7gtz @AGENT-B
-#
-# /src/game/pressure/               @7gtz
-# /src/game/ai/                     @7gtz
-# /src/game/recovery/               @7gtz
-# /src/game/debrief/                @7gtz
+/src/game/state/                  @7gtz @harshitbahl90
+/src/app/city/                    @7gtz @harshitbahl90
+/src/game/integration/            @7gtz @harshitbahl90
+
+/src/game/world/                  @7gtz @Abuzaid-01
+/src/game/ui/                     @7gtz @Abuzaid-01
+/src/game/dialogue/               @7gtz @Abuzaid-01
+/src/game/case/                   @7gtz @Abuzaid-01
+/src/content/cases/               @7gtz @Abuzaid-01
+/src/content/npcs/                @7gtz @Abuzaid-01
+/src/game/pressure/               @7gtz
+/src/game/ai/                     @7gtz
+/src/game/recovery/               @7gtz
+/src/game/debrief/                @7gtz
 #
 # --- Shared contracts: always the captain, whoever else is added ------------
 #
-# /src/lib/validation/schemas.ts    @7gtz
-# /src/lib/live/types.ts            @7gtz
-# /src/game/world/types.ts          @7gtz
-# /src/game/state/types.ts          @7gtz
-# /src/game/state/events.ts         @7gtz
-# /src/game/dialogue/types.ts       @7gtz
-# /src/game/case/types.ts           @7gtz
-# /src/game/ai/adapter.ts           @7gtz
+/src/lib/validation/schemas.ts    @7gtz
+/src/lib/live/types.ts            @7gtz
+/src/game/world/types.ts          @7gtz
+/src/game/state/types.ts          @7gtz
+/src/game/state/events.ts         @7gtz
+/src/game/dialogue/types.ts       @7gtz
+/src/game/case/types.ts           @7gtz
+/src/game/ai/adapter.ts           @7gtz
