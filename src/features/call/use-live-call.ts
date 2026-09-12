@@ -9,7 +9,7 @@ import { scoreCall } from "@/features/scoring/score-call";
 import { getAiStatus } from "@/lib/ai-status";
 import { createLiveCallProvider, mockForced } from "@/lib/live/provider";
 import { getRealWorldContext } from "@/lib/live/real-world";
-import type { CompletedCall, LiveCallProvider } from "@/lib/live/types";
+import type { CallScore, CompletedCall, LiveCallProvider } from "@/lib/live/types";
 import { useCallStore } from "./call-store";
 
 /** Minimum time "REVIEWING TRANSCRIPT" holds, so the moment reads even when the judge is fast. */
@@ -18,7 +18,7 @@ const MIN_REVIEW_MS = 1200;
 type AnswerOptions = { precise: boolean; forceMock?: boolean };
 
 /** Wires a LiveCallProvider to the call store. The only place UI meets a provider. */
-export function useLiveCall(scenarioId: string) {
+export function useLiveCall(scenarioId: string, onComplete?: (score: CallScore) => void) {
   const router = useRouter();
   const provider = useRef<LiveCallProvider | null>(null);
 
@@ -53,10 +53,14 @@ export function useLiveCall(scenarioId: string) {
         });
       }
 
+      onComplete?.(score);
+
       useCallStore.getState().setStatus("results");
-      router.push(`/results/${score.sessionId}`);
+      if (!onComplete) {
+        router.push(`/results/${score.sessionId}`);
+      }
     },
-    [router],
+    [router, onComplete],
   );
 
   const wire = useCallback(
