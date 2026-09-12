@@ -1,0 +1,239 @@
+{
+  "version": "1.0.0",
+  "schemaNote": "Machine-readable source of truth for branch and path ownership during the 24-hour Detective Track build. Read by ops/scripts/check-ownership.mjs and .github/workflows/*. If this file and any prose document disagree, this file wins.",
+  "project": "SCAM CITY — Detective Track",
+  "baseBranch": "main",
+  "baselineSha": "1830343",
+  "planDoc": "docs/DETECTIVE-TRACK-24H.md",
+  "operationsDoc": "docs/AGENT-OPERATIONS.md",
+
+  "policy": {
+    "noDirectPushToBaseBranch": true,
+    "noAgentMayEditAnotherAgentsPaths": true,
+    "noSecretsInRepo": true,
+    "secretPathPatterns": [".env", ".env.*", "**/*.pem", "**/*.key", "**/id_rsa*"],
+    "secretPathException": ".env.example",
+    "noRefactorOfProductCode": true,
+    "rebaseBeforePr": true,
+    "coordinationIssueTitle": "24-hour coordination board",
+    "coordinationLabel": "coordination",
+    "docsAutomergeLabel": "automerge-docs"
+  },
+
+  "docsConfigBranches": {
+    "description": "Documentation and repository-configuration branches. These may not touch product code at all.",
+    "branchPatterns": ["docs/*", "chore/*", "ops/*"],
+    "allowedPaths": ["docs/**", "ops/**", ".github/**"],
+    "note": "chore/game-contracts is exempt from this rule and is governed by the contractsOnly entry below."
+  },
+
+  "contractsOnly": {
+    "id": "game-contracts",
+    "displayName": "Shared contracts (any agent, by agreement)",
+    "branch": "chore/game-contracts",
+    "contractsOnly": true,
+    "description": "Creates the shared interface files every other agent imports. Must merge before implementation branches open PRs. Types and interfaces only — no runtime logic, no React components.",
+    "allowedPaths": [
+      "src/game/world/types.ts",
+      "src/game/state/types.ts",
+      "src/game/state/events.ts",
+      "src/game/dialogue/types.ts",
+      "src/game/case/types.ts",
+      "src/game/ai/adapter.ts"
+    ],
+    "forbiddenPaths": [],
+    "dependsOn": { "branches": [], "issues": [] },
+    "tests": {
+      "ownershipCheck": true,
+      "required": ["pnpm typecheck", "pnpm test", "pnpm build"]
+    },
+    "hour15CutPriority": 0,
+    "hour15CutNote": "Never cut. Everything depends on it."
+  },
+
+  "agents": [
+    {
+      "id": "codex-foundation",
+      "displayName": "Codex / foundation",
+      "tool": "Codex",
+      "branch": "feat/foundation-state",
+      "summary": "Game state, flags, autosave, city routes, and the integration glue that hosts panels.",
+      "allowedPaths": [
+        "src/game/state/**",
+        "src/app/city/**",
+        "src/game/integration/**"
+      ],
+      "forbiddenPaths": [
+        "src/game/state/types.ts",
+        "src/game/state/events.ts"
+      ],
+      "forbiddenPathsNote": "These two are shared contracts owned by chore/game-contracts. Import them; do not edit them. Needed changes go through the release captain.",
+      "dependsOn": { "branches": ["chore/game-contracts"], "issues": [] },
+      "tests": {
+        "ownershipCheck": true,
+        "required": ["pnpm typecheck", "pnpm test", "pnpm build"],
+        "additional": ["Reload restores location, flags, evidence and case board.", "load() returns null on a corrupt save and never throws."]
+      },
+      "promptFile": "ops/prompts/codex-foundation.md",
+      "hour15CutPriority": 5,
+      "hour15CutNote": "Never cut. Every other branch depends on state and routes."
+    },
+    {
+      "id": "antigravity-world-ui",
+      "displayName": "Antigravity / world UI",
+      "tool": "Antigravity",
+      "branch": "feat/world-ui",
+      "summary": "World map, panels, hotspots, panel shell and transitions.",
+      "allowedPaths": [
+        "src/game/world/**",
+        "src/game/ui/**"
+      ],
+      "forbiddenPaths": [
+        "src/game/world/types.ts"
+      ],
+      "forbiddenPathsNote": "world/types.ts is a shared contract owned by chore/game-contracts.",
+      "dependsOn": { "branches": ["chore/game-contracts", "feat/foundation-state"], "issues": [] },
+      "tests": {
+        "ownershipCheck": true,
+        "required": ["pnpm typecheck", "pnpm test", "pnpm build"],
+        "additional": ["Panels render with procedural T0 art and no commissioned assets.", "Hotspots are reachable by keyboard and by pointer."]
+      },
+      "promptFile": "ops/prompts/antigravity-world-ui.md",
+      "hour15CutPriority": 4,
+      "hour15CutNote": "Cut from five panels to three (office, victim-flat, bank-branch) before cutting anything else here."
+    },
+    {
+      "id": "claude-simulation-recovery",
+      "displayName": "Claude Code / simulation and recovery",
+      "tool": "Claude Code",
+      "branch": "feat/simulation-recovery",
+      "summary": "Pressure and timing, the AI adapter and hints, lawful recovery workflows, and the case debrief. Holds the only approval to make additive changes to existing product code.",
+      "allowedPaths": [
+        "src/game/pressure/**",
+        "src/game/ai/**",
+        "src/game/recovery/**",
+        "src/game/debrief/**",
+        "src/features/call/CallRoom.tsx",
+        "src/lib/gemini/**",
+        "src/lib/validation/schemas.ts",
+        "src/tests/**"
+      ],
+      "forbiddenPaths": [
+        "src/game/ai/adapter.ts"
+      ],
+      "forbiddenPathsNote": "adapter.ts is a shared contract owned by chore/game-contracts. Implementations live beside it, not inside it.",
+      "additiveOnlyPaths": [
+        "src/features/call/CallRoom.tsx",
+        "src/lib/gemini/**",
+        "src/lib/validation/schemas.ts"
+      ],
+      "additiveOnlyNote": "Additive changes only: new optional props, new exports, appended Zod schemas. No refactors, no signature changes, no reformatting. schemas.ts is append-only.",
+      "dependsOn": { "branches": ["chore/game-contracts"], "issues": [] },
+      "tests": {
+        "ownershipCheck": true,
+        "required": ["pnpm typecheck", "pnpm test", "pnpm build"],
+        "additional": ["All 88 pre-existing tests stay green.", "Every case completes with GEMINI_API_KEY unset and the network offline.", "Case outcome is identical with AI on and AI off."]
+      },
+      "promptFile": "ops/prompts/claude-simulation-recovery.md",
+      "hour15CutPriority": 3,
+      "hour15CutNote": "The timed decision becomes untimed before the recovery path is cut. Recovery is a brief requirement — failure must never dead-end."
+    },
+    {
+      "id": "antigravity-dialogue-case",
+      "displayName": "Antigravity / dialogue and case UI",
+      "tool": "Antigravity",
+      "branch": "feat/detective-ui",
+      "summary": "Dialogue engine and box, case board, evidence cards, inventory and deterministic verification.",
+      "allowedPaths": [
+        "src/game/dialogue/**",
+        "src/game/case/**"
+      ],
+      "forbiddenPaths": [
+        "src/game/dialogue/types.ts",
+        "src/game/case/types.ts"
+      ],
+      "forbiddenPathsNote": "Both are shared contracts owned by chore/game-contracts.",
+      "dependsOn": { "branches": ["chore/game-contracts", "feat/foundation-state"], "issues": [] },
+      "tests": {
+        "ownershipCheck": true,
+        "required": ["pnpm typecheck", "pnpm test", "pnpm build"],
+        "additional": ["The dialogue engine is a pure reducer and is unit tested.", "A choice gated on a discovered fact is hidden until that fact is held."]
+      },
+      "promptFile": "ops/prompts/antigravity-dialogue-case.md",
+      "hour15CutPriority": 4,
+      "hour15CutNote": "The case board is the deduction surface. Cut visual polish, never the board."
+    },
+    {
+      "id": "antigravity-case-content",
+      "displayName": "Antigravity / case content",
+      "tool": "Antigravity",
+      "branch": "feat/ten-minute-content",
+      "summary": "All data for the case 'The Ten-Minute Window'. Data only — no engine code, no components.",
+      "allowedPaths": [
+        "src/content/cases/ten-minute-window/**",
+        "src/content/npcs/ten-minute-window/**"
+      ],
+      "forbiddenPaths": [],
+      "dependsOn": { "branches": ["chore/game-contracts"], "issues": [] },
+      "tests": {
+        "ownershipCheck": true,
+        "required": ["pnpm typecheck", "pnpm test", "pnpm build"],
+        "additional": ["Every dialogue node is reachable and every ending attainable.", "At least 3 evidence items, 2 plausible false leads, 1 fact-gated choice.", "All organisations, numbers and identities are fictional."]
+      },
+      "promptFile": "ops/prompts/antigravity-case-content.md",
+      "hour15CutPriority": 2,
+      "hour15CutNote": "Cut the victim perspective content first; the detective case reads flags that default to 'the victim complied'."
+    }
+  ],
+
+  "release": {
+    "id": "release-captain",
+    "displayName": "Release captain (human)",
+    "branch": "main",
+    "role": "Integration and merge authority. The only role that merges to main.",
+    "allowedPaths": ["**"],
+    "responsibilities": [
+      "Merge chore/game-contracts first and announce it.",
+      "Enforce merge order: contracts, then foundation, then world-ui and detective-ui, then simulation-recovery, then content.",
+      "Resolve every cross-branch conflict. Agents never resolve another agent's conflict.",
+      "Own the hour-15 scope-cut decision and announce it on the coordination board.",
+      "Cut release/demo and verify the deploy.",
+      "Apply the manual GitHub settings in docs/REPO-SETUP.md before agents start."
+    ],
+    "mergeOrder": [
+      "chore/game-contracts",
+      "feat/foundation-state",
+      "feat/world-ui",
+      "feat/detective-ui",
+      "feat/simulation-recovery",
+      "feat/ten-minute-content"
+    ],
+    "hour15Gate": {
+      "atHour": 15,
+      "test": "map -> panel -> dialogue -> evidence -> case board is playable end to end",
+      "ifFailing": [
+        "Cut the victim perspective; ship the detective case alone.",
+        "Cut five panels to three: office, victim-flat, bank-branch.",
+        "Cut panel backgrounds to typographic only.",
+        "Cut the timed decision to untimed."
+      ],
+      "note": "Decide at hour 15, not at hour 20."
+    }
+  },
+
+  "qualityGate": {
+    "packageManager": "pnpm",
+    "packageManagerMajor": 10,
+    "useCorepack": false,
+    "nodeMajor": 22,
+    "commands": {
+      "install": "pnpm install --frozen-lockfile",
+      "typecheck": "pnpm typecheck",
+      "test": "pnpm test",
+      "build": "pnpm build",
+      "ownership": "node ops/scripts/check-ownership.mjs"
+    },
+    "lintNote": "pnpm lint exists but is deliberately not part of the required gate: the repository documents a known typescript-eslint incompatibility with the TypeScript 7 alias (see README troubleshooting). Run it locally if you wish; it does not gate PRs during this sprint.",
+    "secretsNote": "CI must never require GEMINI_API_KEY. Every test runs against mock providers and authored fallbacks."
+  }
+}

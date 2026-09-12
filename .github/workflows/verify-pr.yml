@@ -1,0 +1,89 @@
+name: Verify PR
+
+# The single required gate for the 24-hour Detective Track build.
+# Same checks the local helper runs (ops/scripts/Test-AgentWorktree.ps1), so a
+# green run there means a green run here.
+#
+# No secrets. GEMINI_API_KEY is deliberately absent: every test must pass
+# against the mock providers and authored fallbacks.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck / test / build / ownership
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history so the ownership checker can find the merge base.
+          fetch-depth: 0
+
+      # pnpm 10 exactly. Corepack is never used: it resolves pnpm 12, which
+      # corrupts node_modules on Windows (see README troubleshooting).
+      # package.json has no "packageManager" field, so "version" below is
+      # authoritative. If that field is ever added, it must say pnpm@10.
+      - name: Set up pnpm 10
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Confirm pnpm major version is 10
+        run: |
+          version="$(pnpm --version)"
+          echo "pnpm $version"
+          case "$version" in
+            10.*) ;;
+            *) echo "::error::Expected pnpm 10, found $version"; exit 1 ;;
+          esac
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Runs before the expensive steps: a branch that touched paths it does not
+      # own should fail in seconds, not after a Next.js build.
+      - name: Ownership check
+        run: |
+          node ops/scripts/check-ownership.mjs \
+            --branch "${{ github.head_ref }}" \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --no-working-tree
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build
+
+      # Next.js writes a build trace; useful when a build fails on CI but not
+      # locally. Ignored when absent so this never turns a green run red.
+      - name: Upload build trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build-trace-${{ github.event.pull_request.number }}
+          path: .next/trace
+          if-no-files-found: ignore
+          retention-days: 3

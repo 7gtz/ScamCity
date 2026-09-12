@@ -1,0 +1,189 @@
+name: Announce merge
+
+# When a branch lands on main, tell everyone who was waiting for it.
+#
+# Five agents work in parallel across three laptops; the expensive failure is an
+# agent sitting idle because nobody told them their dependency merged. This
+# posts to one long-lived coordination issue so the whole 24 hours reads as a
+# single timeline.
+#
+# This workflow never merges code. It only comments.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  announce:
+    name: Post to the coordination board
+    # Closed is not merged. Only announce real merges.
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Comment on the coordination board
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const plan = JSON.parse(fs.readFileSync('ops/workplan.json', 'utf8'));
+            const pr = context.payload.pull_request;
+            const branch = pr.head.ref;
+            const { owner, repo } = context.repo;
+
+            const boardTitle = plan.policy?.coordinationIssueTitle ?? '24-hour coordination board';
+            const labelName = plan.policy?.coordinationLabel ?? 'coordination';
+
+            // --- which entry merged, and who was waiting on it ---------------
+            const entries = [plan.contractsOnly, ...(plan.agents ?? [])].filter(Boolean);
+            const merged = entries.find((e) => e.branch === branch);
+            const unblocked = entries.filter((e) =>
+              (e.dependsOn?.branches ?? []).includes(branch),
+            );
+
+            // An agent is only truly unblocked when all of its dependencies are
+            // in. We cannot know that from one event, so say what is still owed.
+            const mergedBranches = new Set([branch]);
+            const lines = [];
+
+            lines.push(`### Merged: \`${branch}\``);
+            lines.push('');
+            lines.push(`- **PR:** #${pr.number} - ${pr.title}`);
+            lines.push(`- **Merge SHA:** \`${pr.merge_commit_sha ?? 'unknown'}\``);
+            lines.push(`- **Branch:** \`${branch}\``);
+            lines.push(`- **Merged by:** @${pr.merged_by?.login ?? 'unknown'}`);
+            lines.push('');
+
+            if (merged) {
+              lines.push(`**Owner:** ${merged.displayName} (\`${merged.id}\`)`);
+              lines.push('');
+              lines.push('**Paths this branch owns:**');
+              lines.push('');
+              for (const p of merged.allowedPaths ?? []) lines.push(`- \`${p}\``);
+              lines.push('');
+            } else {
+              lines.push('> This branch is not in `ops/workplan.json`. If it changed product code, the release captain should check why the ownership gate allowed it.');
+              lines.push('');
+            }
+
+            if (unblocked.length > 0) {
+              lines.push('### Agents newly unblocked');
+              lines.push('');
+              for (const a of unblocked) {
+                const deps = a.dependsOn?.branches ?? [];
+                const outstanding = deps.filter((d) => !mergedBranches.has(d));
+                if (outstanding.length === 0) {
+                  lines.push(`- **${a.displayName}** (\`${a.branch}\`) - all dependencies met. **Start now.**`);
+                } else {
+                  lines.push(
+                    `- **${a.displayName}** (\`${a.branch}\`) - still waiting on: ${outstanding.map((d) => `\`${d}\``).join(', ')}`,
+                  );
+                }
+              }
+              lines.push('');
+            } else {
+              lines.push('_No agent was waiting on this branch._');
+              lines.push('');
+            }
+
+            lines.push('### Required next action');
+            lines.push('');
+            lines.push('Every agent with an open branch must now:');
+            lines.push('');
+            lines.push('```bash');
+            lines.push('git fetch origin main');
+            lines.push('git rebase origin/main');
+            lines.push('node ops/scripts/check-ownership.mjs');
+            lines.push('```');
+            lines.push('');
+            lines.push('**Rebase onto `main` before you open a PR.** A branch that has not been rebased since the last merge will conflict, and the release captain will send it back.');
+            lines.push('');
+            lines.push('Reminders: do not edit another agent\'s paths, do not push to `main`, and never commit a `.env` file or an API key.');
+            lines.push('');
+            lines.push(`<sub>Posted automatically by \`.github/workflows/announce-merge.yml\` - workplan v${plan.version}</sub>`);
+
+            const body = lines.join('\n');
+
+            // --- make sure the label exists ----------------------------------
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: labelName });
+            } catch (err) {
+              if (err.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: labelName,
+                  color: '0e8a16',
+                  description: 'Cross-agent coordination for the 24-hour build',
+                });
+                core.info(`Created label "${labelName}"`);
+              } else {
+                throw err;
+              }
+            }
+
+            // --- find or create the single coordination issue ----------------
+            const open = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            // listForRepo includes pull requests; filter them out.
+            let board = open.data.find((i) => !i.pull_request && i.title === boardTitle);
+
+            if (!board) {
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title: boardTitle,
+                labels: [labelName],
+                body: [
+                  `# ${boardTitle}`,
+                  '',
+                  'One timeline for the 24-hour Detective Track build. Every merge to `main` is announced here automatically.',
+                  '',
+                  '- Plan: `docs/DETECTIVE-TRACK-24H.md`',
+                  '- Operating rules: `docs/AGENT-OPERATIONS.md`',
+                  '- Ownership source of truth: `ops/workplan.json`',
+                  '',
+                  'Agents: watch this issue. When your dependency is announced merged, rebase and start.',
+                  '',
+                  'The release captain also posts the hour-15 scope decision here.',
+                ].join('\n'),
+              });
+              board = created.data;
+              core.info(`Created coordination issue #${board.number}`);
+            } else if (!board.labels.some((l) => (typeof l === 'string' ? l : l.name) === labelName)) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: board.number,
+                labels: [labelName],
+              });
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: board.number,
+              body,
+            });
+
+            core.info(`Announced ${branch} on issue #${board.number}`);
+            await core.summary
+              .addHeading('Merge announced')
+              .addRaw(`\`${branch}\` -> coordination issue #${board.number}`)
+              .write();
