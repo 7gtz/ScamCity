@@ -17,7 +17,6 @@ import {
   PANEL_POSITIONS,
   PANEL_ORDER,
   ROUTE_PATH,
-  ROUTE_VERTICES,
   PANEL_LENGTHS,
   ROUTE_LENGTH,
 } from "./geometry";
@@ -25,7 +24,8 @@ import type { LocationId } from "@/game/world/types";
 
 type NodeState = "locked" | "open" | "current" | "cleared";
 
-function getNodeState(panelId: LocationId, currentLocation: LocationId, clearedPanels: Set<string>, isAccessible: boolean): NodeState {
+export function getNodeState(panelId: LocationId, currentLocation: LocationId, clearedPanels: Set<string>, isAccessible: boolean): NodeState {
+  if (!isAccessible) return "locked";
   if (panelId === currentLocation) return "current";
   if (clearedPanels.has(panelId)) return "cleared";
   if (isAccessible) return "open";
@@ -46,7 +46,13 @@ const NODE_STROKE: Record<NodeState, string> = {
   cleared: "var(--color-safe)",
 };
 
-export function WorldMap() {
+export interface WorldMapProps {
+  completedLocations?: readonly LocationId[];
+  availableLocations?: readonly LocationId[];
+  objective?: string;
+}
+
+export function WorldMap({ completedLocations, availableLocations, objective }: WorldMapProps = {}) {
   const ready = useGameReady();
   const location = useGameState((s) => s.location);
   const flags = useGameState((s) => s.flags);
@@ -60,15 +66,15 @@ export function WorldMap() {
   }
 
   // Derive cleared panels from flags
-  const clearedPanels = new Set<string>();
+  const clearedPanels = new Set<string>(completedLocations);
   for (const [key, value] of Object.entries(flags)) {
-    if (key.startsWith("panel.cleared.") && value) {
+    if (!completedLocations && key.startsWith("panel.cleared.") && value === true) {
       clearedPanels.add(key.replace("panel.cleared.", ""));
     }
   }
 
   // Calculate the progress line length (how far along the route the player has been)
-  const currentPanelLength = PANEL_LENGTHS[location] ?? 0;
+  const currentPanelLength = Math.max(0, ...[...clearedPanels].map((id) => PANEL_LENGTHS[id as LocationId] ?? 0));
   const progressFraction = currentPanelLength / ROUTE_LENGTH;
 
   return (
@@ -77,17 +83,18 @@ export function WorldMap() {
       className="mx-auto max-w-5xl px-6 py-24 text-bone"
     >
       <p className="font-mono text-sm uppercase tracking-widest text-amber">
-        SCAM CITY / Detective track
+        SCAM CITY / Detective Track
       </p>
       <h1 id="city-map-title" className="my-6 font-display text-5xl">
         The Ten-Minute Window
       </h1>
       <p className="mb-10 text-smoke">
-        Choose a location. Your investigation is saved on this device.
+        {objective ?? "Choose a location."} Your investigation is saved on this device.
       </p>
 
-      {/* SVG transit map */}
-      <div className="relative mx-auto" style={{ maxWidth: "800px" }}>
+      <p>● Current · → Available · ✓ Complete · Locked</p>
+      {/* Decorative overview; the full-size location cards are the navigation. */}
+      <div className="relative mx-auto hidden md:block" aria-hidden="true" style={{ maxWidth: "800px" }}>
         <svg
           viewBox="0 0 800 400"
           className="w-full"
@@ -124,7 +131,7 @@ export function WorldMap() {
             if (!panel) return null;
 
             const pos = PANEL_POSITIONS[panelId];
-            const accessible = canAccess(panel.requires);
+            const accessible = availableLocations ? availableLocations.includes(panel.id) : canAccess(panel.requires);
             const state = getNodeState(panelId, location, clearedPanels, accessible);
 
             return (
@@ -202,7 +209,7 @@ export function WorldMap() {
             if (!panel) return null;
 
             const pos = PANEL_POSITIONS[panelId];
-            const accessible = canAccess(panel.requires);
+            const accessible = availableLocations ? availableLocations.includes(panel.id) : canAccess(panel.requires);
             const state = getNodeState(panelId, location, clearedPanels, accessible);
 
             // Convert SVG coordinates to percentage for overlay
@@ -223,8 +230,6 @@ export function WorldMap() {
                     pointerEvents: "auto",
                     cursor: "not-allowed",
                   }}
-                  role="button"
-                  tabIndex={0}
                   aria-label={`${panel.title} — Locked`}
                   aria-disabled="true"
                 />
@@ -233,6 +238,7 @@ export function WorldMap() {
 
             return (
               <Link
+                tabIndex={-1}
                 key={panelId}
                 href={panelHref(panelId)}
                 className="absolute block rounded-full"
@@ -254,7 +260,7 @@ export function WorldMap() {
       {/* Panel list — accessible fallback and mobile-friendly */}
       <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
         {panels.map((panel) => {
-          const accessible = canAccess(panel.requires);
+          const accessible = availableLocations ? availableLocations.includes(panel.id) : canAccess(panel.requires);
           const state = getNodeState(panel.id, location, clearedPanels, accessible);
 
           return (
@@ -270,7 +276,7 @@ export function WorldMap() {
               {accessible ? (
                 <Link
                   href={panelHref(panel.id)}
-                  className="text-xl font-display underline underline-offset-4"
+                  className="inline-flex min-h-11 min-w-11 items-center text-xl font-display underline underline-offset-4"
                 >
                   {panel.title}
                 </Link>
@@ -279,11 +285,18 @@ export function WorldMap() {
                   {panel.title} — Locked
                 </span>
               )}
+              {/*
+                * Current and complete are independent facts, not one state.
+                * `getNodeState` collapses them for the node's colour, which is
+                * fine for a single swatch — but a player standing in a location
+                * they have already finished could not tell it was finished.
+                * The list reports both.
+                */}
               {state === "current" && (
                 <p className="mt-2 text-sm text-amber">Current location</p>
               )}
-              {state === "cleared" && (
-                <p className="mt-2 text-sm text-safe">Cleared</p>
+              {clearedPanels.has(panel.id) && (
+                <p className="mt-2 text-sm text-safe">✓ Complete</p>
               )}
             </li>
           );

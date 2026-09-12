@@ -18,12 +18,14 @@ it("checks hotspot and destination conditions before invoking hosts", () => {
   const gated = panels.map((panel) => panel.id === "bank-branch" ? { ...panel, requires: { flag: "verified" } } : panel);
   expect(activateHotspot(hotspot, gated, handlers)).toBe(false);
   setFlag("verified", true);
+  setFlag("case.opened", true);
+  collectEvidence(tenMinuteWindowCase, "bank-statement");
   expect(activateHotspot(hotspot, gated, handlers)).toBe(true);
   expect(handlers.travel).toHaveBeenCalledWith("bank-branch");
   expect(getGameState().location).toBe("bank-branch");
   expect(activateHotspot({ ...hotspot, action: { kind: "inspect", evidence: "phone" } }, panels, handlers)).toBe(true);
   expect(handlers.inspect).toHaveBeenCalledWith("phone");
-  expect(getGameState().evidence).toEqual([]);
+  expect(getGameState().evidence).toEqual(["bank-statement"]);
   activateHotspot({ ...hotspot, action: { kind: "talk", npc: "victim" } }, panels, handlers);
   expect(handlers.talk).toHaveBeenCalledWith("victim");
 });
@@ -45,6 +47,7 @@ it("only collects evidence belonging to the active case", () => {
   expect(collectEvidence(caseDefinition, "unknown")).toBe(false);
   expect(collectEvidence({ ...caseDefinition, id: "other" }, "phone")).toBe(false);
   expect(collectEvidence(caseDefinition, "phone")).toBe(true);
+  expect(collectEvidence(caseDefinition, "phone")).toBe(false);
   expect(getGameState().evidence).toEqual(["phone"]);
 });
 

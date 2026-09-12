@@ -10,6 +10,7 @@
  */
 
 import type { Condition } from "@/game/dialogue/types";
+import type { TimerState } from "@/game/pressure/timer";
 import type { LocationId } from "@/game/world/types";
 
 /**
@@ -30,6 +31,16 @@ export interface GameState {
   trust: Record<string, number>;   // npc id -> -100..100
   stress: number;                  // 0..100
   caseId: string | null;
+  /**
+   * The clearing window, in full.
+   *
+   * Previously only a start timestamp was kept, and `pausedAt` /
+   * `pausedTotalMs` were rebuilt on mount — so every pause was silently
+   * refunded on navigation or reload, and a paused case kept counting down.
+   * The whole `TimerState` is authoritative and persisted; `null` means the
+   * case has not opened and the clock has not started.
+   */
+  timer: TimerState | null;
   version: number;
 }
 

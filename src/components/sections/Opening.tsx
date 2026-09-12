@@ -47,6 +47,9 @@ export function Opening() {
             <Link href="/freestyle?demo=1" className="meta min-h-11 content-center text-smoke transition-colors hover:text-bone">
               Judging? The three-minute demo →
             </Link>
+            <Link href="/city/bank-branch?demo=1" className="meta min-h-11 content-center text-smoke transition-colors hover:text-bone">
+              …or the ninety-second case →
+            </Link>
           </div>
         </Reveal>
       </div>

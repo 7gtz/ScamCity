@@ -8,7 +8,7 @@
  */
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { PanelDefinition } from "@/game/world/types";
 import { navigateToMap } from "@/game/world/navigation";
 import "./shell.css";
@@ -24,14 +24,45 @@ export interface PanelShellProps {
   onSettings?: () => void;
 }
 
-/** SVG arrow-left icon (16×16). */
-function ArrowLeftIcon() {
-  return (
-    <svg className="shell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M19 12H5" />
-      <path d="m12 19-7-7 7-7" />
-    </svg>
-  );
+/**
+ * Publish the shell's *measured* height so content in normal flow can clear it.
+ *
+ * The shell is `position: fixed`, so anything in document flow starts beneath
+ * it at y=0. The previous integration HUD assumed a 64px offset against a shell
+ * that renders at 76px on desktop, and the timer and Hint/Restart controls were
+ * partly covered.
+ *
+ * A hard-coded offset cannot be correct: the bar wraps at narrow widths, grows
+ * with text zoom, and gains safe-area padding on notched devices. Measuring it
+ * is the only version that holds under all three. Published as
+ * `--city-shell-top` / `--city-shell-bottom` on the document element.
+ */
+function useShellMetrics(
+  top: React.RefObject<HTMLDivElement | null>,
+  bottom: React.RefObject<HTMLDivElement | null>,
+) {
+  useEffect(() => {
+    const root = document.documentElement;
+    const publish = () => {
+      root.style.setProperty("--city-shell-top", `${Math.round(top.current?.getBoundingClientRect().height ?? 0)}px`);
+      root.style.setProperty("--city-shell-bottom", `${Math.round(bottom.current?.getBoundingClientRect().height ?? 0)}px`);
+    };
+    publish();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", publish);
+      return () => window.removeEventListener("resize", publish);
+    }
+    const observer = new ResizeObserver(publish);
+    if (top.current) observer.observe(top.current);
+    if (bottom.current) observer.observe(bottom.current);
+    window.addEventListener("resize", publish);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", publish);
+      root.style.removeProperty("--city-shell-top");
+      root.style.removeProperty("--city-shell-bottom");
+    };
+  }, [top, bottom]);
 }
 
 /** SVG map icon (16×16). */
@@ -86,6 +117,9 @@ export function PanelShell({
   onInventory,
   onSettings,
 }: PanelShellProps) {
+  const topBar = useRef<HTMLDivElement>(null);
+  const bottomBar = useRef<HTMLDivElement>(null);
+  useShellMetrics(topBar, bottomBar);
   const mapUrl = navigateToMap();
   const toneAttr = panel.tone === "paper" ? "paper" : undefined;
 
@@ -94,17 +128,8 @@ export function PanelShell({
       {/* Shell overlay — fixed, pointer-events none, children pass through */}
       <nav className="panel-shell" aria-label="Panel navigation">
         {/* Top bar — back, map, case board, inventory, settings */}
-        <div className="shell-top">
+        <div className="shell-top" ref={topBar}>
           <div className="shell-top-left">
-            <Link
-              href={mapUrl}
-              className="shell-btn"
-              data-tone={toneAttr}
-              aria-label="Back to city map"
-            >
-              <ArrowLeftIcon />
-              <span>Back</span>
-            </Link>
             <Link
               href={mapUrl}
               className="shell-btn"
@@ -112,7 +137,7 @@ export function PanelShell({
               aria-label="Open city map"
             >
               <MapIcon />
-              <span>Map</span>
+              <span>City Map</span>
             </Link>
           </div>
 
@@ -126,7 +151,7 @@ export function PanelShell({
                 aria-label="Open case board"
               >
                 <CaseBoardIcon />
-                <span>Case</span>
+                <span>Case Board</span>
               </button>
             )}
             {onInventory && (
@@ -135,10 +160,10 @@ export function PanelShell({
                 className="shell-btn"
                 data-tone={toneAttr}
                 onClick={onInventory}
-                aria-label="Open inventory"
+                aria-label="Open Evidence"
               >
                 <InventoryIcon />
-                <span>Items</span>
+                <span>Evidence</span>
               </button>
             )}
             {onSettings && (
@@ -156,7 +181,7 @@ export function PanelShell({
         </div>
 
         {/* Bottom bar — location indicator */}
-        <div className="shell-bottom">
+        <div className="shell-bottom" ref={bottomBar}>
           <span className="shell-location">{panel.title}</span>
         </div>
       </nav>

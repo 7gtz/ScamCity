@@ -25,7 +25,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "office-start",
     speaker: "Detective Miller",
     lines: [
-      "The emergency fraud intake report rests on my desk: Mara Okoye, senior architect at Harrow & Finch, reported an unauthorized £4,850 transfer from her Northstar Bank account fifteen minutes ago.",
+      "The emergency fraud intake report rests on my desk: Mara Okoye, senior architect at Harrow & Finch, reported an unauthorized ₹4,80,000 transfer from her Northstar Bank account late last night.",
       "The caller claimed to be Northstar Security and warned that the transfer would finalize in ten minutes unless cancelled with a one-time code.",
       "In digital banking fraud, that first window is everything. I need to review the initial notes and proceed immediately.",
     ],
@@ -47,7 +47,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "office-notes",
     speaker: "Detective Miller",
     lines: [
-      "Intake Summary: Victim received an inbound call from 020 0190 0142. The caller quoted employee badge 'NS-4471' and warned of a fraudulent charge to 'Apex Horizon Trading'.",
+      "Intake Summary: Victim received an inbound call from +91 22 4019 0142. The caller quoted employee badge 'NS-4471' and warned of a fraudulent charge to 'Apex Horizon Trading'.",
       "During the call, an SMS authentication passcode was transmitted to her phone, which she read aloud under pressure.",
       "The victim's flat is close by. Northstar Bank's central branch and the local police station are also within reach.",
     ],
@@ -124,8 +124,8 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "victim-interview-start",
     speaker: "Mara Okoye",
     lines: [
-      "It started at 13:35. My phone rang, and the caller display showed Northstar Security. The man on the line spoke in a calm, authoritative voice.",
-      "He claimed their fraud detection algorithm had flagged a suspicious pending payment of £4,850.00 to an outfit called Apex Horizon Trading.",
+      "It started at 21:47. My phone rang, and the caller display showed Northstar Security. The man on the line spoke in a calm, authoritative voice.",
+      "He claimed their fraud detection algorithm had flagged a suspicious pending payment of ₹4,80,000.00 to an outfit called Apex Horizon Trading.",
     ],
     choices: [
       {
@@ -156,7 +156,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
       },
       {
         id: "c-vic-gated-call-log",
-        text: "Looking at your handset call log, the number that phoned you was 020 0190 0142, not the bank's card number.",
+        text: "Looking at your handset call log, the number that phoned you was +91 22 4019 0142, not the bank's card number.",
         requires: { hasEvidence: "call-log" },
         next: "victim-discuss-call-log",
       },
@@ -186,8 +186,8 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "victim-check-sms",
     speaker: "Detective Miller",
     lines: [
-      "Opening the SMS inbox... here is the message from NORTHSTAR-SEC, timestamped 13:41:08.",
-      "'719-204 is your Northstar one-time passcode to AUTHORISE transfer of £4,850.00 to Apex Horizon Trading. WARNING: Northstar Bank will NEVER ask for this code.'",
+      "Opening the SMS inbox... here is the message from NORTHSTAR-SEC, timestamped 22:01:08.",
+      "'847291 is your Northstar one-time passcode to AUTHORISE transfer of ₹4,80,000.00 to Apex Horizon Trading. WARNING: Northstar Bank will NEVER ask for this code.'",
     ],
     choices: [
       {
@@ -252,7 +252,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "victim-check-mail",
     speaker: "Mara Okoye",
     lines: [
-      "There was a redelivery slip dropped through the mail slot around eleven this morning. I haven't opened the package yet.",
+      "There was a redelivery slip left on the door mat around eleven yesterday morning. I haven't opened the package yet.",
     ],
     choices: [
       {
@@ -284,7 +284,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "victim-check-repair",
     speaker: "Mara Okoye",
     lines: [
-      "Earlier this week, I dropped my phone on the pavement outside our architectural firm. The screen cracked, so I left it with Ravi Sunder at Apex Fix & Tech.",
+      "Earlier this week, I dropped my phone on the pavement outside our architectural firm. The screen cracked, so I left it with Ravi Sunder at Apex Fix & Tech, over in Sector 22.",
       "Here is the receipt he gave me when I picked it up.",
     ],
     choices: [
@@ -334,7 +334,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "victim-discuss-call-log",
     speaker: "Mara Okoye",
     lines: [
-      "You're right... the number on the back of my Northstar debit card is 0800 018 4471. I should have checked that instead of trusting the display.",
+      "You're right... the number on the back of my Northstar debit card is 1800 419 4471. I should have checked that instead of trusting the display.",
     ],
     choices: [
       {
@@ -409,7 +409,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     choices: [
       {
         id: "c-bnk-commit-alienate",
-        text: "I don't care about your procedure! Everyone behind this counter is a fraud accomplice!",
+        text: "Confirm accusation against the branch — this ends their cooperation and may close the investigation without a freeze.",
         effects: [
           { setFlag: "case.alienated-bank-staff", to: true },
           { trust: "teller-vance", by: -50 },
@@ -450,7 +450,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     choices: [
       {
         id: "c-bnk-get-statement",
-        text: "Request an immediate interim statement of today's account activity.",
+        text: "Request an immediate interim statement of last night's account activity.",
         effects: [
           { giveEvidence: "bank-statement" },
           { setFlag: "branch.has-statement", to: true },
@@ -459,7 +459,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
       },
       {
         id: "c-bnk-demand-freeze",
-        text: "We need an emergency stop placed on a £4,850 transfer to Apex Horizon Trading.",
+        text: "We need an emergency stop placed on a ₹4,80,000 transfer to Apex Horizon Trading.",
         next: "bank-freeze-request",
       },
     ],
@@ -470,7 +470,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     speaker: "Teller Vance",
     lines: [
       "Printing the interim statement... here it is.",
-      "At 13:42, an outward FastPay transfer of £4,850.00 to Apex Horizon Trading was initiated. Because of the amount and new recipient, it entered our automated ten-minute fraud clearing window.",
+      "At 22:03, an outward IMPS transfer of ₹4,80,000.00 to Apex Horizon Trading was initiated. Because of the amount and the new payee, it was held overnight for fraud review. It releases into the morning international settlement batch in ten minutes.",
       "The status is currently 'PENDING CLEARING'.",
     ],
     choices: [
@@ -531,7 +531,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "bank-window-timing",
     speaker: "Teller Vance",
     lines: [
-      "The clock has reached 13:52. The ten-minute clearing window has lapsed, and the batch has been transmitted to Apex Horizon Trading's receiving bank.",
+      "The settlement batch has gone. The ten-minute window has lapsed, and the payment has been transmitted to Apex Horizon Trading's receiving bank.",
       "We can no longer perform an instant branch stop. Recovery will now require a formal police crime reference number and inter-bank indemnity filings.",
     ],
     choices: [
@@ -552,14 +552,14 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "bank-freeze-success",
     speaker: "Teller Vance",
     lines: [
-      "Examining the file... caller ID 020 0190 0142, staff identifier NS-4471... wait, NS-4471 was an old operational code retired two years ago!",
+      "Examining the file... caller ID +91 22 4019 0142, staff identifier NS-4471... wait, NS-4471 was an old operational code retired two years ago!",
       "And the SMS timestamp matches the spoofed call duration precisely. This clearly establishes dual-factor harvesting under fraudulent impersonation.",
       "Applying the Northstar Emergency Stop Override right now.",
     ],
     choices: [
       {
         id: "c-bnk-confirm-freeze",
-        text: "Verify that the £4,850 transfer has been halted.",
+        text: "Verify that the ₹4,80,000 transfer has been halted.",
         effects: [
           { setFlag: "branch.emergency-freeze-applied", to: true },
           { trust: "teller-vance", by: 20 },
@@ -573,7 +573,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "bank-freeze-confirmed",
     speaker: "Teller Vance",
     lines: [
-      "Confirmed. The £4,850.00 payment to Apex Horizon Trading has been locked in escrow at our gateway. The funds are safe and will be credited back to Mara Okoye's current account.",
+      "Confirmed. The ₹4,80,000.00 payment to Apex Horizon Trading has been locked in escrow at our gateway. The funds are safe and will be credited back to Mara Okoye's current account.",
       "I have flagged the receiving beneficiary details for our national cyber intelligence unit.",
     ],
     choices: [
@@ -624,7 +624,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     choices: [
       {
         id: "c-rep-double-down",
-        text: "Don't play innocent, Sunder! Apex Fix & Tech, Apex Horizon Trading—you cloned her device and stole £4,850!",
+        text: "Confirm the accusation against Ravi — this ends the investigation against him without verified proof and may let the real transfer proceed.",
         effects: [
           { setFlag: "case.accused-repair-shop", to: true },
           { trust: "ravi-sunder", by: -60 },
@@ -787,7 +787,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     choices: [
       {
         id: "c-pol-request-carrier-trace",
-        text: "I need to run a carrier port-out audit for subscriber 07700 900412 in an active banking fraud case.",
+        text: "I need to run a carrier port-out audit for subscriber +91 98190 04412 in an active banking fraud case.",
         effects: [{ trust: "sgt-brennan", by: 15 }],
         next: "police-inquiry",
       },
@@ -804,7 +804,7 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     speaker: "Sgt. Brennan",
     lines: [
       "Submitting subscriber query MSISDN-44-7700900412 through the National Telecom Carrier Gateway terminal...",
-      "Here is the network telemetry report. Look at the timestamp from 13:20:14 today.",
+      "Here is the network telemetry report. Look at the timestamp from 21:20:14 last night.",
     ],
     choices: [
       {
@@ -823,8 +823,8 @@ export const TEN_MINUTE_DIALOGUE: Record<string, DialogueNode> = {
     id: "police-discuss-sim-swap",
     speaker: "Sgt. Brennan",
     lines: [
-      "An automated port-out request was submitted through the carrier's self-service web gateway at 13:20, authenticated using leaked biographical data.",
-      "At 13:22, an SMS divert was activated to a disposable burner SIM. That was fifteen minutes before Martin Hayes phoned Mara.",
+      "An automated port-out request was submitted through the carrier's self-service web gateway at 21:20, authenticated using leaked biographical data.",
+      "At 21:22, an SMS divert was activated to a disposable burner SIM. That was twenty-five minutes before Martin Hayes phoned Mara.",
       "This proves the compromise was purely network-layer: they intercepted the SMS traffic upstream.",
     ],
     choices: [

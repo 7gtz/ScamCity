@@ -59,10 +59,18 @@ export function verifyClaim(
   deduction: Deduction,
   heldEvidence: readonly string[],
 ): boolean {
+  // Selecting the entire inventory is not a meaningful proposed connection.
+  if (new Set(claimedEvidenceIds).size !== deduction.from.length) return false;
+  if (new Set(claimedEvidenceIds).size !== claimedEvidenceIds.length) return false;
   // All claimed evidence must be held
   if (!claimedEvidenceIds.every((id) => heldEvidence.includes(id))) return false;
   // The claimed set must contain all required evidence for the deduction
   return deduction.from.every((id) => claimedEvidenceIds.includes(id));
+}
+
+/** Player-facing labels never fall back to an internal identifier. */
+export function evidenceTitle(allEvidence: readonly EvidenceItem[], id: string): string {
+  return allEvidence.find((item) => item.id === id)?.title ?? "Unidentified document";
 }
 
 /**

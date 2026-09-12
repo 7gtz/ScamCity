@@ -7,11 +7,11 @@ import {
   TEN_MINUTE_DIALOGUE,
   NPC_DIALOGUE_ENTRY,
 } from "@/content/cases/ten-minute-window";
-import { advanceDialogue, getVisibleChoices } from "@/game/dialogue/engine";
+import { getVisibleChoices } from "@/game/dialogue/engine";
 import { checkDeductions } from "@/game/case/verify";
 import { gradeCase, type CaseRun } from "@/game/debrief/grade-case";
 import { phraseHint } from "@/game/ai/hints";
-import { clearSave, save, load, flushSave } from "@/game/state/save";
+import { clearSave, load, flushSave } from "@/game/state/save";
 
 describe("Playthrough verification — 5 required acceptance criteria", () => {
   beforeEach(() => {
@@ -51,6 +51,7 @@ describe("Playthrough verification — 5 required acceptance criteria", () => {
     expect(choices.length).toBeGreaterThan(0);
 
     // Step B: Travel to Victim Flat
+    setFlag("case.opened", true);
     const doorHotspot = officePanel.hotspots.find((h) => h.id === "office-door")!;
     activateHotspot(doorHotspot, panels, handlers);
     expect(getGameState().location).toBe("victim-flat");

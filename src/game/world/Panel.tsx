@@ -10,12 +10,12 @@
  * Backgrounds are DOM + CSS, not WebGL.
  */
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { PanelDefinition } from "@/game/world/types";
 import type { PanelHandlers } from "@/game/integration/panel-actions";
 import { panels } from "./registry";
-import { resolveBackground } from "./assets";
-import { Hotspot } from "./Hotspot";
+import { getStaticBackground } from "./assets";
+import { Hotspot, type HotspotProps } from "./Hotspot";
 import {
   OfficeBackground,
   VictimFlatBackground,
@@ -48,20 +48,13 @@ export interface PanelProps {
   handlers: PanelHandlers;
   children?: ReactNode;
   overlay?: ReactNode;
+  interactionStates?: Readonly<Record<string, HotspotProps["state"]>>;
+  /** Per-hotspot explanation for any hotspot whose state is `locked`. */
+  hotspotRequirements?: Readonly<Record<string, string>>;
 }
 
-export function Panel({ panel, handlers, children, overlay }: PanelProps) {
-  const [commissionedBg, setCommissionedBg] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void resolveBackground(panel.id).then((path) => {
-      if (!cancelled && path) setCommissionedBg(path);
-    });
-    return () => { cancelled = true; };
-  }, [panel.id]);
-
-  const noop = useCallback(() => {}, []);
+export function Panel({ panel, handlers, children, overlay, interactionStates, hotspotRequirements }: PanelProps) {
+  const commissionedBg = getStaticBackground(panel.id);
 
   return (
     <div
@@ -103,12 +96,15 @@ export function Panel({ panel, handlers, children, overlay }: PanelProps) {
 
       {/* Hotspot layer */}
       <div className="hotspot-layer">
+        <h2 className="hotspot-tray-title">Things here</h2>
         {panel.hotspots.map((hotspot) => (
           <Hotspot
             key={hotspot.id}
             hotspot={hotspot}
             panels={panels}
             handlers={handlers}
+            state={interactionStates?.[hotspot.id]}
+            requirement={hotspotRequirements?.[hotspot.id]}
           />
         ))}
       </div>

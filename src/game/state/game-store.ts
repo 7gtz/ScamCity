@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { Condition, Effect } from "@/game/dialogue/types";
+import type { TimerState } from "@/game/pressure/timer";
 import type { LocationId } from "@/game/world/types";
 import type { FlagId, GameState } from "./types";
 import { evaluateCondition } from "./conditions";
@@ -8,7 +9,7 @@ import { emit } from "./event-bus";
 import { connectSaveSource, SAVE_KEY, SAVE_VERSION, saveStorage } from "./save";
 
 export function initialGameState(): GameState {
-  return { location: "office", flags: {}, evidence: [], inventory: [], trust: {}, stress: 0, caseId: "ten-minute-window", version: SAVE_VERSION };
+  return { location: "office", flags: {}, evidence: [], inventory: [], trust: {}, stress: 0, caseId: "ten-minute-window", timer: null, version: SAVE_VERSION };
 }
 
 interface GameActions {
@@ -22,11 +23,13 @@ interface GameActions {
   changeTrust: (npc: string, delta: number) => void;
   changeStress: (delta: number) => void;
   applyEffects: (effects: readonly Effect[]) => void;
+  /** Write the clearing window. The timer module owns every transition. */
+  setTimer: (timer: TimerState | null) => void;
   resetGame: (caseId?: string | null) => void;
 }
 
 export function snapshot(state: GameState): GameState {
-  return { location: state.location, flags: { ...state.flags }, evidence: [...state.evidence], inventory: [...state.inventory], trust: { ...state.trust }, stress: state.stress, caseId: state.caseId, version: state.version };
+  return { location: state.location, flags: { ...state.flags }, evidence: [...state.evidence], inventory: [...state.inventory], trust: { ...state.trust }, stress: state.stress, caseId: state.caseId, timer: state.timer ? { ...state.timer, config: { ...state.timer.config } } : null, version: state.version };
 }
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
@@ -69,6 +72,7 @@ export const useGameStore = create<GameState & GameActions>()(
           else get().changeStress(effect.stress);
         }
       },
+      setTimer: (timer) => set({ timer }),
       resetGame: (caseId = "ten-minute-window") => set({ ...initialGameState(), caseId }),
     }),
     { name: SAVE_KEY, version: SAVE_VERSION, storage: createJSONStorage(() => saveStorage), skipHydration: true, partialize: snapshot },
