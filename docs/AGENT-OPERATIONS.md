@@ -26,7 +26,7 @@ before you start, then keep it open.
 |---|---|---|
 | **Codex / foundation** | `feat/foundation-state` | `src/game/state/**`, `src/app/city/**`, `src/game/integration/**` |
 | **Antigravity / world UI** | `feat/world-ui` | `src/game/world/**` (except `types.ts`), `src/game/ui/**` |
-| **Claude Code / simulation** | `feat/simulation-recovery` | `src/game/pressure/**`, `src/game/ai/**`, `src/game/recovery/**`, `src/game/debrief/**` — plus *additive-only* changes to `CallRoom.tsx`, `src/lib/gemini/**`, `src/lib/validation/schemas.ts`, `src/tests/**` |
+| **Claude Code / simulation** | `feat/simulation-recovery` | `src/game/pressure/**`, `src/game/ai/**`, `src/game/recovery/**`, `src/game/debrief/**` — plus *additive-only* changes to `CallRoom.tsx`, `use-live-call.ts`, `src/lib/gemini/**`, `src/lib/validation/schemas.ts`, `src/tests/**` |
 | **Antigravity / dialogue UI** | `feat/detective-ui` | `src/game/dialogue/**` (except `types.ts`), `src/game/case/**` (except `types.ts`) |
 | **Antigravity / content** | `feat/ten-minute-content` | `src/content/cases/ten-minute-window/**`, `src/content/npcs/ten-minute-window/**` |
 
