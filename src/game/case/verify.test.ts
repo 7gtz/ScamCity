@@ -190,14 +190,14 @@ describe("verifyClaim", () => {
     ).toBe(true);
   });
 
-  it("returns true with superset of required evidence", () => {
+  it("rejects unrelated evidence in a proposed connection", () => {
     expect(
       verifyClaim(
         ["call-log", "otp-message", "bank-statement"],
         testDeductions[0]!,
         ["call-log", "otp-message", "bank-statement"],
       ),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("returns false when claimed evidence is not held", () => {

@@ -22,7 +22,7 @@ export const TEN_MINUTE_OUTCOMES: Record<CaseOutcome, OutcomeDefinition> = {
       ],
     },
     debrief:
-      "Full recovery achieved. By combining Mara's call log with the urgent OTP and interim statement, you proved that the fraudulent £4,850 transfer was actively pending within Northstar Bank's 10-minute clearing window. Presenting verified evidence at the branch enabled Teller Vance and the fraud desk to intervene immediately before settlement. Mara's funds were safely recovered, and the spoofed caller's footprint has been forwarded to the cyber fraud task force.",
+      "Full recovery achieved. By combining Mara's call log with the urgent OTP and interim statement, you proved that the fraudulent ₹4,80,000 transfer was still held in Northstar Bank's fraud-review queue with minutes left before settlement. Presenting verified evidence at the branch enabled Teller Vance and the fraud desk to intervene immediately before settlement. Mara's funds were safely recovered, and the spoofed caller's footprint has been forwarded to the cyber fraud task force.",
   },
 
   "partial-recovery": {
@@ -34,7 +34,7 @@ export const TEN_MINUTE_OUTCOMES: Record<CaseOutcome, OutcomeDefinition> = {
       ],
     },
     debrief:
-      "Partial recovery through lawful statutory procedure. Although the initial ten-minute instant hold window lapsed while assembling evidence, you accurately diagnosed the scam mechanism: spoofed Northstar Bank security extracting an OTP under false urgency. Lodging a formal crime report with Sgt. Brennan and notifying Northstar's fraud unit triggered an inter-bank recovery order, freezing a portion of the receiving account under banking indemnity rules.",
+      "Partial recovery through lawful statutory procedure. Although the ten-minute hold window lapsed while assembling evidence, you accurately diagnosed the scam mechanism: spoofed Northstar Bank security extracting an OTP under false urgency. Lodging a formal crime report with Sgt. Brennan and notifying Northstar's fraud unit triggered an inter-bank recovery order, freezing a portion of the receiving account under banking indemnity rules.",
   },
 
   "wrong-suspect": {
@@ -42,7 +42,7 @@ export const TEN_MINUTE_OUTCOMES: Record<CaseOutcome, OutcomeDefinition> = {
       all: [{ flag: "case.accused-repair-shop" }],
     },
     debrief:
-      "Investigation derailed by a false lead. Fixating on Ravi Sunder at Apex Fix & Tech based solely on a recent screen replacement receipt wasted vital minutes. Ravi's service was strictly physical glass adhesive, while the breach was executed upstream at the cellular carrier level. The delay allowed the ten-minute window to close and the fraudulent payment to settle irreversibly.",
+      "Investigation derailed by a false lead. Fixating on Ravi Sunder at Apex Fix & Tech based solely on a recent screen replacement receipt wasted vital minutes. Ravi's service was strictly physical glass adhesive, while the breach was executed upstream at the cellular carrier level. The delay allowed the ten-minute window to close and the ₹4,80,000 to settle irreversibly overseas.",
   },
 
   "genuine-turned-away": {

@@ -1,0 +1,52 @@
+.npc-overlay { position: fixed; inset: 0; z-index: 80; display: grid; align-items: end; pointer-events: auto; }
+.npc-dialog { width: min(68rem, calc(100% - 1rem)); padding: 1rem; }
+.npc-dialog .npc-sheet { max-height: none; overflow: visible; border: 0; border-radius: 0; }
+.npc-dialog .npc-heading { grid-template-columns: auto minmax(0, 1fr); }
+.npc-dialog .npc-state { display: flex; }
+.npc-dialog button, .npc-dialog input { min-width: 44px; min-height: 44px; }
+.npc-dialog .npc-error { position: static; margin: 1rem; max-width: none; }
+.npc-dialog .npc-evidence-toast { position: static; margin: 1rem; }
+.npc-dialog .npc-subtitle { max-width: 100%; overflow-wrap: anywhere; }
+.npc-dialog .npc-subtitle-empty { color: var(--color-smoke); }
+.npc-dialog .npc-text-line input { font-size: 1rem; }
+.npc-scrim { position: absolute; inset: 0; border: 0; background: color-mix(in oklch, var(--color-ink) 65%, transparent); backdrop-filter: blur(3px); cursor: default; }
+.npc-sheet { position: relative; width: min(100%, 68rem); max-height: min(78dvh, 48rem); margin-inline: auto; overflow: hidden; border: 1px solid var(--color-line); border-bottom: 0; border-radius: 10px 10px 0 0; background: color-mix(in oklch, var(--color-ink) 95%, var(--color-ember)); color: var(--color-bone); box-shadow: 0 -24px 70px rgb(0 0 0 / .55); animation: npc-sheet-in var(--d-wipe) var(--ease-out) both; }
+.npc-sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .06; background-image: radial-gradient(circle, currentColor 1px, transparent 1px); background-size: 7px 7px; }
+.npc-heading { position: relative; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 1rem; padding: 1rem clamp(1rem, 3vw, 2rem); border-bottom: 1px solid var(--color-line); }
+.npc-portrait { display: grid; place-items: center; width: 4.5rem; aspect-ratio: 4 / 5; border: 1px solid var(--color-amber); background: linear-gradient(145deg, var(--color-ember), var(--color-ink)); clip-path: polygon(7% 0, 100% 0, 100% 89%, 89% 100%, 0 100%, 0 7%); font-family: var(--font-display); font-size: 1.35rem; color: var(--color-amber); }
+.npc-identity > span, .npc-text-line label { font-family: var(--font-mono); font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; color: var(--color-amber); }
+.npc-identity h2 { margin: .08rem 0; font-family: var(--font-display); font-size: clamp(1.35rem, 3vw, 2rem); line-height: 1; }
+.npc-identity p { color: var(--color-smoke); font-size: .8rem; }
+.npc-state { display: flex; align-items: center; gap: .5rem; font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--color-smoke); }
+.npc-state i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-amber); box-shadow: 0 0 12px var(--color-amber); }
+.npc-state[data-status="connecting"] i { animation: npc-pulse 1s infinite; }
+.npc-leave, .npc-control, .npc-talk, .npc-text-line button { border: 1px solid var(--color-line); background: var(--color-raised); color: var(--color-smoke); font: .7rem var(--font-mono); text-transform: uppercase; letter-spacing: .06em; cursor: pointer; }
+.npc-leave { padding: .5rem .7rem; }
+.npc-waveform { position: relative; height: 3.5rem; padding: .65rem clamp(1rem, 3vw, 2rem); border-bottom: 1px solid var(--color-line); color: var(--color-amber); opacity: .8; }
+.npc-subtitle-reel { position: relative; height: clamp(10rem, 27dvh, 16rem); overflow-y: auto; padding: 1.2rem clamp(1rem, 4vw, 3rem); scrollbar-color: var(--color-line) transparent; }
+.npc-subtitle { max-width: 82%; margin: 0 0 1rem; color: var(--color-bone); font-size: clamp(.95rem, 2vw, 1.15rem); line-height: 1.55; }
+.npc-subtitle[data-speaker="player"] { margin-left: auto; color: var(--color-smoke); text-align: right; }
+.npc-subtitle span { display: block; margin-bottom: .18rem; font: .62rem var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--color-amber); }
+.npc-subtitle i { color: var(--color-amber); font-style: normal; }
+.npc-subtitle-empty { padding-top: 2rem; text-align: center; color: var(--color-dim); font-style: italic; }
+.npc-controls { position: relative; display: flex; justify-content: center; gap: .65rem; padding: .8rem 1rem; border-top: 1px solid var(--color-line); }
+.npc-talk { min-width: 9rem; padding: .75rem 1rem; border-color: var(--color-amber); background: color-mix(in oklch, var(--color-amber) 14%, var(--color-ink)); color: var(--color-amber); }
+.npc-talk:active { background: var(--color-amber); color: var(--color-ink); }
+.npc-control { padding: .7rem .8rem; }
+.npc-control[aria-pressed="true"] { border-color: var(--color-amber); color: var(--color-amber); }
+.npc-text-line { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .75rem; padding: .8rem clamp(1rem, 3vw, 2rem); background: var(--color-raised); }
+.npc-text-line input { min-width: 0; border: 0; border-bottom: 1px solid var(--color-line); background: transparent; padding: .5rem; color: var(--color-bone); outline: 0; }
+.npc-text-line input:focus { border-color: var(--color-amber); }
+.npc-text-line button { padding: .55rem .9rem; }
+.npc-leave:hover, .npc-control:hover, .npc-text-line button:hover { border-color: var(--color-amber); color: var(--color-bone); }
+.npc-sheet button:focus-visible, .npc-sheet input:focus-visible { outline: 2px solid var(--color-amber); outline-offset: 2px; }
+.npc-sheet button:disabled, .npc-sheet input:disabled { cursor: not-allowed; opacity: .42; }
+.npc-error { position: absolute; right: 1rem; bottom: 7.5rem; z-index: 2; max-width: 22rem; border-left: 2px solid var(--color-signal); background: var(--color-ink); padding: .6rem .8rem; color: var(--color-smoke); font-size: .75rem; }
+.npc-evidence-toast { position: absolute; right: 1rem; top: 6.5rem; z-index: 3; border: 1px solid var(--color-safe); background: var(--color-ink); padding: .7rem 1rem; color: var(--color-safe); font: .7rem var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }
+.npc-overlay-fallback { padding: 1rem; }
+.npc-fallback-note { width: min(100%, 48rem); margin-inline: auto; border: 1px solid var(--color-line); border-bottom: 0; background: var(--color-ink); padding: .65rem 1rem; color: var(--color-smoke); font: .68rem var(--font-mono); text-transform: uppercase; }
+.npc-fallback-dialogue { width: min(100%, 48rem); margin-inline: auto; }
+@keyframes npc-sheet-in { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes npc-pulse { 50% { opacity: .3; } }
+@media (max-width: 640px) { .npc-heading { grid-template-columns: auto 1fr auto; } .npc-state { display: none; } .npc-portrait { width: 3.5rem; } .npc-text-line { grid-template-columns: 1fr auto; } .npc-text-line label { grid-column: 1 / -1; } .npc-controls { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) { .npc-sheet, .npc-state i { animation: none; } .npc-subtitle-reel { scroll-behavior: auto; } }

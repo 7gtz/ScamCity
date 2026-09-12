@@ -1,16 +1,25 @@
 /**
- * Asset resolver — checks for commissioned art at the convention path,
- * falls back to the procedural T0 background component.
- *
- * When a real `public/art/panels/<id>/bg.avif` is dropped in, this resolver
- * picks it up with no component change.
+ * Deterministic commissioned-art manifest. Add entries only alongside shipped
+ * files. Unlisted locations render their procedural background immediately.
  */
 
 import type { LocationId } from "@/game/world/types";
 
+/** Known commissioned background assets for instant rendering without flash or 404s. */
+const KNOWN_BACKGROUNDS: Partial<Record<LocationId, string>> = {
+  office: "/art/panels/office/bg.jpg",
+  "victim-flat": "/art/panels/victim-flat/bg.jpg",
+};
+
+/** Get synchronously known background path if available. */
+export function getStaticBackground(id: LocationId): string | null {
+  return KNOWN_BACKGROUNDS[id] ?? null;
+}
+
+
 /** Convention path for a commissioned panel background. */
-export function panelBgPath(id: LocationId): string {
-  return `/art/panels/${id}/bg.avif`;
+export function panelBgPath(id: LocationId, ext: string = ".jpg"): string {
+  return `/art/panels/${id}/bg${ext}`;
 }
 
 /** Convention path for a commissioned panel foreground layer. */
@@ -27,16 +36,8 @@ export function panelThumbPath(id: LocationId): string {
  * Check whether a commissioned background exists for a panel.
  * Returns the path if it does, null otherwise.
  *
- * This is a client-side check — we attempt to load the image head.
- * In SSR / build, we always fall back to procedural.
+ * Compatibility async API. Never performs runtime network discovery.
  */
 export async function resolveBackground(id: LocationId): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-  const path = panelBgPath(id);
-  try {
-    const res = await fetch(path, { method: "HEAD" });
-    return res.ok ? path : null;
-  } catch {
-    return null;
-  }
+  return getStaticBackground(id);
 }

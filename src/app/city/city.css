@@ -1,0 +1,18 @@
+/*
+ * City investigation track styles.
+ *
+ * The detective track is an immersive full-screen game mode (like /play/*).
+ * Hide the global marketing chrome navigation to prevent overlapping the
+ * detective PanelShell and world navigation controls.
+ */
+header[data-chrome] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel *, .panel-shell *, .npc-dialog *, svg[aria-label="City investigation map"] * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

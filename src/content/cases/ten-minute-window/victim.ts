@@ -32,7 +32,7 @@ export const VICTIM_CALL_DIALOGUE: Record<string, DialogueNode> = {
     speaker: "Martin Hayes (Northstar Security)",
     lines: [
       "Good afternoon, is this Ms. Mara Okoye?",
-      "This is Martin Hayes from Northstar Bank Account Security. We are tracking an urgent, unauthorized payment attempt of £4,850.00 to Apex Horizon Trading.",
+      "This is Martin Hayes from Northstar Bank Account Security. We are tracking an urgent, unauthorized payment attempt of ₹4,80,000.00 to Apex Horizon Trading.",
       "The transfer is currently queued in our pending hold, but it will settle in less than ten minutes unless we apply an administrative stop right now.",
     ],
     choices: [
@@ -47,7 +47,7 @@ export const VICTIM_CALL_DIALOGUE: Record<string, DialogueNode> = {
       },
       {
         id: "vc-panic",
-        text: "£4,850?! No, I never authorized that! Please stop it immediately!",
+        text: "₹4,80,000?! No, I never authorized that! Please stop it immediately!",
         effects: [
           { setFlag: "victim.panicked", to: true },
           { stress: 30 },
@@ -68,7 +68,7 @@ export const VICTIM_CALL_DIALOGUE: Record<string, DialogueNode> = {
     choices: [
       {
         id: "vc-read-code",
-        text: "The text just arrived: 719-204. Please stop the transfer!",
+        text: "The text just arrived: 847291. Please stop the transfer!",
         effects: [
           { setFlag: "victim.complied", to: true },
           { setFlag: "victim.revealed-otp", to: true },
@@ -99,7 +99,7 @@ export const VICTIM_CALL_DIALOGUE: Record<string, DialogueNode> = {
     choices: [
       {
         id: "vc-give-code",
-        text: "It says 719-204. Take it and stop the payment!",
+        text: "It says 847291. Take it and stop the payment!",
         effects: [
           { setFlag: "victim.complied", to: true },
           { setFlag: "victim.revealed-otp", to: true },

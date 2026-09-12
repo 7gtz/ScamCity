@@ -15,3 +15,8 @@ next-env.d.ts
 # OUTSIDE this directory; this is the safety net for when one lands inside it.
 # An embedded clone otherwise gets committed as a gitlink and breaks clones and CI.
 /scamcity-*/
+
+# macOS and local test artefacts
+.DS_Store
+city-audit.png
+/tmp-screenshots/

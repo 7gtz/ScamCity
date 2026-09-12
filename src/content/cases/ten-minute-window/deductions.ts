@@ -28,7 +28,7 @@ export const emergencyFreezeReadyDeduction: Deduction = {
   id: "d-emergency-freeze-ready",
   from: ["bank-statement", "call-log", "otp-message"],
   conclusion:
-    "The £4,850 transfer to Apex Horizon Trading is currently held in Northstar's ten-minute fraud clearing window and qualifies for an emergency branch freeze.",
+    "The ₹4,80,000 transfer to Apex Horizon Trading is still held in Northstar's fraud-review queue, minutes from the morning international settlement batch, and qualifies for an emergency branch freeze.",
   unlocksFlag: "deduction.freeze-authorization-ready",
 };
 

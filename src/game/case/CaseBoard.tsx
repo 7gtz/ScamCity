@@ -1,191 +1,71 @@
-/**
- * Case board — the deduction surface.
- *
- * Evidence cards, links between them, deductions unlocked by holding the right
- * combination. A Deduction fires only when every id in its `from` array is
- * held. Deterministic — never AI-decided.
- *
- * Spec: ops/prompts/antigravity-dialogue-case.md §4.4.
- */
-
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CaseDefinition, Deduction, EvidenceItem } from "@/game/case/types";
+/** The player proposes a connection; merely reading the board never changes it. */
+import { useState, type FormEvent } from "react";
+import type { CaseDefinition } from "./types";
 import { useGameState } from "@/game/integration/use-game-state";
-import { setFlag } from "@/game/integration/game";
+import { submitDeduction } from "@/game/integration/deductions";
 import { EvidenceCard } from "./EvidenceCard";
-import { checkDeductions, getHeldEvidenceItems, isDeductionReady } from "./verify";
+import { evidenceTitle, getHeldEvidenceItems } from "./verify";
 
 export interface CaseBoardProps {
   caseDef: CaseDefinition;
   className?: string;
 }
 
-/**
- * The case board renders held evidence and tracks deductions.
- *
- * When a deduction's required evidence is all held, the deduction fires
- * and its `unlocksFlag` is set. This is the only way deduction flags are
- * set — the player must actually combine the evidence.
- */
 export function CaseBoard({ caseDef, className = "" }: CaseBoardProps) {
-  const heldEvidence = useGameState((s) => s.evidence);
-  const flags = useGameState((s) => s.flags);
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [newDeductions, setNewDeductions] = useState<Deduction[]>([]);
-  const processedRef = useRef<Set<string>>(new Set());
+  const held = useGameState((state) => state.evidence);
+  const flags = useGameState((state) => state.flags);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [conclusion, setConclusion] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const items = getHeldEvidenceItems(caseDef.evidence, held);
+  const resolved = Boolean(flags["case.outcome"]);
 
-  const heldItems = useMemo(
-    () => getHeldEvidenceItems(caseDef.evidence, heldEvidence),
-    [caseDef.evidence, heldEvidence],
-  );
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const result = submitDeduction(caseDef, conclusion, selected);
+    setFeedback(result.message);
+    if (result.status === "verified") { setSelected([]); setConclusion(""); }
+  }
 
-  // Check and fire newly-unlocked deductions
-  useEffect(() => {
-    const ready = checkDeductions(caseDef.deductions, heldEvidence, flags);
-    const unprocessed = ready.filter((d) => !processedRef.current.has(d.id));
-
-    if (unprocessed.length > 0) {
-      for (const d of unprocessed) {
-        setFlag(d.unlocksFlag, true);
-        processedRef.current.add(d.id);
-      }
-      setNewDeductions((prev) => [...prev, ...unprocessed]);
-    }
-  }, [caseDef.deductions, heldEvidence, flags]);
-
-  const dismissDeductionNotice = useCallback((id: string) => {
-    setNewDeductions((prev) => prev.filter((d) => d.id !== id));
-  }, []);
-
-  return (
-    <section
-      aria-label={`Case Board: ${caseDef.title}`}
-      className={`flex flex-col gap-6 ${className}`}
-    >
-      {/* Header */}
-      <header className="border-b border-line pb-4">
-        <h2 className="font-display text-2xl text-bone">{caseDef.title}</h2>
-        <p className="mt-1 text-sm text-smoke">
-          Evidence collected: {heldEvidence.length} / {caseDef.evidence.length}
-        </p>
-      </header>
-
-      {/* New deduction notifications */}
-      {newDeductions.length > 0 && (
-        <div className="flex flex-col gap-2" role="alert" aria-live="polite">
-          {newDeductions.map((d) => (
-            <div
-              key={d.id}
-              className="flex items-start gap-3 border border-safe/30 bg-safe/5 p-3 text-sm"
-            >
-              <span className="mt-0.5 shrink-0 text-safe" aria-hidden>
-                ✓
-              </span>
-              <div className="flex-1">
-                <p className="font-semibold text-safe">Deduction Unlocked</p>
-                <p className="mt-1 text-ash">{d.conclusion}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => dismissDeductionNotice(d.id)}
-                className="shrink-0 text-dim transition-colors hover:text-smoke"
-                aria-label="Dismiss"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Evidence cards */}
-      {heldItems.length === 0 ? (
-        <p className="py-8 text-center text-dim italic">
-          No evidence collected yet. Investigate locations to gather documents.
-        </p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {heldItems.map((item) => (
-            <EvidenceCard
-              key={item.id}
-              item={item}
-              expanded={expandedCard === item.id}
-              onActivate={() =>
-                setExpandedCard((prev) =>
-                  prev === item.id ? null : item.id,
-                )
-              }
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Deductions tracker */}
-      <div className="border-t border-line pt-4">
-        <h3 className="mb-3 font-semibold text-smoke">Deductions</h3>
-        <ul className="flex flex-col gap-2">
-          {caseDef.deductions.map((d) => {
-            const ready = isDeductionReady(d, heldEvidence);
-            const unlocked = Object.hasOwn(flags, d.unlocksFlag);
-            return (
-              <li
-                key={d.id}
-                className={`border p-3 text-sm transition-colors ${
-                  unlocked
-                    ? "border-safe/30 bg-safe/5"
-                    : ready
-                      ? "border-amber/30 bg-amber/5"
-                      : "border-line bg-ink/50"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`size-2 shrink-0 rounded-full ${
-                      unlocked
-                        ? "bg-safe"
-                        : ready
-                          ? "bg-amber"
-                          : "bg-dim"
-                    }`}
-                    aria-hidden
-                  />
-                  <span
-                    className={
-                      unlocked
-                        ? "text-bone"
-                        : ready
-                          ? "text-ash"
-                          : "text-dim"
-                    }
-                  >
-                    {unlocked ? d.conclusion : `Requires: ${d.from.join(" + ")}`}
-                  </span>
-                </div>
-                {/* Evidence links */}
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {d.from.map((evidenceId) => {
-                    const held = heldEvidence.includes(evidenceId);
-                    return (
-                      <span
-                        key={evidenceId}
-                        className={`rounded px-2 py-0.5 text-xs ${
-                          held
-                            ? "bg-raised text-bone"
-                            : "bg-ink text-dim"
-                        }`}
-                      >
-                        {evidenceId}
-                      </span>
-                    );
-                  })}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+  return <section aria-label={`Case Board: ${caseDef.title}`} className={`flex flex-col gap-6 ${className}`}>
+    <header>
+      <h2 className="font-display text-2xl">{caseDef.title}</h2>
+      <p>{items.length} documents preserved. Select the documents that support one connection, then propose a conclusion.</p>
+    </header>
+    <form onSubmit={submit} className="flex flex-col gap-4">
+      <fieldset disabled={resolved} className="flex flex-col gap-3">
+        <legend className="mb-3 font-semibold">Choose supporting evidence</legend>
+        {items.length === 0 && <p>No evidence preserved yet. Inspect documents in the city and choose Preserve Evidence.</p>}
+        {items.map((item) => <div key={item.id} className="border border-line p-3">
+          <label className="flex min-h-11 cursor-pointer items-center gap-3">
+            <input type="checkbox" checked={selected.includes(item.id)} onChange={(event) => setSelected((previous) => event.target.checked ? [...previous, item.id] : previous.filter((id) => id !== item.id))} />
+            <span>{item.title}</span>
+          </label>
+          <button type="button" className="city-ui-button" aria-expanded={expanded === item.id} onClick={() => setExpanded(expanded === item.id ? null : item.id)}>Read {item.title}</button>
+          {expanded === item.id && <EvidenceCard item={item} expanded />}
+        </div>)}
+      </fieldset>
+      {!resolved && <>
+        <label htmlFor="proposed-conclusion">Proposed conclusion</label>
+        <select id="proposed-conclusion" className="min-h-11 w-full min-w-0 border border-line bg-ink p-2 text-bone" value={conclusion} onChange={(event) => setConclusion(event.target.value)}>
+          <option value="">Choose a conclusion</option>
+          {caseDef.deductions.filter((item) => flags[item.unlocksFlag] !== true).map((item) => <option key={item.id} value={item.id}>{item.conclusion}</option>)}
+        </select>
+        <button className="city-ui-button" type="submit" disabled={!selected.length || !conclusion}>Verify connection</button>
+      </>}
+      <p role="status">{resolved ? "Closed investigation — review only." : feedback}</p>
+    </form>
+    <section aria-label="Verified connections">
+      <h3 className="font-semibold">Verified connections</h3>
+      <ul className="flex flex-col gap-3">
+        {caseDef.deductions.filter((item) => flags[item.unlocksFlag] === true).map((item) => <li key={item.id} className="border border-safe p-3">
+          <p>✓ {item.conclusion}</p>
+          <p className="mt-2 text-sm text-smoke">{item.from.map((id) => evidenceTitle(caseDef.evidence, id)).join(" + ")}</p>
+        </li>)}
+      </ul>
     </section>
-  );
+  </section>;
 }

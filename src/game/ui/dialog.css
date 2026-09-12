@@ -1,0 +1,9 @@
+.city-dialog-backdrop { position: fixed; inset: 0; z-index: 100; background: rgb(0 0 0 / .75); }
+.city-dialog { position: fixed; z-index: 101; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: min(42rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: auto; overscroll-behavior: contain; padding: clamp(1rem, 4vw, 2rem); background: var(--color-ink); color: var(--color-bone); border: 1px solid var(--color-smoke); border-radius: .5rem; overflow-wrap: anywhere; }
+.city-dialog-title { font: 1.6rem var(--font-display); margin-bottom: 1rem; }
+.city-dialog-description { color: var(--color-smoke); margin-bottom: 1rem; }
+.city-dialog-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-block: 1rem; }
+.city-ui-button { min-width: 44px; min-height: 44px; padding: .65rem 1rem; border: 1px solid var(--color-smoke); border-radius: .25rem; background: var(--color-raised); color: var(--color-bone); cursor: pointer; }
+.city-ui-button[data-destructive] { border-color: var(--color-signal); }
+.city-dialog :focus-visible { outline: 3px solid var(--color-amber); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .city-dialog, .city-dialog * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

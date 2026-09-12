@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CityPanelScreen } from "@/game/integration/CityScreens";
-import { getPanel, panels } from "@/game/integration/panel-registry";
+import { getPanel, panels } from "@/game/world/registry";
 
 type Props = { params: Promise<{ locationId: string }> };
 

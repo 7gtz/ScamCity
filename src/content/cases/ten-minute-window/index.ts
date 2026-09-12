@@ -20,6 +20,18 @@ export const TEN_MINUTE_LOCATIONS: LocationId[] = [
 ];
 
 /**
+ * Authored entry-node mapping from NPC ID to dialogue node ID.
+ * Resolves action: { kind: "talk", npc: string } from world hotspots.
+ */
+export const NPC_DIALOGUE_ENTRY: Record<string, string> = {
+  "mara-okoye": "victim-interview-start",
+  "teller-vance": "bank-entry",
+  "ravi-sunder": "repair-entry",
+  "sgt-brennan": "police-entry",
+  detective: "office-start",
+};
+
+/**
  * Case Definition: "The Ten-Minute Window"
  *
  * Implements the complete CaseDefinition contract from src/game/case/types.ts.

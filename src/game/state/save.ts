@@ -6,6 +6,23 @@ export const SAVE_KEY = "scam-city:detective";
 export const SAVE_VERSION = 1;
 export const AUTOSAVE_DELAY_MS = 300;
 
+/**
+ * Persisted shape of `TimerState`. Optional and nullable: a save written before
+ * the clock was persisted still loads, and simply starts with no clock.
+ */
+const timerStateSchema = z
+  .object({
+    config: z.object({
+      durationMs: z.number().finite().nonnegative(),
+      graceMs: z.number().finite().nonnegative(),
+      untimed: z.boolean(),
+    }),
+    startedAt: z.number().finite(),
+    pausedAt: z.number().finite().nullable(),
+    pausedTotalMs: z.number().finite().nonnegative(),
+  })
+  .nullable();
+
 export const gameStateSchema = z.object({
   location: z.enum(["office", "victim-flat", "bank-branch", "repair-shop", "police-station"]),
   flags: z.record(z.string(), z.union([z.boolean(), z.number().finite(), z.string()])),
@@ -14,6 +31,7 @@ export const gameStateSchema = z.object({
   trust: z.record(z.string(), z.number().min(-100).max(100)),
   stress: z.number().min(0).max(100),
   caseId: z.string().nullable(),
+  timer: timerStateSchema.optional().default(null),
   version: z.literal(SAVE_VERSION),
 });
 
