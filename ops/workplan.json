@@ -114,6 +114,7 @@
         "src/game/recovery/**",
         "src/game/debrief/**",
         "src/features/call/CallRoom.tsx",
+        "src/features/call/use-live-call.ts",
         "src/lib/gemini/**",
         "src/lib/validation/schemas.ts",
         "src/tests/**"
@@ -124,10 +125,11 @@
       "forbiddenPathsNote": "adapter.ts is a shared contract owned by chore/game-contracts. Implementations live beside it, not inside it.",
       "additiveOnlyPaths": [
         "src/features/call/CallRoom.tsx",
+        "src/features/call/use-live-call.ts",
         "src/lib/gemini/**",
         "src/lib/validation/schemas.ts"
       ],
-      "additiveOnlyNote": "Additive changes only: new optional props, new exports, appended Zod schemas. No refactors, no signature changes, no reformatting. schemas.ts is append-only.",
+      "additiveOnlyNote": "Additive changes only: new optional props, new exports, appended Zod schemas. No refactors, no signature changes, no reformatting. schemas.ts is append-only. use-live-call.ts was granted by the release captain for ONE purpose: an optional onComplete(score) callback, invoked where the score is already produced. Nothing else in that file may change.",
       "dependsOn": { "branches": ["chore/game-contracts"], "issues": [] },
       "tests": {
         "ownershipCheck": true,

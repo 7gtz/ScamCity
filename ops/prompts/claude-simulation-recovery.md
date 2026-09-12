@@ -31,6 +31,7 @@ src/game/debrief/**
 
 ```
 src/features/call/CallRoom.tsx      new optional props only
+src/features/call/use-live-call.ts  ONE optional onComplete(score) callback, nothing else
 src/lib/gemini/**                   new exports only
 src/lib/validation/schemas.ts       APPEND-ONLY
 src/tests/**                        new test files; never weaken an existing one
@@ -41,6 +42,12 @@ schemas, new test files. It does **not** mean changing a signature, reordering
 code, renaming anything, or reformatting. `CallRoom.tsx` is 797 lines and is the
 flagship — the intended change there is roughly ten lines adding an optional
 `onComplete` callback.
+
+`use-live-call.ts` was granted by the release captain for exactly one purpose:
+calling `onComplete(score)` where the score is already produced (around line 38,
+beside the existing `progress` and `freestyle.resolve` calls). This replaces
+reading the newest score back out of `useResultsStore`, which is unsound because
+`CallScore` carries no timestamp. **Nothing else in that file may change.**
 
 ## 2. Paths you must not touch
 
