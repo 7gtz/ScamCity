@@ -59,8 +59,9 @@ export function Cursor() {
 
     /** Everything the cursor shows depends only on what sits under it. */
     const read = (node: Element | null) => {
-      const overField = Boolean(node?.closest("input, textarea, select"));
-      setVisible(lastX >= 0 && !overField);
+      // The native cursor is disabled while this component is active, so the
+      // custom cursor must remain visible over form fields as well as buttons.
+      setVisible(lastX >= 0);
       const tone = node?.closest<HTMLElement>("[data-tone]")?.dataset.tone;
       setLight(tone === "paper" || tone === "amber");
       const target = node?.closest<HTMLElement>("[data-cursor]") ?? null;
@@ -153,7 +154,8 @@ export function Cursor() {
     <div
       ref={ref}
       aria-hidden
-      className={cn("pointer-events-none fixed top-0 left-0 z-[95] transition-opacity duration-[180ms] ease-out", light && "tone-paper")}
+      data-custom-cursor
+      className={cn("pointer-events-none fixed top-0 left-0 z-[200] transition-opacity duration-[180ms] ease-out", light && "tone-paper")}
       style={{ opacity: visible ? 1 : 0 }}
     >
       <span

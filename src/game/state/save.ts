@@ -40,11 +40,21 @@ let pending: string | null = null;
 let timer: ReturnType<typeof setTimeout> | undefined;
 let readState: (() => GameState) | undefined;
 
+/** Judge previews are disposable sandboxes and must never touch a campaign save. */
+function isDemoSession(): boolean {
+  try {
+    return typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1";
+  } catch {
+    return false;
+  }
+}
+
 /** Called once by the store; keeps persistence independent of Zustand actions. */
 export function connectSaveSource(source: () => GameState) { readState = source; }
 
 /** Invalid JSON, stale versions, denied storage and SSR all start fresh. */
 export function load(): GameState | null {
+  if (isDemoSession()) return null;
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw === null) return null;
@@ -63,6 +73,7 @@ export function flushSave(): void {
 }
 
 function schedule(value: string): void {
+  if (isDemoSession()) return;
   pending = value;
   clearTimeout(timer);
   timer = setTimeout(flushSave, AUTOSAVE_DELAY_MS);
@@ -81,6 +92,7 @@ export function clearSave(): void {
   clearTimeout(timer);
   timer = undefined;
   pending = null;
+  if (isDemoSession()) return;
   try { localStorage.removeItem(SAVE_KEY); } catch { /* Storage may be disabled. */ }
 }
 

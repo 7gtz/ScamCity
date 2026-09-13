@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Choice, DialogueNode, Effect } from "@/game/dialogue/types";
 import type { GameState } from "@/game/state/types";
-import { advanceDialogue, getVisibleChoices } from "@/game/dialogue/engine";
+import { getVisibleChoices } from "@/game/dialogue/engine";
 
 /** The minimal state slice the dialogue box needs. */
 export type DialogueBoxState = Pick<GameState, "flags" | "evidence">;
@@ -39,10 +39,11 @@ const CHAR_DELAY = 30;
 
 /** Check reduced motion preference. */
 function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
+  const [reduced, setReduced] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
   useEffect(() => {
     const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mql.matches);
     const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
     mql.addEventListener("change", handler);
     return () => mql.removeEventListener("change", handler);
@@ -85,6 +86,15 @@ export function DialogueBox({
     () => (currentNode ? getVisibleChoices(currentNode, state) : []),
     [currentNode, state],
   );
+  const choicesVisible = showChoices || (!!currentNode && currentLineIndex >= currentNode.lines.length);
+  const effectiveRevealing = isRevealing && !reducedMotion;
+  const visibleText = reducedMotion
+    ? (currentNode?.lines[currentLineIndex] ?? "")
+    : displayedText;
+
+  useEffect(() => {
+    if (!currentNode) onEnd();
+  }, [currentNode, onEnd]);
 
   // Clean up timers
   useEffect(() => {
@@ -98,18 +108,18 @@ export function DialogueBox({
     if (!currentNode) return;
     const lines = currentNode.lines;
     if (currentLineIndex >= lines.length) {
-      setShowChoices(true);
       return;
     }
 
     const fullText = lines[currentLineIndex]!;
 
     if (reducedMotion) {
-      setDisplayedText(fullText);
-      setIsRevealing(false);
       return;
     }
 
+    // This is an intentional animation state transition: it starts the
+    // typewriter after the current line/node has changed.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsRevealing(true);
     setDisplayedText("");
     let charIndex = 0;
@@ -135,7 +145,7 @@ export function DialogueBox({
     if (!currentNode) return;
     if (timerRef.current) clearTimeout(timerRef.current);
 
-    if (isRevealing) {
+    if (effectiveRevealing) {
       // Complete current line instantly
       const fullText = currentNode.lines[currentLineIndex];
       if (fullText) {
@@ -157,7 +167,7 @@ export function DialogueBox({
       ]);
       setShowChoices(true);
     }
-  }, [currentNode, currentLineIndex, isRevealing]);
+  }, [currentNode, currentLineIndex, effectiveRevealing]);
 
   const handleChoice = useCallback(
     (choice: Choice) => {
@@ -197,18 +207,17 @@ export function DialogueBox({
       }
       if (
         (e.key === "Enter" || e.key === " ") &&
-        !showChoices &&
+        !choicesVisible &&
         e.target === boxRef.current
       ) {
         e.preventDefault();
         skipReveal();
       }
     },
-    [showChoices, skipReveal],
+    [choicesVisible, skipReveal],
   );
 
   if (!currentNode) {
-    onEnd();
     return null;
   }
 
@@ -260,22 +269,22 @@ export function DialogueBox({
           className="min-h-[3em] text-bone leading-relaxed"
           aria-live="polite"
         >
-          <p>{displayedText}</p>
+          <p>{visibleText}</p>
         </div>
 
         {/* Skip button */}
-        {(isRevealing || (!showChoices && currentLineIndex < currentNode.lines.length - 1)) && (
+        {(effectiveRevealing || (!choicesVisible && currentLineIndex < currentNode.lines.length - 1)) && (
           <button
             type="button"
             onClick={skipReveal}
             className="mt-2 text-xs text-dim transition-colors hover:text-smoke"
           >
-            {isRevealing ? "Skip ▸" : "Continue ▸"}
+            {effectiveRevealing ? "Skip ▸" : "Continue ▸"}
           </button>
         )}
 
         {/* Choices */}
-        {showChoices && (
+        {choicesVisible && (
           <div ref={choicesRef} className="mt-4 flex flex-col gap-2" role="group" aria-label="Dialogue choices">
             {visibleChoices.map((choice, i) => (
               <button

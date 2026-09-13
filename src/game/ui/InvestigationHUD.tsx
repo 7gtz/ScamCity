@@ -13,10 +13,15 @@ export interface InvestigationHUDProps {
 export function InvestigationHUD({ objective, timer, onHint, onRestart }: InvestigationHUDProps) {
   const [confirm, setConfirm] = useState(false);
   return <aside className="investigation-hud" aria-label="Investigation status">
-    <strong>{objective}</strong>
-    <span>Timer: {timer.status === "not-started" ? "Not started" : timer.status === "untimed" ? "Untimed" : `${timer.label}${timer.status === "paused" ? " (paused)" : ""}`}</span>
-    {onHint && <button className="city-ui-button" onClick={onHint}>Hint</button>}
-    {onRestart && <details><summary>Investigation options</summary><button className="city-ui-button" onClick={() => setConfirm(true)}>Restart investigation</button></details>}
+    <div className="hud-objective">
+      <span>Current objective</span>
+      <strong>{objective}</strong>
+    </div>
+    <div className="hud-actions">
+      <span className="hud-timer"><small>Clearing window</small><strong>{timer.status === "not-started" ? "Not started" : timer.status === "untimed" ? "Untimed" : `${timer.label}${timer.status === "paused" ? " · paused" : ""}`}</strong></span>
+      {onHint && <button className="hud-button" onClick={onHint}>Hint</button>}
+      {onRestart && <details className="hud-options"><summary aria-label="Open investigation options">•••</summary><div><button className="city-ui-button" onClick={() => setConfirm(true)}>Restart investigation</button></div></details>}
+    </div>
     <DestructiveConfirmation open={confirm} onOpenChange={setConfirm} title="Restart investigation?" description="Your current investigation progress will be cleared." confirmLabel="Restart investigation" onConfirm={() => onRestart?.()} />
   </aside>;
 }

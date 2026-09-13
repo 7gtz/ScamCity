@@ -8,11 +8,11 @@
 /* ── Panel container ───────────────────────────────────────────────── */
 
 .hotspot-tray-title { display: none; }
-.panel .hotspot { width: 64px; height: 44px; min-width: 44px; min-height: 44px; transform: translate(-50%, -50%); border: 2px solid var(--color-smoke); border-radius: .4rem; background: var(--color-ink); color: var(--color-bone); opacity: 1; }
+.panel .hotspot { width: 64px; height: 44px; min-width: 44px; min-height: 44px; transform: translate(-50%, -50%); border: 2px solid color-mix(in oklch, var(--color-amber) 58%, transparent); border-radius: .4rem; background: color-mix(in oklch, var(--color-ink) 82%, transparent); color: var(--color-bone); opacity: 1; }
 .panel .hotspot-marker { font: .75rem var(--font-mono); }
 .panel .hotspot[data-action-kind="travel"] { border-style: dashed; }
 .panel .hotspot:focus-visible { outline: 3px solid var(--color-amber); outline-offset: 4px; z-index: 9; }
-.panel .hotspot-label { max-width: min(16rem, 80vw); white-space: normal; overflow-wrap: anywhere; }
+.panel .hotspot-label { width: max-content; max-width: min(16rem, 80vw); white-space: normal; overflow-wrap: anywhere; }
 .panel .hotspot[data-label-edge="left"] .hotspot-label { left: 0; transform: translateY(100%); }
 .panel .hotspot[data-label-edge="right"] .hotspot-label { left: auto; right: 0; transform: translateY(100%); }
 .panel .hotspot[data-interaction-state="relevant"] { border-color: var(--color-amber); }
@@ -22,7 +22,7 @@
   .hotspot-tray-title { display: block; font: 1.3rem var(--font-display); }
   .panel .hotspot { position: relative; left: auto !important; top: auto !important; transform: none; width: 100%; height: auto; padding: .75rem; display: flex; gap: .75rem; align-items: center; text-align: left; }
   .panel .hotspot-marker { flex: 0 0 3.5rem; }
-  .panel .hotspot[data-label-edge] .hotspot-label { position: static; opacity: 1; visibility: visible; transform: none; max-width: none; padding: 0; background: none; font-size: .875rem; }
+  .panel .hotspot[data-label-edge] .hotspot-label { position: static; opacity: 1; visibility: visible; transform: none; width: auto; max-width: none; padding: 0; background: none; font-size: .875rem; }
 }
 
 .panel {

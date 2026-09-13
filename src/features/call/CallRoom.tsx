@@ -17,7 +17,6 @@ import { startRing, stopRing, unlockRingtone } from "@/features/freestyle/ringto
 import { useProgressStore } from "@/features/progress/progress-store";
 import { JudgingProgress } from "@/features/scoring/JudgingProgress";
 import { fmt } from "@/features/scoring/mock-judge";
-import { useResultsStore } from "@/features/scoring/results-store";
 import { useAiStatus } from "@/lib/ai-status";
 import { cn } from "@/lib/cn";
 import { mockForced } from "@/lib/live/provider";
@@ -58,7 +57,12 @@ export function CallRoom({ scenarioId, persona: districtPersona, onComplete }: P
   // In a live call the director writes a new caller each time.
   const caller = useCallStore((s) => s.caller);
   const persona = useMemo(
-    () => (caller ? { ...districtPersona, ...caller, portrait: undefined } : districtPersona),
+    () => {
+      if (!caller) return districtPersona;
+      // Live caller metadata can omit artwork; keep the authored scenario
+      // frame instead of silently falling back to the generic silhouette.
+      return { ...districtPersona, ...caller, portrait: districtPersona.portrait };
+    },
     [caller, districtPersona],
   );
   const muted = useCallStore((s) => s.muted);

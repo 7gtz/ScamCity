@@ -287,7 +287,16 @@ export function CityPanelScreen({
   const router = useRouter();
   const ready = useGameReady();
   const state = useGameState((s) => s);
-  const open = !panel.requires || evaluateCondition(panel.requires, state);
+  const [isDemo] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("demo") === "1",
+  );
+  const [demoPrepared, setDemoPrepared] = useState(() => !isDemo);
+  // Route entry and map/travel use the same authored access rule. This keeps a
+  // player from bypassing investigation progression by typing a panel URL.
+  const panelAccess = locationAccess(panel.id, state);
+  const open = isDemo || (panelAccess.allowed && (!panel.requires || evaluateCondition(panel.requires, state)));
 
   // Active interaction modals
   const [activeNpc, setActiveNpc] = useState<NpcId | null>(null);
@@ -396,7 +405,7 @@ export function CityPanelScreen({
   /** Wipe the saved case and start the ten-minute window over from the office. */
 
   /*
-   * Judges' demo (`?demo=1`). A pitch has ninety seconds, not ten minutes, so
+   * Judges' demo (`?demo=1`). A pitch has 20–30 seconds, not ten minutes, so
    * this seeds the case as if the detective had already worked the flat —
    * evidence in hand, eight minutes already burned — and opens on the one
    * exchange that shows what the game is: an NPC that refuses you until you can
@@ -407,16 +416,16 @@ export function CityPanelScreen({
   // whole panel to client-side rendering for a flag only the demo ever sets.
   // Lazy initialiser rather than an effect: it feeds effects only, never the
   // first render, so there is nothing for hydration to mismatch on.
-  const [isDemo] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("demo") === "1",
-  );
-  const demoSeeded = Boolean(state.flags["demo.seeded"]);
   useEffect(() => {
-    if (!ready || !isDemo || demoSeeded) return;
-    // Deferred so the seed lands after this render rather than cascading inside it.
+    if (!ready || !isDemo || demoPrepared) return;
+
+    // Always build the preview from a clean in-memory state. Demo persistence
+    // is disabled in save.ts, so this neither reads nor overwrites campaign
+    // progress—even when the preview was entered via client navigation.
+    let active = true;
     queueMicrotask(() => {
+      if (!active) return;
+      resetGame("ten-minute-window");
       for (const id of ["bank-statement", "call-log", "otp-message"]) giveEvidence(id);
       const startedAt = Date.now() - 8 * 60_000; // ~2 minutes left on the clock
       persistTimer(start(configFor(CLEARING_WINDOW, prefersReducedMotion()), startedAt));
@@ -424,8 +433,10 @@ export function CityPanelScreen({
       setFlag("case.opened", true);
       setFlag("demo.seeded", true);
       if (panel.id === "bank-branch") setActiveNpc("vance");
+      setDemoPrepared(true);
     });
-  }, [ready, isDemo, demoSeeded, panel.id]);
+    return () => { active = false; };
+  }, [ready, isDemo, demoPrepared, panel.id]);
 
   const caseOpened = Boolean(state.flags["case.opened"]);
   useEffect(() => {
@@ -545,7 +556,7 @@ export function CityPanelScreen({
       <section className="mx-auto max-w-5xl px-6 py-24 text-bone">
         <h1 className="font-display text-4xl">Location locked</h1>
         <p className="my-4 text-smoke">
-          You lack the authorization or held facts to enter this location.
+          {panelAccess.requirement || "You lack the authorization or held facts to enter this location."}
         </p>
         <Link href="/city" className="font-mono text-sm underline text-amber">
           Return to map
@@ -568,24 +579,18 @@ export function CityPanelScreen({
       onCaseBoard={() => setShowCaseBoard(true)}
       onInventory={() => setShowInventory(true)}
     >
+      <InvestigationHUD
+        objective={objective}
+        timer={hudTimer(state, now)}
+        onHint={handleRequestHint}
+        onRestart={handleRestartCase}
+      />
       <Panel
         panel={panel}
         handlers={handlers}
         interactionStates={hotspotStates}
         hotspotRequirements={hotspotRequirements}
       >
-        {/*
-          * One HUD, owned by the UI layer. It renders in normal document flow
-          * and clears the fixed shell by its measured height, so the timer and
-          * actions are no longer partly covered at desktop widths.
-          */}
-        <InvestigationHUD
-          objective={objective}
-          timer={hudTimer(state, now)}
-          onHint={handleRequestHint}
-          onRestart={handleRestartCase}
-        />
-
         {panel.id === "victim-flat" && (
           <div className="relative z-20 flex justify-end px-6 pointer-events-auto">
             <button
@@ -676,6 +681,7 @@ export function CityPanelScreen({
         {activeNpc && (
           <VoiceInterrogationOverlay
             npc={activeNpc}
+            demoMode={isDemo}
             fallbackDialogueNodeId={NPC_DIALOGUE_ENTRY[DIALOGUE_KEY_BY_NPC[activeNpc]]}
             onEffects={handleEffectsAndCheck}
             onClose={() => {
@@ -706,6 +712,7 @@ export function CityPanelScreen({
         onOpenChange={(open) => { if (!open) setDebriefHidden(true); }}
         title="Case debrief"
         description="How this investigation was resolved, and what it was scored on."
+        closeLabel="Leave debrief"
       >
         {caseGrade && (
           <>

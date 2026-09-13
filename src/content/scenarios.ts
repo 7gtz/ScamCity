@@ -46,6 +46,7 @@ const bankSecurity: Scenario = {
     name: "Martin Hayes",
     role: "Account Security",
     organization: "Northstar Bank",
+    portrait: "/art/frames/scammer.png",
     legitimate: false,
     district: "bank",
     level: 1,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useInsertionEffect, useRef, useState, type FormEvent } from "react";
+import Image from "next/image";
 import { CityDialog } from "@/game/ui/CityDialog";
 import { Waveform } from "@/features/call/Waveform";
 import { DialogueBox } from "@/game/dialogue/DialogueBox";
@@ -8,6 +9,8 @@ import { getGameState } from "@/game/integration/game";
 import { prefersReducedMotion } from "@/game/world/navigation";
 import { TEN_MINUTE_DIALOGUE } from "@/content/cases/ten-minute-window";
 import { NpcPortrait, npcIdentity } from "./NpcPortrait";
+import { npcSceneArt } from "./art";
+import { CampaignTrailer } from "./CampaignTrailer";
 import { SubtitleReel } from "./SubtitleReel";
 import { npcSessionFactory, publishNpcConnectionStatus } from "./npc-session-store";
 import type {
@@ -18,13 +21,12 @@ import type {
 } from "./types";
 import "./npc-overlay.css";
 
-
-
 export function VoiceInterrogationOverlay({
   npc,
   onEffects,
   onClose,
   fallbackDialogueNodeId,
+  demoMode = false,
 }: VoiceInterrogationOverlayProps) {
   /*
    * The session is created inside the connect effect, not memoised across
@@ -77,7 +79,9 @@ export function VoiceInterrogationOverlay({
         setStatus(event.status);
         publishNpcConnectionStatus(event.status);
       }
-      if (event.type === "speaking") setSpeaking(event.on ? event.who : null);
+      if (event.type === "speaking") {
+        setSpeaking(event.on ? event.who : null);
+      }
       if (event.type === "error") setError(event.message);
       if (event.type === "subtitle") {
         setSubtitles((current) => {
@@ -214,8 +218,18 @@ export function VoiceInterrogationOverlay({
 
   const motion = prefersReducedMotion() ? "reduced" : "full";
   const active = speaking !== null;
+  const sceneFrame = npcSceneArt(npc, status, getGameState().trust[npc] ?? 0);
+
+  if (demoMode && npc === "vance") {
+    // A hard boundary is intentional: normal navigation would retain the
+    // disposable preview store instead of rehydrating the campaign.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    const leaveDemo = () => window.location.assign("/city");
+    return <CampaignTrailer onExit={leaveDemo} />;
+  }
+
   return (
-    <CityDialog open onOpenChange={(open) => { if (!open) close(); }} title={`Interview with ${identity.name}`} className="npc-dialog">
+    <CityDialog open onOpenChange={(open) => { if (!open) close(); }} title={`Interview with ${identity.name}`} showCloseButton={false} className={demoMode ? "npc-dialog npc-dialog-demo" : "npc-dialog"}>
     <div data-motion={motion}>
       <section className="npc-sheet">
         <header className="npc-heading">
@@ -229,8 +243,20 @@ export function VoiceInterrogationOverlay({
             <i aria-hidden="true" />
             {status === "connecting" ? "Opening line" : speaking === "npc" ? "Speaking" : speaking === "player" ? "Listening" : status}
           </div>
-          <button type="button" className="npc-leave" onClick={close}>Leave ×</button>
+          <button type="button" className="npc-leave" onClick={close} aria-label={demoMode ? "Exit demo" : "Leave interview"}>
+            {demoMode ? "Exit demo ×" : "Leave ×"}
+          </button>
         </header>
+
+        <div className="npc-scene-frame" aria-hidden="true">
+          <Image
+            src={sceneFrame}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 68rem, 100vw"
+            priority
+          />
+        </div>
 
         <div className="npc-waveform">
           <Waveform active={active} />

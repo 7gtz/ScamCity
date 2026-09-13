@@ -1,45 +1,29 @@
-/*
- * Panel shell styles — persistent chrome wrapping every detective-track panel.
- *
- * All colours via design tokens. --color-signal and --color-safe never decorative.
- */
+/* Compact persistent chrome for every detective-track location. */
 
-.panel-shell {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-/* ── Top bar ───────────────────────────────────────────────────────── */
+.panel-layout { min-height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--color-ink); }
+.panel-shell { position: relative; z-index: 50; pointer-events: none; }
+.panel-main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.panel-main > .panel { min-height: 0; height: 100%; }
 
 .shell-top {
+  min-height: 4rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  /* Safe areas, so the bar is never under a notch or a rounded corner. */
-  padding-block: max(1rem, env(safe-area-inset-top)) 1rem;
+  gap: .75rem;
+  padding-block: max(.55rem, env(safe-area-inset-top)) .55rem;
   padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
+  border-bottom: 1px solid color-mix(in oklch, var(--color-line) 76%, transparent);
+  background: var(--color-ink);
+  box-shadow: 0 .5rem 2rem rgb(0 0 0 / .2);
   pointer-events: auto;
 }
 
-.shell-top-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.shell-top-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ── Shell buttons ─────────────────────────────────────────────────── */
+.shell-top-left, .shell-top-right { min-width: 0; display: flex; align-items: center; gap: .5rem; }
+.shell-context { display: grid; align-content: center; min-height: 40px; padding-left: .8rem; border-left: 1px solid var(--color-line); }
+.shell-context small, .shell-context strong { display: block; }
+.shell-context small { color: var(--color-dim); font: .52rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.shell-context strong { margin-top: .08rem; color: var(--color-bone); font: .95rem var(--font-display); }
 
 .shell-btn {
   min-width: 44px;
@@ -47,113 +31,82 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  border: 1.5px solid var(--color-line);
-  border-radius: 4px;
-  background: color-mix(in oklch, var(--color-ink) 70%, transparent);
+  gap: .4rem;
+  padding: .4rem .7rem;
+  border: 1px solid var(--color-line);
+  border-radius: 3px;
+  background: color-mix(in oklch, var(--color-ink) 76%, transparent);
   color: var(--color-bone);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
+  font: .68rem/1.2 var(--font-mono);
+  letter-spacing: .055em;
   text-transform: uppercase;
-  cursor: pointer;
-  transition: border-color var(--d-micro) var(--ease-out),
-              background-color var(--d-micro) var(--ease-out);
-  outline: none;
   text-decoration: none;
-  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--d-micro) var(--ease-out), background-color var(--d-micro) var(--ease-out), color var(--d-micro) var(--ease-out);
 }
+.shell-btn:hover, .shell-btn:focus-visible { border-color: var(--color-amber); background: color-mix(in oklch, var(--color-amber) 10%, var(--color-ink)); outline: none; }
+.shell-btn:focus-visible { box-shadow: 0 0 0 2px var(--color-amber); }
+.shell-btn:active { background: color-mix(in oklch, var(--color-amber) 18%, var(--color-ink)); }
+.shell-btn[data-tone="paper"] { background: color-mix(in oklch, var(--color-paper) 86%, transparent); color: var(--color-paper-ink); border-color: var(--color-paper-line); }
+.shell-btn[data-tone="paper"]:hover, .shell-btn[data-tone="paper"]:focus-visible { border-color: var(--color-paper-muted); background: var(--color-paper-2); }
+.shell-icon { width: 16px; height: 16px; flex-shrink: 0; }
+.shell-bottom { display: none; }
 
-.shell-top { flex-wrap: wrap; gap: .5rem; background: var(--color-ink); padding-top: max(1rem, env(safe-area-inset-top)); }
-/*
- * The HUD sits in normal document flow, beneath a fixed shell. It clears the
- * shell by its *measured* height (published by PanelShell as --city-shell-top),
- * never a hard-coded offset: the bar wraps at narrow widths, grows with text
- * zoom, and gains safe-area padding on notched devices.
- *
- * The fallback keeps it usable if the custom property is ever missing.
- */
 .investigation-hud {
   position: relative;
   z-index: 40;
+  min-height: 4.5rem;
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
   align-items: center;
-  margin-block-start: var(--city-shell-top, 4.75rem);
-  padding-block: 1rem;
+  gap: 1rem;
+  margin-block-start: 0;
+  padding-block: .65rem;
   padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
-  background: var(--color-ink);
+  border-bottom: 1px solid color-mix(in oklch, var(--color-line) 64%, transparent);
+  background: var(--color-raised);
   color: var(--color-bone);
-  overflow-wrap: anywhere;
 }
-.investigation-hud strong { flex-basis: 100%; font-size: 1.25rem; }
-.investigation-hud summary { min-height: 44px; padding: .75rem; cursor: pointer; }
-.shell-top-left, .shell-top-right { flex-wrap: wrap; }
-.shell-btn { line-height: 1.3; overflow-wrap: anywhere; }
-.shell-bottom { pointer-events: none; background: var(--color-ink); padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+.hud-objective { min-width: 0; flex: 1 1 32rem; }
+.hud-objective > span, .hud-timer > small { display: block; color: var(--color-amber); font: .52rem var(--font-mono); letter-spacing: .11em; text-transform: uppercase; }
+.hud-objective > strong { display: block; margin-top: .18rem; font-size: clamp(.9rem, 1.4vw, 1.05rem); line-height: 1.25; overflow-wrap: anywhere; }
+.hud-actions { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-end; gap: .45rem; }
+.hud-timer { min-width: 7.3rem; padding: .3rem .7rem; border-left: 2px solid var(--color-signal); }
+.hud-timer > small { color: var(--color-dim); }
+.hud-timer > strong { display: block; margin-top: .1rem; color: var(--color-bone); font: .95rem var(--font-mono); }
 
-.shell-btn:hover,
-.shell-btn:focus-visible {
-  border-color: var(--color-amber);
-  background: color-mix(in oklch, var(--color-amber) 10%, var(--color-ink));
-}
-
-.shell-btn:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-amber);
-}
-
-.shell-btn:active {
-  background: color-mix(in oklch, var(--color-amber) 18%, var(--color-ink));
-}
-
-.shell-btn[data-tone="paper"] {
-  background: color-mix(in oklch, var(--color-paper) 80%, transparent);
-  color: var(--color-paper-ink);
-  border-color: var(--color-paper-line);
-}
-
-.shell-btn[data-tone="paper"]:hover,
-.shell-btn[data-tone="paper"]:focus-visible {
-  border-color: var(--color-paper-muted);
-  background: var(--color-paper-2);
-}
-
-/* ── Shell icon ────────────────────────────────────────────────────── */
-
-.shell-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-/* ── Bottom bar ────────────────────────────────────────────────────── */
-
-.shell-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem var(--gutter);
-  pointer-events: auto;
-  gap: 1rem;
-}
-
-/* ── Location badge ────────────────────────────────────────────────── */
-
-.shell-location {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.06em;
+.hud-button, .hud-options > summary {
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 3px;
+  background: color-mix(in oklch, var(--color-ink) 72%, transparent);
+  padding: .55rem .7rem;
+  color: var(--color-smoke);
+  font: .62rem var(--font-mono);
+  letter-spacing: .06em;
   text-transform: uppercase;
-  color: var(--color-amber);
-  opacity: 0.8;
+  cursor: pointer;
+}
+.hud-button:hover, .hud-options > summary:hover, .hud-button:focus-visible, .hud-options > summary:focus-visible { border-color: var(--color-amber); color: var(--color-bone); outline: none; }
+.hud-options { position: relative; }
+.hud-options > summary { list-style: none; font-size: .85rem; }
+.hud-options > summary::-webkit-details-marker { display: none; }
+.hud-options > div { position: absolute; z-index: 20; top: calc(100% + .45rem); right: 0; min-width: 13rem; border: 1px solid var(--color-line); background: var(--color-ink); padding: .55rem; box-shadow: 0 .8rem 2rem rgb(0 0 0 / .45); }
+.hud-options > div .city-ui-button { width: 100%; }
+
+@media (max-width: 700px) {
+  .shell-top { padding-inline: .75rem; }
+  .shell-context { padding-left: .55rem; }
+  .shell-context small { display: none; }
+  .shell-context strong { max-width: 8.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; }
+  .shell-btn { padding-inline: .6rem; }
+  .shell-top-right .shell-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .investigation-hud { align-items: stretch; flex-direction: column; gap: .5rem; padding: .6rem .75rem; }
+  .hud-objective { flex-basis: auto; }
+  .hud-actions { justify-content: flex-start; }
+  .hud-timer { margin-right: auto; padding-left: .55rem; }
 }
 
-/* ── Reduced motion ────────────────────────────────────────────────── */
-
-@media (prefers-reduced-motion: reduce) {
-  .shell-btn {
-    transition: none;
-  }
-}
+@media (prefers-reduced-motion: reduce) { .shell-btn { transition: none; } }

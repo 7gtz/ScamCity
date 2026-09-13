@@ -10,7 +10,7 @@
  * Brief: ops/prompts/antigravity-dialogue-case.md §4.1.
  */
 
-import type { Choice, Condition, DialogueNode, Effect } from "@/game/dialogue/types";
+import type { Choice, DialogueNode, Effect } from "@/game/dialogue/types";
 import type { GameState } from "@/game/state/types";
 import { evaluateCondition } from "@/game/state/conditions";
 

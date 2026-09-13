@@ -158,6 +158,8 @@ export interface VoiceInterrogationOverlayProps {
   /** Where the guarded effects land — the client calls `applyEffects` here. */
   onEffects: (effects: readonly Effect[]) => void;
   onClose: () => void;
+  /** Deterministic, button-led path used for the short judge presentation. */
+  demoMode?: boolean;
   /** Authored-tree entry node, shown when the session reports `unavailable`. */
   fallbackDialogueNodeId?: string;
 }

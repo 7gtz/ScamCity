@@ -143,27 +143,19 @@ Open `/freestyle?demo=1` (or **Judging? The three-minute demo** on the landing p
 2. **A text in a different channel**, aimed at whatever the email exposed. The contact replies live and adapts. Without a Gemini key, a scam website arrives instead.
 3. **A live call**, sometimes genuine. The judge scores it and your defense profile appears.
 
-### The ninety-second demo (Detective Track)
+### The 20–30 second demo (Detective Track)
 
 Open **`/city/bank-branch?demo=1`**. The case is seeded as if you had already
-worked the victim's flat — three pieces of evidence in hand, two minutes left on
-the clearing window — and Teller Vance is already waiting.
+worked the victim's flat — three pieces of evidence in hand — and Teller Vance is
+already waiting. The demo uses two prepared buttons, so it is deterministic and
+does not require a microphone or a network call.
 
-Say this out loud, or type it in the interview line:
+1. Click **Request a freeze**. Vance refuses because a demand without grounds
+   fails compliance.
+2. Click **Present evidence**. The timestamped chain is accepted and the
+   emergency hold is placed.
 
-> *"Freeze the transfer on the Okoye account."*
-
-He refuses. He is not being obstructive — he has compliance rules and no grounds.
-Then say the case:
-
-> *"The OTP was issued at 22:01 and used at 22:03 to move ₹4,80,000 to Apex
-> Horizon Trading. At 21:47 she took a call from a spoofed number showing as your
-> own helpline. The code was obtained by impersonation and used within two
-> minutes."*
-
-He places the emergency hold, and the money is saved.
-
-That exchange is the whole thesis in two turns: **the AI is not narrating a
+That exchange is the whole thesis in two clicks: **the AI is not narrating a
 branch — it is deciding whether you argued your case.** Vague demands fail, and
 specifics work, because the tools an NPC may call are guarded by deterministic
 rules (`src/game/npc/tools.ts`) rather than by the model's goodwill.

@@ -1,4 +1,6 @@
 import type { NpcId } from "./types";
+import { npcPortraitArt } from "./art";
+import Image from "next/image";
 
 const PEOPLE: Record<NpcId, { name: string; role: string; initials: string }> = {
   miller: { name: "Detective Miller", role: "Senior Investigator", initials: "DM" },
@@ -16,8 +18,15 @@ export function npcIdentity(npc: NpcId) {
 export function NpcPortrait({ npc }: { npc: NpcId }) {
   const person = PEOPLE[npc];
   return (
-    <div className="npc-portrait" data-npc={npc} aria-hidden="true">
-      <span>{person.initials}</span>
+    <div className="npc-portrait" data-npc={npc}>
+      <Image
+        src={npcPortraitArt(npc)}
+        alt=""
+        fill
+        sizes="4.5rem"
+        priority
+      />
+      <span className="sr-only">{person.name}</span>
     </div>
   );
 }

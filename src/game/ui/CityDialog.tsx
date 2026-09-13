@@ -17,13 +17,17 @@ export interface CityDialogProps {
   returnFocusRef?: RefObject<HTMLElement | null>;
   dismissOnEscape?: boolean;
   dismissOnBackdrop?: boolean;
+  /** Hide the generic footer close when the dialog content owns its exit control. */
+  showCloseButton?: boolean;
+  /** Use a task-specific exit label when "Close" would be ambiguous. */
+  closeLabel?: string;
   className?: string;
 }
 
 /** One controlled modal at a time. Close the current modal before opening another. */
 export function CityDialog({ open, onOpenChange, title, description, children,
   initialFocusRef, returnFocusRef, dismissOnEscape = true,
-  dismissOnBackdrop = false, className = "" }: CityDialogProps) {
+  dismissOnBackdrop = false, showCloseButton = true, closeLabel = "Close", className = "" }: CityDialogProps) {
   const nested = useContext(InsideDialog);
   const descriptionId = useId();
   const previousFocus = useRef<HTMLElement | null>(null);
@@ -60,10 +64,14 @@ export function CityDialog({ open, onOpenChange, title, description, children,
         }}
         onEscapeKeyDown={(event) => { if (!dismissOnEscape) event.preventDefault(); }}
         onInteractOutside={(event) => { if (!dismissOnBackdrop) event.preventDefault(); }}>
+        {dismissOnEscape && showCloseButton && (
+          <Dialog.Close className="city-dialog-close" aria-label={closeLabel}>
+            {closeLabel} <span aria-hidden="true">×</span>
+          </Dialog.Close>
+        )}
         <Dialog.Title className="city-dialog-title">{title}</Dialog.Title>
         {description && <Dialog.Description id={descriptionId} className="city-dialog-description">{description}</Dialog.Description>}
         <InsideDialog.Provider value={true}>{children}</InsideDialog.Provider>
-        {dismissOnEscape && <Dialog.Close className="city-ui-button">Close</Dialog.Close>}
       </Dialog.Content>
     </Dialog.Portal>
   </Dialog.Root>;

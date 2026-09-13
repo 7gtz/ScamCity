@@ -8,7 +8,7 @@
  */
 
 import Link from "next/link";
-import { useEffect, useRef, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import type { PanelDefinition } from "@/game/world/types";
 import { navigateToMap } from "@/game/world/navigation";
 import "./shell.css";
@@ -22,47 +22,6 @@ export interface PanelShellProps {
   onInventory?: () => void;
   /** Called when settings button is pressed. */
   onSettings?: () => void;
-}
-
-/**
- * Publish the shell's *measured* height so content in normal flow can clear it.
- *
- * The shell is `position: fixed`, so anything in document flow starts beneath
- * it at y=0. The previous integration HUD assumed a 64px offset against a shell
- * that renders at 76px on desktop, and the timer and Hint/Restart controls were
- * partly covered.
- *
- * A hard-coded offset cannot be correct: the bar wraps at narrow widths, grows
- * with text zoom, and gains safe-area padding on notched devices. Measuring it
- * is the only version that holds under all three. Published as
- * `--city-shell-top` / `--city-shell-bottom` on the document element.
- */
-function useShellMetrics(
-  top: React.RefObject<HTMLDivElement | null>,
-  bottom: React.RefObject<HTMLDivElement | null>,
-) {
-  useEffect(() => {
-    const root = document.documentElement;
-    const publish = () => {
-      root.style.setProperty("--city-shell-top", `${Math.round(top.current?.getBoundingClientRect().height ?? 0)}px`);
-      root.style.setProperty("--city-shell-bottom", `${Math.round(bottom.current?.getBoundingClientRect().height ?? 0)}px`);
-    };
-    publish();
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", publish);
-      return () => window.removeEventListener("resize", publish);
-    }
-    const observer = new ResizeObserver(publish);
-    if (top.current) observer.observe(top.current);
-    if (bottom.current) observer.observe(bottom.current);
-    window.addEventListener("resize", publish);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", publish);
-      root.style.removeProperty("--city-shell-top");
-      root.style.removeProperty("--city-shell-bottom");
-    };
-  }, [top, bottom]);
 }
 
 /** SVG map icon (16×16). */
@@ -117,18 +76,13 @@ export function PanelShell({
   onInventory,
   onSettings,
 }: PanelShellProps) {
-  const topBar = useRef<HTMLDivElement>(null);
-  const bottomBar = useRef<HTMLDivElement>(null);
-  useShellMetrics(topBar, bottomBar);
   const mapUrl = navigateToMap();
   const toneAttr = panel.tone === "paper" ? "paper" : undefined;
 
   return (
-    <>
-      {/* Shell overlay — fixed, pointer-events none, children pass through */}
+    <div className="panel-layout">
       <nav className="panel-shell" aria-label="Panel navigation">
-        {/* Top bar — back, map, case board, inventory, settings */}
-        <div className="shell-top" ref={topBar}>
+        <div className="shell-top">
           <div className="shell-top-left">
             <Link
               href={mapUrl}
@@ -139,6 +93,10 @@ export function PanelShell({
               <MapIcon />
               <span>City Map</span>
             </Link>
+            <span className="shell-context" aria-label={`Current location: ${panel.title}`}>
+              <small>Current location</small>
+              <strong>{panel.title}</strong>
+            </span>
           </div>
 
           <div className="shell-top-right">
@@ -180,14 +138,8 @@ export function PanelShell({
           </div>
         </div>
 
-        {/* Bottom bar — location indicator */}
-        <div className="shell-bottom" ref={bottomBar}>
-          <span className="shell-location">{panel.title}</span>
-        </div>
       </nav>
-
-      {/* Panel content sits below the shell */}
-      {children}
-    </>
+      <main className="panel-main">{children}</main>
+    </div>
   );
 }

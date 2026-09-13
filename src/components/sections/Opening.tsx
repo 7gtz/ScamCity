@@ -44,11 +44,13 @@ export function Opening() {
               </Button>
               <CtaLink href="#incoming">Or take one call</CtaLink>
             </div>
+            {/* Full navigation keeps the disposable preview store out of campaign memory. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+            <a href="/city/bank-branch?demo=1" className="meta min-h-11 content-center text-smoke transition-colors hover:text-bone">
+              Judging? The 20–30 second case demo →
+            </a>
             <Link href="/freestyle?demo=1" className="meta min-h-11 content-center text-smoke transition-colors hover:text-bone">
-              Judging? The three-minute demo →
-            </Link>
-            <Link href="/city/bank-branch?demo=1" className="meta min-h-11 content-center text-smoke transition-colors hover:text-bone">
-              …or the ninety-second case →
+              Or the three-minute freestyle demo →
             </Link>
           </div>
         </Reveal>

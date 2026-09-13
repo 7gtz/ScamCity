@@ -7,8 +7,11 @@ import type { LocationId } from "@/game/world/types";
 
 /** Known commissioned background assets for instant rendering without flash or 404s. */
 const KNOWN_BACKGROUNDS: Partial<Record<LocationId, string>> = {
-  office: "/art/panels/office/bg.jpg",
-  "victim-flat": "/art/panels/victim-flat/bg.jpg",
+  office: "/art/panels/office/bg-v2.png",
+  "victim-flat": "/art/panels/victim-flat/bg-v2.png",
+  "bank-branch": "/art/panels/bank-branch/bg.png",
+  "repair-shop": "/art/panels/repair-shop/bg.png",
+  "police-station": "/art/panels/police-station/bg.png",
 };
 
 /** Get synchronously known background path if available. */

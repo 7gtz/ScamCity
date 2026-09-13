@@ -118,7 +118,11 @@ class MockNpcSession implements NpcSession {
     readonly npc: NpcId,
     /** > 1 compresses timing (tests). */
     private readonly speed = 1,
-  ) {}
+    /** Allows a curated demo to enter a conversation at its strongest beat. */
+    initialTurn = 0,
+  ) {
+    this.turn = initialTurn;
+  }
 
   on(listener: (event: NpcSessionEvent) => void) {
     this.listeners.add(listener);
@@ -201,6 +205,6 @@ class MockNpcSession implements NpcSession {
   }
 }
 
-export function createMockNpcSession(npc: NpcId, speed = 1): NpcSession {
-  return new MockNpcSession(npc, speed);
+export function createMockNpcSession(npc: NpcId, speed = 1, initialTurn = 0): NpcSession {
+  return new MockNpcSession(npc, speed, initialTurn);
 }
